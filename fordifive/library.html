@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>자료실</title>
+  <style>
+    body {
+      height: 100vh;
+      margin: 0;
+      background-image: linear-gradient(to right, rgba(248, 248, 247, 0), rgb(17, 17, 16));
+      color: white;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 20px;
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    /* 좌측 상단 회색 버튼 */
+.top-left-link {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background-color: #444;
+  color: #fff;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 8px 14px;
+  border-radius: 4px;
+}
+
+.top-left-link:hover {
+  background-color: #555;
+}
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .video-container {
+      position: relative;
+      width: 25vw;
+      padding-top: 44.44%;
+      margin-left: 0;
+      margin-right: auto;
+    }
+
+    .video-container video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+
+  <a href="library2.html" class="top-left-link">자료실2</a>
+
+  <h1>자료실_미리보기1</h1>
+
+  <div class="video-container">
+    <video controls>
+      <source src="mp4/fordistudio.mp4" type="video/mp4">
+      브라우저가 동영상을 지원하지 않습니다.
+    </video>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>로그인 / 회원가입</title>
+</head>
+<body>
+  <h2>회원가입</h2>
+  <input id="signup-email" type="email" placeholder="이메일"><br>
+  <input id="signup-password" type="password" placeholder="비밀번호"><br>
+  <button onclick="signup()">회원가입</button>
+
+  <h2>로그인</h2>
+  <input id="login-email" type="email" placeholder="이메일"><br>
+  <input id="login-password" type="password" placeholder="비밀번호"><br>
+  <button onclick="login()">로그인</button>
+
+  <h2>로그아웃</h2>
+  <button onclick="logout()">로그아웃</button>
+
+  <h3 id="status">로그인 상태: 확인 중...</h3>
+
+  <!-- Firebase SDK v8 -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDhXxZZvjPQslJM3O1VBAT0rcRT4iRb8uY",
+      authDomain: "ffff-4f188.firebaseapp.com",
+      projectId: "ffff-4f188",
+      storageBucket: "ffff-4f188.firebasestorage.app",
+      messagingSenderId: "194297475368",
+      appId: "1:194297475368:web:84d0c6c50af6e3dbf1a01d",
+      measurementId: "G-RV3BY75WM0"
+    };
+
+    // Firebase 초기화
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    // 회원가입
+    function signup() {
+      const email = document.getElementById("signup-email").value;
+      const password = document.getElementById("signup-password").value;
+
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(() => {
+          alert("회원가입 성공!");
+          window.location.href = "library2.html"; // 회원가입 후 바로 이동
+        })
+        .catch((error) => alert("회원가입 실패: " + error.message));
+    }
+
+    // 로그인
+    function login() {
+      const email = document.getElementById("login-email").value;
+      const password = document.getElementById("login-password").value;
+
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+          alert("로그인 성공!");
+          window.location.href = "library2.html"; // 로그인 후 이동
+        })
+        .catch((error) => alert("로그인 실패: " + error.message));
+    }
+
+    // 로그아웃
+    function logout() {
+      auth.signOut().then(() => alert("로그아웃 완료"));
+    }
+
+    // 로그인 상태 표시
+    auth.onAuthStateChanged((user) => {
+      const status = document.getElementById("status");
+      status.innerText = user ? "로그인 상태: " + user.email : "로그인 상태: 로그아웃됨";
+    });
+  </script>
+</body>
+</html>

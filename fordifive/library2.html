@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>자료실2</title>
+
+<style>
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: sans-serif;
+  color: white;
+  background: linear-gradient(to right, rgba(248,248,247,0), rgb(17,17,16));
+}
+
+h1 {
+  text-align: center;
+  margin: 20px 0;
+}
+
+/* 전체 레이아웃 */
+.content {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 60px;
+  padding-left: 40px;
+  flex: 1;
+}
+
+/* 영상 */
+.video-container {
+  width: 30vw;
+  max-width: 500px;
+}
+
+.video-container video {
+  width: 100%;
+}
+
+/* 게시판 타이틀 */
+.board-title {
+  text-align: center;
+  font-size: 22px;
+  margin-bottom: 10px;
+}
+
+/* 카드 */
+.image-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card {
+  text-align: center;
+}
+
+/* 이미지 박스 */
+.image-box {
+  width: 180px;
+  height: 180px;
+  border: 2px dashed #aaa;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.image-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-box input {
+  display: none;
+}
+
+/* 제목 */
+.title {
+  margin-top: 8px;
+  width: 180px;
+  text-align: center;
+  padding: 5px;
+  border: none;
+  background: #222;
+  color: white;
+}
+.home-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 9999; /* 🔥 더 높게 */
+
+  padding: 10px 15px;
+  background: rgba(134, 133, 133, 0.7);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<h1>자료실2</h1>
+
+<button onclick="goHome()" class="home-btn">홈으로</button>
+
+<div class="content">
+
+  <!-- 🎬 영상 -->
+  <div class="video-container">
+    <video controls>
+      <source src="mp4/fordistudio.mp4" type="video/mp4">
+    </video>
+  </div>
+
+  <!-- 📦 게시판 -->
+  <div>
+
+    <div class="board-title">📌 게시판</div>
+
+    <div class="image-container">
+
+      <div class="card">
+        <div class="image-box" id="box1">
+          <input type="file" id="file1" accept="image/*">
+          <span onclick="document.getElementById('file1').click()">사진 추가</span>
+        </div>
+        <input class="title" placeholder="제목 입력">
+      </div>
+
+      <div class="card">
+        <div class="image-box" id="box2">
+          <input type="file" id="file2" accept="image/*">
+          <span onclick="document.getElementById('file2').click()">사진 추가</span>
+        </div>
+        <input class="title" placeholder="제목 입력">
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- 이미지 미리보기 -->
+<script>
+
+function setup(fileId, boxId) {
+  document.getElementById(fileId).addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      document.getElementById(boxId).innerHTML =
+        `<img src="${event.target.result}">`;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+setup("file1", "box1");
+setup("file2", "box2");
+</script>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "YOUR_REAL_KEY",
+  authDomain: "ffff-4f188.firebaseapp.com",
+  projectId: "ffff-4f188",
+  storageBucket: "ffff-4f188.firebasestorage.app",
+  messagingSenderId: "194297475368",
+  appId: "1:194297475368:web:84d0c6c50af6e3dbf1a01d"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
+const adminEmail = "Mr.cucumber5794@gmail.com";
+
+let authReady = false;
+
+/* 🔥 안정 로그인 구조 */
+auth.onAuthStateChanged((user) => {
+
+  console.log("AUTH:", user);
+
+  if (!authReady) {
+    authReady = true;
+    if (!user) return;
+  }
+
+  if (!user) {
+    location.replace("login.html");
+    return;
+  }
+
+  const isAdmin = (user.email === adminEmail);
+
+  applyPermission(isAdmin);
+
+});
+
+function applyPermission(isAdmin) {
+
+  if (!isAdmin) {
+
+    // 파일 업로드 차단
+    document.querySelectorAll('input[type="file"]').forEach(el => {
+      el.disabled = true;
+      el.style.display = "none";
+    });
+
+    // 제목 입력 차단
+    document.querySelectorAll('.title').forEach(el => {
+      el.disabled = true;
+    });
+
+    // 클릭 자체 차단
+    document.querySelectorAll('.image-box').forEach(el => {
+      el.style.pointerEvents = "none";
+      el.style.opacity = "0.6";
+    });
+  }
+
+}
+function goHome() {
+  location.href = "index.html";
+}
+</script>
+
+</body>
+</html>

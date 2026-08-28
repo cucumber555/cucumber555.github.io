@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>프로그램 소개</title>
+
+    <style>
+        body {
+            height: 100vh;
+            margin: 0;
+            background-image: linear-gradient(to right, #ff7e5f, #feb47b);
+            font-family: sans-serif;
+            color: rgb(15, 15, 15);
+            text-align: center;
+        }
+
+        .home-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 9999;
+
+            padding: 10px 15px;
+            background: rgba(163, 161, 161, 0.7);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .home-btn:hover {
+            background: rgba(0,0,0,0.9);
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>프로그램 소개</h1>
+    <button onclick="goHome()" class="home-btn"> 홈으로</button>
+
+    <p>(아직은 프로그램이 없습니다.) *로그인하시오</p>
+
+    <script>
+        function goHome() {
+            location.href = "index.html";
+        }
+    </script>
+
+</body>
+</html>

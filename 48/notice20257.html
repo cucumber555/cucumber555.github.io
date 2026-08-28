@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주요일정</title>
+    <style>
+        body {
+            margin: 10px auto;
+            background-color: #fff7e5;
+            font-family: sans-serif;
+        }
+
+        #middle {
+            display: flex;
+        }
+
+        #left {
+            flex: 0 0 28.5%;
+            background: #f6ed92;
+            padding: 10px;
+        }
+
+        #right {
+            flex: 0 0 71.5%;
+            background: #d9f692;
+            padding: 10px;
+        }
+
+        #top {
+            background: #dcf9fe;
+            padding: 10px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;     /* 가로 가운데 정렬 */
+            align-items: center;         /* 세로 가운데 정렬 */
+            height: 40px;                /* ⭐ 높이 지정 필수 */
+            }
+
+        #bottom {
+            background: #f6c992;
+            padding: 10px;
+            font-weight: bold;
+            display: flex;
+            justify-content: center;     /* 가로 가운데 정렬 */
+            align-items: center;         /* 세로 가운데 정렬 */
+            height: 40px;  /* ⭐ 원하는 높이로 조정 */
+        }
+
+        /* 왼쪽 테이블 스타일 */
+        #left table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        /* 왼쪽 테이블 셀 가운데 정렬 */
+        #left td {
+            border: 1px solid #999;
+            padding: 8px;
+            text-align: center;
+            height: 34px;  /* ⭐ 원하는 높이로 조정 */
+        }
+
+        /* 왼쪽 table 헤더 셀 가운데 정렬 */
+        #left tr:first-child td {
+            background-color: #f5f787;
+            font-weight: bold;
+            text-align: center;         /* 가로 가운데 정렬 */
+            vertical-align: middle;     /* 세로 가운데 정렬 */
+            height: 28px;          /* 요일 셀만 높이 다르게 */
+        }
+
+        /* 오른쪽 달력 테이블 스타일 */
+        #right table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+            margin-right: 10px; /* ⭐ 우측 여백 확보 */
+        }
+
+        #right td {
+            border: 1px solid #888;
+            width: 14.28%; /* 100% ÷ 7칸 */
+            height: 120px;   /* 고정된 높이로 정사각형 비슷하게 */
+            vertical-align: top;
+        }
+
+        /* 오른쪽 달력 헤더 셀 (요일 부분) 가운데 정렬 */
+        #right tr:first-child td {
+            background-color: #b2e0a3;
+            font-weight: bold;
+            text-align: center;         /* 가로 가운데 정렬 */
+            vertical-align: middle;     /* 세로 가운데 정렬 */
+            height: 40px;          /* 요일 셀만 높이 다르게 */
+        }
+
+    </style>
+</head>
+<body>
+    <br>
+    <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="index.html">초기 화면으로 가기</a></p>
+
+    <div id="top"><CENTER>HCB</CENTER></div>
+    <div id="middle">
+        <div id="left"><CENTER><b>2025년 월별 주요 이벤트</b></CENTER><BR>
+            <CENTER>
+            <table>
+                <tr>
+                    <td>월별</td><td>이벤트</td>
+                </tr>
+                <tr>
+                    <td>3월</td><td>개학</td>
+                </tr>
+                <tr>
+                    <td>4월</td><td>학급회의</td>
+                </tr>
+                <tr>
+                    <td>5월</td><td>스포츠데이</td>
+                </tr>
+                <tr>
+                    <td>6월</td><td>5-3피구 완승</td>
+                </tr>
+                <tr>
+                    <td>7월</td><td>팥빙수 파티</td>
+                </tr>
+                <tr>
+                    <td>8월</td><td>뭘까요?</td>
+                </tr>
+                <tr>
+                    <td>9월</td><td>뭘까요?</td>
+                </tr>
+                <tr>
+                    <td>10월</td><td>뭘까요?</td>
+                </tr>
+                <tr>
+                    <td>11월</td><td>뭘까요?</td>
+                </tr>
+                <tr>
+                    <td>12월</td><td>뭘까요?</td>
+                </tr>
+                <tr>
+                    <td>1월</td><td>뭘까요?</td>
+                </tr>
+                <tr>
+                    <td>2월</td><td>뭘까요?</td>
+                </tr>
+            </table>
+            </CENTER>
+        </div>
+        <div id="right"><CENTER><b>7월 학급 일정</b></CENTER><BR>
+            <table>
+                <tr>
+                    <td>일</td><td>월</td><td>화</td><td>수</td><td>목</td><td>금</td><td>토</td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td>1</td>
+                    <td>2<br>영등위 강사 수업</td>
+                    <td>3<br>피구</td>
+                    <td>4<br>받아쓰기</td>
+                    <td>5</td>
+                </tr>
+                <tr>
+                    <td>6</td>
+                    <td>7</td>
+                    <td>8</td>
+                    <td>9</td>
+                    <td>10<br>팥빙수 파티</td>
+                    <td>11<br>받아쓰기</td>
+                    <td>12</td>
+                </tr>
+                <tr>
+                    <td>13</td>
+                    <td>14<br>영어단어 시험</td>
+                    <td>15</td>
+                    <td>16</td>
+                    <td>17</td>
+                    <td>18<br>받아쓰기</td>
+                    <td>19</td>
+                </tr>
+                <tr>
+                    <td>20</td>
+                    <td>21<br>영어단어 시험</td>
+                    <td>22</td>
+                    <td>23<br></td>
+                    <td>24</td>
+                    <td>25<br>받아쓰기</td>
+                    <td>26</td>
+                </tr>
+                <tr>
+                    <td>27</td>
+                    <td>28<br>영어단어 시험</td>
+                    <td>29</td>
+                    <td>30</td>
+                    <td>31<br>*7월 중간에 방학식*</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div id="bottom">
+        <CENTER>
+            Created by <a href="mailto:mr.cucumber5794@gmail.com" style="color: black; text-decoration: none; font-style: italic;">Ian</a>
+        </CENTER>
+    </div>
+
+</body>
+</html>

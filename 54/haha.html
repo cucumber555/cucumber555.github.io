@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>haha 모음 | 김밥반</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Noto Sans KR", Arial, sans-serif;
+            color: #26342a;
+            background: #f5f8f3;
+        }
+
+
+        /* 상단 연두색 선 */
+
+        .top-line {
+            height: 5px;
+            background: #69a83f;
+        }
+
+
+        /* 헤더 */
+
+        header {
+            background: white;
+            border-bottom: 1px solid #dfe7dc;
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: auto;
+            padding: 28px 35px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo-area {
+            text-decoration: none;
+            color: #18351f;
+        }
+
+        .logo {
+            font-size: 21px;
+            font-weight: 900;
+        }
+
+        .subtitle {
+            margin-top: 5px;
+            color: #7a857c;
+            font-size: 10px;
+            letter-spacing: 2px;
+        }
+
+        .back-button {
+            padding: 9px 18px;
+
+            border: 1px solid #d5e2d1;
+
+            background: white;
+            color: #3e7438;
+
+            text-decoration: none;
+
+            font-size: 12px;
+            font-weight: 700;
+
+            transition: 0.2s;
+        }
+
+        .back-button:hover {
+            background: #eef7e9;
+        }
+
+
+        /* 히어로 */
+
+        .hero {
+            background:
+                linear-gradient(
+                    110deg,
+                    #dcefd3,
+                    #f7faf5
+                );
+
+            border-bottom: 1px solid #dce6d8;
+        }
+
+        .hero-inner {
+            max-width: 1200px;
+            margin: auto;
+            padding: 70px 35px;
+        }
+
+        .hero-kicker {
+            color: #4e9236;
+
+            font-size: 11px;
+            font-weight: 900;
+
+            letter-spacing: 3px;
+        }
+
+        .hero h1 {
+            margin: 15px 0 12px;
+
+            color: #18351f;
+
+            font-size: 48px;
+
+            letter-spacing: -2px;
+        }
+
+        .hero p {
+            margin: 0;
+
+            color: #68756c;
+
+            font-size: 14px;
+
+            line-height: 1.8;
+        }
+
+
+        /* 메인 */
+
+        main {
+            max-width: 1200px;
+
+            margin: auto;
+
+            padding: 50px 35px 80px;
+        }
+
+        .section-header {
+            margin-bottom: 25px;
+        }
+
+        .section-title {
+            color: #18351f;
+
+            font-size: 22px;
+
+            font-weight: 900;
+        }
+
+        .section-description {
+            margin-top: 7px;
+
+            color: #7a857c;
+
+            font-size: 12px;
+        }
+
+
+        /* 게임 카드 */
+
+        .game-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, 1fr);
+
+            gap: 20px;
+        }
+
+        .game-card {
+            position: relative;
+
+            min-height: 220px;
+
+            padding: 30px;
+
+            background: white;
+
+            border: 1px solid #dfe7dc;
+
+            text-decoration: none;
+
+            color: #26342a;
+
+            box-shadow:
+                0 8px 25px rgba(30, 60, 30, 0.05);
+
+            transition: 0.25s;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+
+            border-color: #91bd80;
+
+            box-shadow:
+                0 15px 35px rgba(30, 60, 30, 0.10);
+        }
+
+        .game-number {
+            color: #70a953;
+
+            font-size: 11px;
+
+            font-weight: 900;
+
+            letter-spacing: 2px;
+        }
+
+        .game-title {
+            margin-top: 25px;
+
+            color: #245f2c;
+
+            font-size: 24px;
+
+            font-weight: 900;
+        }
+
+        .game-description {
+            margin-top: 12px;
+
+            max-width: 400px;
+
+            color: #68756c;
+
+            font-size: 13px;
+
+            line-height: 1.8;
+        }
+
+        .game-link {
+            position: absolute;
+
+            right: 25px;
+            bottom: 22px;
+
+            color: #4e9236;
+
+            font-size: 12px;
+
+            font-weight: 800;
+        }
+
+
+        /* 안내 박스 */
+
+        .notice {
+            margin-top: 30px;
+
+            padding: 20px 25px;
+
+            background: #edf6e9;
+
+            border-left: 4px solid #69a83f;
+
+            color: #536456;
+
+            font-size: 12px;
+
+            line-height: 1.8;
+        }
+
+
+        /* 푸터 */
+
+        footer {
+            background: #005522;
+
+            color: white;
+        }
+
+        .footer-inner {
+            max-width: 1200px;
+
+            margin: auto;
+
+            padding: 30px 35px;
+
+            display: flex;
+
+            justify-content: space-between;
+        }
+
+        .footer-title {
+            font-size: 13px;
+
+            font-weight: 800;
+        }
+
+        .footer-text {
+            margin-top: 7px;
+
+            color: #c8dfcd;
+
+            font-size: 10px;
+        }
+
+
+        /* 모바일 */
+
+        @media (max-width: 700px) {
+
+            .header-inner {
+                padding: 22px 20px;
+            }
+
+            .hero-inner {
+                padding: 50px 20px;
+            }
+
+            .hero h1 {
+                font-size: 38px;
+            }
+
+            main {
+                padding: 35px 20px 60px;
+            }
+
+            .game-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-inner {
+                padding: 25px 20px;
+
+                flex-direction: column;
+
+                gap: 20px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- 상단 -->
+
+<div class="top-line"></div>
+
+
+<!-- 헤더 -->
+
+<header>
+
+    <div class="header-inner">
+
+
+        <a href="secret.html" class="logo-area">
+
+            <div class="logo">
+                김밥반
+            </div>
+
+            <div class="subtitle">
+                5·4 CLASS SECRET ARCHIVE
+            </div>
+
+        </a>
+
+
+        <a href="secret.html" class="back-button">
+            비밀 페이지
+        </a>
+
+
+    </div>
+
+</header>
+
+
+<!-- 제목 -->
+
+<section class="hero">
+
+    <div class="hero-inner">
+
+        <div class="hero-kicker">
+            SPECIAL MENU · 01
+        </div>
+
+        <h1>
+            haha 모음
+        </h1>
+
+        <p>
+            hahahaha
+        </p>
+
+    </div>
+
+</section>
+
+
+<!-- 게임 목록 -->
+
+<main>
+
+
+    <div class="section-header">
+
+        <div class="section-title">
+            HAHA ARCHIVE
+        </div>
+
+        <div class="section-description">
+            원하는 콘텐츠를 선택하면 새 탭에서 열립니다.
+        </div>
+
+    </div>
+
+
+    <div class="game-grid">
+
+
+        <!-- 01 -->
+
+        <a
+            href="https://ko.wikipedia.org/wiki/%EA%B5%AC%EA%B8%80%EC%9D%98_%EC%9D%B4%EC%8A%A4%ED%84%B0_%EC%97%90%EA%B7%B8_%EB%AA%A9%EB%A1%9D"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="game-card"
+        >
+
+            <div class="game-number">
+                01
+            </div>
+
+            <div class="game-title">
+                Google 이스터에그
+            </div>
+
+            <div class="game-description">
+                Google에 숨겨진 다양한 이스터에그를
+                찾아볼 수 있습니다.
+            </div>
+
+            <div class="game-link">
+                둘러보기 →
+            </div>
+
+        </a>
+
+
+        <!-- 02 -->
+
+        <a
+            href="https://geulgu.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="game-card"
+        >
+
+            <div class="game-number">
+                02
+            </div>
+
+            <div class="game-title">
+                글구
+            </div>
+
+            <div class="game-description">
+                다양한 Google 이스터에그와
+                재미있는 웹 콘텐츠를 만나보세요.
+            </div>
+
+            <div class="game-link">
+                바로가기 →
+            </div>
+
+        </a>
+
+
+        <!-- 03 -->
+
+        <a
+            href="https://kkutu.kr/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="game-card"
+        >
+
+            <div class="game-number">
+                03
+            </div>
+
+            <div class="game-title">
+                끄투
+            </div>
+
+            <div class="game-description">
+                글자로 즐기는 온라인 끝말잇기 게임입니다.
+            </div>
+
+            <div class="game-link">
+                게임 시작 →
+            </div>
+
+        </a>
+
+
+        <!-- 04 -->
+
+        <a
+            href="https://neal.fun/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="game-card"
+        >
+
+            <div class="game-number">
+                04
+            </div>
+
+            <div class="game-title">
+                Neal.fun
+            </div>
+
+            <div class="game-description">
+                여러 가지 재미있는 웹 게임과
+                인터랙티브 실험을 즐겨보세요.
+            </div>
+
+            <div class="game-link">
+                둘러보기 →
+            </div>
+
+        </a>
+
+
+        <!-- 05 -->
+
+        <a
+            href="https://m.blog.naver.com/absconder/222079210477"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="game-card"
+        >
+
+            <div class="game-number">
+                05
+            </div>
+
+            <div class="game-title">
+                모음
+            </div>
+
+            <div class="game-description">
+                다양한 게임과 재미있는 웹 콘텐츠를
+                모아 놓은 페이지입니다.
+            </div>
+
+            <div class="game-link">
+                보러가기 →
+            </div>
+
+        </a>
+
+
+        <!-- 06 -->
+
+        <a
+            href="https://designpostscripts.tistory.com/15"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="game-card"
+        >
+
+            <div class="game-number">
+                06
+            </div>
+
+            <div class="game-title">
+                모음 2
+            </div>
+
+            <div class="game-description">
+                다양한 재미있는 사이트와
+                콘텐츠를 둘러보세요.
+            </div>
+
+            <div class="game-link">
+                보러가기 →
+            </div>
+
+        </a>
+
+
+        <!-- 07 -->
+
+        <a
+            href="https://kr.akinator.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="game-card"
+        >
+
+            <div class="game-number">
+                07
+            </div>
+
+            <div class="game-title">
+                인물 맞추기
+            </div>
+
+            <div class="game-description">
+                질문에 답하면서 생각한 인물을
+                맞혀보세요.
+            </div>
+
+            <div class="game-link">
+                게임 시작 →
+            </div>
+
+        </a>
+
+
+        <!-- 08 -->
+
+        <a
+            href="https://www.arealme.com/coreball/ko/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="game-card"
+        >
+
+            <div class="game-number">
+                08
+            </div>
+
+            <div class="game-title">
+                코어볼
+            </div>
+
+            <div class="game-description">
+                회전하는 코어에 공을 붙이며
+                레벨을 클리어하세요.
+            </div>
+
+            <div class="game-link">
+                게임 시작 →
+            </div>
+
+        </a>
+
+
+        <!-- 09 -->
+
+        <a
+            href="https://www.myinstants.com/ko/instant/meme-mp3-37545/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="game-card"
+        >
+
+            <div class="game-number">
+                09
+            </div>
+
+            <div class="game-title">
+                소리 사이트
+            </div>
+
+            <div class="game-description">
+                다양한 재미있는 소리와 사운드를
+                찾아볼 수 있습니다.
+            </div>
+
+            <div class="game-link">
+                들어가기 →
+            </div>
+
+        </a>
+
+
+        <!-- 10 -->
+
+        <a
+            href="https://poki.com/kr"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="game-card"
+        >
+
+            <div class="game-number">
+                10
+            </div>
+
+            <div class="game-title">
+                포크
+            </div>
+
+            <div class="game-description">
+                다양한 무료 온라인 haha를
+                즐겨보세요.
+            </div>
+
+            <div class="game-link">
+                게임 찾기 →
+            </div>
+
+        </a>
+
+
+        <!-- 11 -->
+
+        <a
+            href="https://mathsurvivorbh.netlify.app/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="game-card"
+        >
+
+            <div class="game-number">
+                11
+            </div>
+
+            <div class="game-title">
+                수학 서바이버
+            </div>
+
+            <div class="game-description">
+                수학 문제를 풀며 용사를 성장시키는
+                수학 게임입니다.
+            </div>
+
+            <div class="game-link">
+                게임 시작 →
+            </div>
+
+        </a>
+
+
+        <!-- 12 -->
+
+        <a
+            href="https://www.hancomtaja.com/ko/overview"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="game-card"
+        >
+
+            <div class="game-number">
+                12
+            </div>
+
+            <div class="game-title">
+                한컴타자
+            </div>
+
+            <div class="game-description">
+                타자 연습부터 게임과 퀴즈까지
+                다양한 타자 콘텐츠를 즐겨보세요.
+            </div>
+
+            <div class="game-link">
+                시작하기 →
+            </div>
+
+        </a>
+
+
+    </div>
+
+
+    <!-- 안내 -->
+
+    <div class="notice">
+
+        이 페이지의 외부 콘텐츠는 김밥반 홈페이지에서
+        직접 운영하는 콘텐츠가 아닙니다.
+        각 사이트의 이용 규칙을 지켜 이용하세요.
+
+    </div>
+
+
+</main>
+
+
+<!-- 푸터 -->
+
+<footer>
+
+    <div class="footer-inner">
+
+        <div>
+
+            <div class="footer-title">
+                나성초등학교 5학년 4반 김밥반
+            </div>
+
+            <div class="footer-text">
+                5·4 CLASS SECRET ARCHIVE
+            </div>
+
+        </div>
+
+    </div>
+
+</footer>
+
+
+</body>
+
+</html>

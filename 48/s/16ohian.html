@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>친구소개</title>
+    <style>
+      /* 이미지 크기 조정 */
+      img {
+        width: 100%;           /* 화면 너비에 맞추기 */
+        height: 100vh;         /* 화면 높이에 맞추기 */
+        object-fit: cover;     /* 이미지 비율을 유지하면서 화면을 꽉 채우기 */
+        cursor: pointer;
+      }
+    </style>
+    
+    </head>
+    <body>
+    <br>
+    <p><a href="../aboutus.html">우리 학급 안내 페이지로 돌아가기</a>
+        
+    <center>
+
+  <!-- 클릭할 이미지 -->
+  <img id="image" src="simg/16.jpg" alt="클릭전이미지">
+
+  <script>
+    const img = document.getElementById("image");
+
+    // 클릭할 때 이미지를 변경
+    img.addEventListener("mousedown", function() {
+      img.src = "simg/16click.jpg";  // 이미지 변경
+    });
+
+    // 클릭을 떼면 페이지 이동
+    img.addEventListener("mouseup", function() {
+      // 페이지 이동
+      window.location.href = "16ohian2.html";  // 이동할 페이지 URL
+    });
+
+    // 마우스가 이미지 밖으로 나가면 클릭 취소
+    img.addEventListener("mouseleave", function() {
+      // 마우스가 이미지 밖으로 나가면 이미지 원래대로 복귀
+      img.src = "simg/16.jpg";
+    });
+  </script>
+
+</center>
+</body>
+</html>

@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>인포학당 | INPO ACADEMY</title>
+
+  <style>
+    :root {
+      --inpo-blue: #164A8A;
+      --white: #FFFFFF;
+      --light-blue: #EEF5FC;
+      --dark: #16324F;
+      --gray: #64748B;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Noto Sans KR", Arial, sans-serif;
+      color: var(--dark);
+      background: #fff;
+      line-height: 1.7;
+    }
+
+    /* Header */
+    header {
+      background: var(--white);
+      border-bottom: 1px solid #e5e7eb;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-inner {
+      max-width: 1200px;
+      margin: auto;
+      height: 82px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--inpo-blue);
+      text-decoration: none;
+    }
+
+    .logo-mark {
+      width: 46px;
+      height: 46px;
+      border: 3px solid var(--inpo-blue);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .logo-text strong {
+      display: block;
+      font-size: 21px;
+      letter-spacing: -1px;
+    }
+
+    .logo-text span {
+      display: block;
+      font-size: 10px;
+      letter-spacing: 2px;
+      color: var(--gray);
+    }
+
+    nav {
+      display: flex;
+      gap: 30px;
+    }
+
+    nav a {
+      color: var(--dark);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    nav a:hover {
+      color: var(--inpo-blue);
+    }
+
+    /* Hero */
+    .hero {
+      background:
+        linear-gradient(
+          135deg,
+          rgba(22, 74, 138, 0.98),
+          rgba(22, 74, 138, 0.88)
+        );
+      color: white;
+      padding: 105px 24px 110px;
+    }
+
+    .hero-inner {
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .hero small {
+      letter-spacing: 4px;
+      opacity: 0.8;
+    }
+
+    .hero h1 {
+      font-size: clamp(42px, 7vw, 78px);
+      line-height: 1.15;
+      margin: 20px 0;
+      letter-spacing: -4px;
+    }
+
+    .hero p {
+      font-size: 19px;
+      max-width: 650px;
+      opacity: 0.92;
+    }
+
+    .hero-buttons {
+      margin-top: 35px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 13px 24px;
+      border-radius: 30px;
+      text-decoration: none;
+      font-weight: 700;
+    }
+
+    .btn-white {
+      background: white;
+      color: var(--inpo-blue);
+    }
+
+    .btn-outline {
+      border: 1px solid rgba(255,255,255,.7);
+      color: white;
+    }
+
+    /* Sections */
+    section {
+      padding: 90px 24px;
+    }
+
+    .section-inner {
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .section-title {
+      margin-bottom: 42px;
+    }
+
+    .section-title small {
+      color: var(--inpo-blue);
+      font-weight: 800;
+      letter-spacing: 3px;
+    }
+
+    .section-title h2 {
+      font-size: 38px;
+      margin-top: 8px;
+      letter-spacing: -2px;
+    }
+
+    /* Philosophy */
+    .philosophy {
+      background: var(--light-blue);
+      text-align: center;
+    }
+
+    .motto {
+      max-width: 850px;
+      margin: auto;
+      background: white;
+      padding: 55px 35px;
+      border-radius: 20px;
+      box-shadow: 0 10px 35px rgba(0,0,0,.06);
+    }
+
+    .motto .hanja {
+      color: var(--inpo-blue);
+      font-size: 32px;
+      font-weight: 800;
+    }
+
+    .motto h3 {
+      font-size: 27px;
+      margin: 18px 0;
+    }
+
+    .motto p {
+      color: var(--gray);
+    }
+
+    .bible {
+      margin-top: 25px;
+      font-weight: 700;
+      color: var(--inpo-blue);
+    }
+
+    /* Schools */
+    .school-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 18px;
+    }
+
+    .school-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 27px;
+      transition: .2s;
+    }
+
+    .school-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--inpo-blue);
+      box-shadow: 0 10px 25px rgba(22,74,138,.10);
+    }
+
+    .school-card .type {
+      color: var(--inpo-blue);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    .school-card h3 {
+      margin: 7px 0;
+      font-size: 20px;
+    }
+
+    .school-card p {
+      color: var(--gray);
+      font-size: 14px;
+    }
+
+    /* Symbols */
+    .symbols {
+      background: #f8fafc;
+    }
+
+    .symbol-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+    }
+
+    .symbol {
+      background: white;
+      border-radius: 16px;
+      padding: 30px 20px;
+      text-align: center;
+      border: 1px solid #e5e7eb;
+    }
+
+    .symbol .icon {
+      font-size: 42px;
+      margin-bottom: 12px;
+    }
+
+    .symbol h3 {
+      color: var(--inpo-blue);
+    }
+
+    .symbol p {
+      color: var(--gray);
+      font-size: 14px;
+    }
+
+    /* Universities */
+    .universities {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .univ {
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid #e5e7eb;
+    }
+
+    .univ-top {
+      background: var(--inpo-blue);
+      color: white;
+      padding: 30px;
+    }
+
+    .univ-top span {
+      font-size: 12px;
+      letter-spacing: 2px;
+      opacity: .8;
+    }
+
+    .univ-top h3 {
+      font-size: 28px;
+      margin-top: 5px;
+    }
+
+    .univ-body {
+      padding: 25px;
+    }
+
+    .univ-body p {
+      color: var(--gray);
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    /* Global */
+    .global {
+      background: var(--inpo-blue);
+      color: white;
+    }
+
+    .global h2 {
+      margin-bottom: 30px;
+    }
+
+    .global-campus {
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.2);
+      padding: 25px;
+      border-radius: 15px;
+      max-width: 500px;
+    }
+
+    /* Footer */
+    footer {
+      background: #0d2848;
+      color: white;
+      padding: 45px 24px;
+    }
+
+    .footer-inner {
+      max-width: 1200px;
+      margin: auto;
+      display: flex;
+      justify-content: space-between;
+      gap: 30px;
+      flex-wrap: wrap;
+    }
+
+    footer h3 {
+      margin-bottom: 8px;
+    }
+
+    footer p {
+      font-size: 13px;
+      opacity: .7;
+    }
+
+    .copyright {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255,255,255,.15);
+      font-size: 12px;
+      opacity: .6;
+    }
+
+    @media (max-width: 800px) {
+      nav {
+        display: none;
+      }
+
+      .symbol-grid,
+      .universities {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .symbol-grid,
+      .universities {
+        grid-template-columns: 1fr;
+      }
+
+      .hero h1 {
+        letter-spacing: -2px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-inner">
+
+      <a href="#" class="logo">
+        <div class="logo-mark">人抱</div>
+        <div class="logo-text">
+          <strong>인포학당</strong>
+          <span>INPO ACADEMY</span>
+        </div>
+      </a>
+
+      <nav>
+        <a href="#about">인포학당</a>
+        <a href="#schools">교육기관</a>
+        <a href="#universities">대학교</a>
+        <a href="#symbols">상징</a>
+        <a href="#global">글로벌</a>
+      </nav>
+
+    </div>
+  </header>
+
+
+  <!-- Hero -->
+  <main>
+
+    <section class="hero">
+      <div class="hero-inner">
+
+        <small>人抱學堂 · INPO ACADEMY</small>
+
+        <h1>
+          사람을 품고,<br>
+          미래를 열다.
+        </h1>
+
+        <p>
+          인포학당은 사람을 소중히 여기며
+          배움과 섬김을 통해 세상을 밝히는
+          기독교 교육공동체입니다.
+        </p>
+
+        <div class="hero-buttons">
+          <a href="#about" class="btn btn-white">인포학당 소개</a>
+          <a href="#schools" class="btn btn-outline">교육기관 보기</a>
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- Philosophy -->
+    <section id="about" class="philosophy">
+
+      <div class="section-inner">
+
+        <div class="section-title">
+          <small>FOUNDATION</small>
+          <h2>건학이념과 교훈</h2>
+        </div>
+
+        <div class="motto">
+
+          <div class="hanja">人抱</div>
+
+          <h3>
+            사람을 품고, 세상을 섬기며,<br>
+            하나님을 영화롭게 한다.
+          </h3>
+
+          <p>
+            인포(人抱)는 '사람을 품다'라는 뜻을 담고 있습니다.
+            인포학당은 모든 사람이 존중받고 성장할 수 있는
+            교육공동체를 지향합니다.
+          </p>
+
+          <div class="bible">
+            “너희는 세상의 빛이라.”<br>
+            <span>— 마태복음 5장 14절</span>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- Schools -->
+    <section id="schools">
+
+      <div class="section-inner">
+
+        <div class="section-title">
+          <small>EDUCATION</small>
+          <h2>인포학당 교육기관</h2>
+        </div>
+
+        <div class="school-grid">
+
+          <a href="inpo_university_homepage.html" class="school-card">
+          <div class="type">UNIVERSITY</div>
+          <h3>인포대학교</h3>
+          <p>INPO UNIVERSITY</p>
+          </a>
+
+          <div class="school-card">
+            <div class="type">UNIVERSITY</div>
+            <h3>포인대학교</h3>
+            <p>FOIN UNIV.</p>
+          </div>
+
+          <div class="school-card">
+            <div class="type">UNIVERSITY</div>
+            <h3>폴릭대학교</h3>
+            <p>POLICK UNIV.</p>
+          </div>
+
+          <div class="school-card">
+            <div class="type">HIGH SCHOOL</div>
+            <h3>인포대학교부설외국어고등학교</h3>
+            <p>Foreign Language Education</p>
+          </div>
+
+          <div class="school-card">
+            <div class="type">HIGH SCHOOL</div>
+            <h3>포인고등학교</h3>
+            <p>General High School</p>
+          </div>
+
+          <div class="school-card">
+            <div class="type">SCIENCE</div>
+            <h3>폴릭과학고등학교</h3>
+            <p>Science High School</p>
+          </div>
+
+          <div class="school-card">
+            <div class="type">ARTS</div>
+            <h3>포인대학교부설포인예술고등학교</h3>
+            <p>Arts High School</p>
+          </div>
+
+          <div class="school-card">
+            <div class="type">LAW</div>
+            <h3>포인대학교부설법학전문고등학교</h3>
+            <p>Law-focused High School</p>
+          </div>
+
+          <div class="school-card">
+            <div class="type">GIFTED EDUCATION</div>
+            <h3>폴릭과학예술영재학교</h3>
+            <p>Science & Arts Gifted School</p>
+          </div>
+
+          <div class="school-card">
+            <div class="type">MIDDLE SCHOOL</div>
+            <h3>인포국제중학교</h3>
+            <p>International Middle School</p>
+          </div>
+
+          <div class="school-card">
+            <div class="type">MIDDLE SCHOOL</div>
+            <h3>포인고등학교부설경인중학교</h3>
+            <p>Middle School</p>
+          </div>
+
+          <div class="school-card">
+            <div class="type">ELEMENTARY SCHOOL</div>
+            <h3>포인고등학교부설경인초등학교</h3>
+            <p>Elementary School</p>
+          </div>
+
+          <div class="school-card">
+            <div class="type">EARLY CHILDHOOD</div>
+            <h3>포인고등학교부설경인유치원/어린이집</h3>
+            <p>Early Childhood Education</p>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- Symbols -->
+    <section id="symbols" class="symbols">
+
+      <div class="section-inner">
+
+        <div class="section-title">
+          <small>IDENTITY</small>
+          <h2>인포학당의 상징</h2>
+        </div>
+
+        <div class="symbol-grid">
+
+          <div class="symbol">
+            <div class="icon">🔵</div>
+            <h3>인포 블루</h3>
+            <p>#164A8A</p>
+          </div>
+
+          <div class="symbol">
+            <div class="icon">🌳</div>
+            <h3>느티나무</h3>
+            <p>인포학당의 교목</p>
+          </div>
+
+          <div class="symbol">
+            <div class="icon">💠</div>
+            <h3>수국</h3>
+            <p>인포학당의 교화</p>
+          </div>
+
+          <div class="symbol">
+            <div class="icon">🐦</div>
+            <h3>학</h3>
+            <p>인포학당의 공통 상징동물</p>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- Universities -->
+    <section id="universities">
+
+      <div class="section-inner">
+
+        <div class="section-title">
+          <small>UNIVERSITIES</small>
+          <h2>인포학당의 대학교</h2>
+        </div>
+
+        <div class="universities">
+
+          <article class="univ">
+
+            <div class="univ-top">
+              <span>INPO UNIVERSITY</span>
+              <h3>인포대학교</h3>
+            </div>
+
+            <div class="univ-body">
+              <p>교목 · 느티나무</p>
+              <p>교화 · 수국</p>
+              <p>상징동물 · 학</p>
+              <p>색상 · 인포블루 + 화이트</p>
+            </div>
+
+          </article>
+
+
+          <article class="univ">
+
+            <div class="univ-top">
+              <span>FOIN UNIVERSITY</span>
+              <h3>포인대학교</h3>
+            </div>
+
+            <div class="univ-body">
+              <p>교목 · 버드나무</p>
+              <p>교화 · 하얀 튤립</p>
+              <p>상징동물 · 학</p>
+              <p>색상 · 인포블루 + 포인블루 + 화이트</p>
+            </div>
+
+          </article>
+
+
+          <article class="univ">
+
+            <div class="univ-top">
+              <span>POLICK UNIVERSITY</span>
+              <h3>폴릭대학교</h3>
+            </div>
+
+            <div class="univ-body">
+              <p>교목 · 조팝나무</p>
+              <p>교화 · 백합</p>
+              <p>상징동물 · 학</p>
+              <p>색상 · 인포블루 + 폴릭블루 + 화이트</p>
+            </div>
+
+          </article>
+
+        </div>
+
+      </div>
+    </section>
+
+
+    <!-- Global -->
+    <section id="global" class="global">
+
+      <div class="section-inner">
+
+        <div class="section-title">
+          <small>GLOBAL CAMPUS</small>
+          <h2>세계로 나아가는 인포학당</h2>
+        </div>
+
+        <div class="global-campus">
+          <h3>🇺🇸 INPO · FOIN · POLICK JOINT GLOBAL CAMPUS</h3>
+          <p>
+            인포·포인·폴릭 공동 글로벌 캠퍼스. 
+            미국 텍사스주 오스틴에 위치한 세 대학의 공동 글로벌 캠퍼스입니다.
+          </p>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+
+  <!-- Footer -->
+  <footer>
+
+    <div class="footer-inner">
+
+      <div>
+        <h3>인포학당 人抱學堂</h3>
+        <p>INPO ACADEMY</p>
+        <p>사람을 품고, 세상을 섬기며, 하나님을 영화롭게 한다.</p>
+      </div>
+
+      <div>
+        <p>상징색 · 인포 블루 #164A8A</p>
+        <p>교목 · 느티나무　교화 · 수국　상징동물 · 학</p>
+      </div>
+
+    </div>
+
+    <div class="section-inner copyright">
+      © INPO ACADEMY. All fictional world-building content.
+    </div>
+
+  </footer>
+
+</body>
+</html>

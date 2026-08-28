@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>학급 일정 | 나성초등학교 5학년 4반</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Noto Sans KR", Arial, sans-serif;
+            color: #26342a;
+            background: #f6f8f5;
+        }
+
+        /* 상단 */
+
+        .top-line {
+            height: 5px;
+            background: #69a83f;
+        }
+
+        /* 헤더 */
+
+        header {
+            height: 100px;
+            background: white;
+            border-bottom: 1px solid #dfe7dc;
+        }
+
+        .header-inner {
+            max-width: 1280px;
+            height: 100%;
+            margin: auto;
+            padding: 0 40px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* 로고 */
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .logo-mark {
+            width: 58px;
+            height: 58px;
+
+            border: 3px solid #5c9d38;
+            border-radius: 50%;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            text-align: center;
+
+            color: #438528;
+            font-size: 13px;
+            font-weight: 900;
+            line-height: 1.2;
+        }
+
+        .logo-title {
+            font-size: 21px;
+            font-weight: 900;
+            color: #18351f;
+        }
+
+        .logo-subtitle {
+            margin-top: 4px;
+
+            font-size: 11px;
+            letter-spacing: 1px;
+
+            color: #7b857c;
+        }
+
+        /* 메뉴 */
+
+        nav {
+            display: flex;
+            gap: 42px;
+        }
+
+        nav a {
+            position: relative;
+
+            padding: 38px 0;
+
+            color: #2c382f;
+            text-decoration: none;
+
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        nav a:hover {
+            color: #4f9631;
+        }
+
+        nav a.active {
+            color: #27802d;
+        }
+
+        nav a.active::after {
+            content: "";
+
+            position: absolute;
+
+            left: 0;
+            bottom: 0;
+
+            width: 100%;
+            height: 3px;
+
+            background: #27802d;
+        }
+
+        /* 페이지 제목 */
+
+        .page-title {
+            background:
+                linear-gradient(
+                    110deg,
+                    #e8f3e2,
+                    #f8faf7
+                );
+
+            border-bottom: 1px solid #dce6d8;
+        }
+
+        .page-title-inner {
+            max-width: 1280px;
+
+            margin: auto;
+
+            padding: 55px 40px 50px;
+        }
+
+        .page-kicker {
+            color: #5c9d38;
+
+            font-size: 11px;
+            font-weight: 900;
+
+            letter-spacing: 2px;
+        }
+
+        .page-title h1 {
+            margin: 12px 0 10px;
+
+            font-size: 42px;
+
+            letter-spacing: -2px;
+
+            color: #18351f;
+        }
+
+        .page-title p {
+            margin: 0;
+
+            color: #68756c;
+
+            font-size: 14px;
+        }
+
+        /* 본문 */
+
+        main {
+            max-width: 1280px;
+
+            margin: auto;
+
+            padding: 50px 40px 80px;
+        }
+
+        /* 달력 상단 */
+
+        .calendar-header {
+            display: flex;
+
+            justify-content: space-between;
+            align-items: end;
+
+            margin-bottom: 20px;
+        }
+
+        .section-kicker {
+            color: #5c9d38;
+
+            font-size: 11px;
+            font-weight: 900;
+
+            letter-spacing: 1.5px;
+        }
+
+        .section-title {
+            margin-top: 7px;
+
+            font-size: 24px;
+            font-weight: 900;
+        }
+
+        .section-description {
+            color: #7a847c;
+
+            font-size: 12px;
+        }
+
+        /* 월 이동 */
+
+        .calendar-control {
+            display: flex;
+            gap: 8px;
+
+            margin-bottom: 15px;
+        }
+
+        .calendar-control button {
+            border: 1px solid #d8e3d5;
+
+            background: white;
+
+            color: #356b35;
+
+            padding: 9px 15px;
+
+            font-size: 12px;
+            font-weight: 700;
+
+            cursor: pointer;
+
+            transition: 0.2s;
+        }
+
+        .calendar-control button:hover {
+            background: #eef7e9;
+
+            border-color: #a8c99b;
+        }
+
+        /* 달력 */
+
+        .calendar {
+            background: white;
+
+            border: 1px solid #dfe7dc;
+
+            box-shadow: 0 8px 25px rgba(30, 60, 30, 0.05);
+
+            overflow: hidden;
+        }
+
+        .calendar-week {
+            display: grid;
+
+            grid-template-columns: repeat(7, 1fr);
+
+            background: #145a2a;
+
+            color: white;
+        }
+
+        .weekday {
+            padding: 14px;
+
+            text-align: center;
+
+            font-size: 12px;
+            font-weight: 900;
+        }
+
+        .calendar-grid {
+            display: grid;
+
+            grid-template-columns: repeat(7, 1fr);
+        }
+
+        .day {
+            min-height: 125px;
+
+            padding: 12px;
+
+            border-right: 1px solid #e7ece5;
+            border-bottom: 1px solid #e7ece5;
+
+            background: white;
+        }
+
+        .day:nth-child(7n) {
+            border-right: none;
+        }
+
+        .day-number {
+            margin-bottom: 8px;
+
+            font-size: 13px;
+            font-weight: 900;
+
+            color: #39463c;
+        }
+
+        .empty {
+            background: #fafcf9;
+        }
+
+        /* 오늘 */
+
+        .today {
+            background: #f2faed;
+
+            box-shadow:
+                inset 0 0 0 2px #72ad52;
+        }
+
+        .today .day-number {
+            display: inline-flex;
+
+            width: 28px;
+            height: 28px;
+
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            background: #5d9e3d;
+
+            color: white;
+        }
+
+        /* 일정 */
+
+        .event {
+            display: block;
+
+            padding: 6px 7px;
+
+            margin-top: 5px;
+
+            border-left: 3px solid #69a83f;
+
+            background: #eef7e9;
+
+            color: #38642f;
+
+            font-size: 10px;
+
+            line-height: 1.5;
+        }
+
+        .holiday {
+            color: #b44949;
+        }
+
+        .holiday .day-number {
+            color: #b44949;
+        }
+
+        /* 일정 데이터 안내 */
+
+        .schedule-info {
+            margin-top: 30px;
+
+            padding: 22px 25px;
+
+            background: white;
+
+            border: 1px solid #dfe7dc;
+        }
+
+        .schedule-info-title {
+            margin-bottom: 12px;
+
+            color: #285c2d;
+
+            font-size: 15px;
+            font-weight: 900;
+        }
+
+        .schedule-info p {
+            margin: 5px 0;
+
+            color: #68756c;
+
+            font-size: 12px;
+
+            line-height: 1.8;
+        }
+
+        code {
+            padding: 2px 5px;
+
+            background: #eef3eb;
+
+            color: #356b35;
+
+            border-radius: 3px;
+        }
+
+        /* 푸터 */
+
+        footer {
+            background: #005522;
+
+            color: white;
+        }
+
+        .footer-inner {
+            max-width: 1280px;
+
+            margin: auto;
+
+            padding: 35px 40px;
+
+            display: flex;
+
+            justify-content: space-between;
+        }
+
+        .footer-title {
+            font-size: 14px;
+            font-weight: 800;
+        }
+
+        .footer-text {
+            margin-top: 8px;
+
+            color: #c8dfcd;
+
+            font-size: 11px;
+
+            line-height: 1.7;
+        }
+
+        .footer-links {
+            display: flex;
+
+            align-items: center;
+
+            gap: 25px;
+
+            font-size: 12px;
+        }
+
+        /* 모바일 */
+
+        @media (max-width: 850px) {
+
+            header {
+                height: auto;
+            }
+
+            .header-inner {
+                padding: 20px;
+
+                flex-direction: column;
+
+                gap: 20px;
+            }
+
+            nav {
+                gap: 20px;
+            }
+
+            nav a {
+                padding: 10px 0;
+            }
+
+            .page-title-inner {
+                padding: 40px 20px;
+            }
+
+            .page-title h1 {
+                font-size: 34px;
+            }
+
+            main {
+                padding: 35px 20px 60px;
+            }
+
+            .calendar {
+                overflow-x: auto;
+            }
+
+            .calendar-week,
+            .calendar-grid {
+                min-width: 700px;
+            }
+
+            .calendar-header {
+                align-items: flex-start;
+
+                flex-direction: column;
+
+                gap: 8px;
+            }
+
+            .footer-inner {
+                padding: 30px 20px;
+
+                flex-direction: column;
+
+                gap: 25px;
+            }
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="top-line"></div>
+
+
+<header>
+
+    <div class="header-inner">
+
+        <a href="index.html" class="logo">
+
+            <div class="logo-mark">
+                5·4<br>
+                김밥반
+            </div>
+
+            <div>
+
+                <div class="logo-title">
+                    나성초등학교 5학년 4반
+                </div>
+
+                <div class="logo-subtitle">
+                    GIMBAP CLASS · CLASS WEBSITE
+                </div>
+
+            </div>
+
+        </a>
+
+
+        <nav>
+
+            <a href="index.html">
+                홈
+            </a>
+
+            <a href="intro.html">
+                학급 소개
+            </a>
+
+            <a href="schedule.html" class="active">
+                학급 일정
+            </a>
+
+            <a href="play.html">
+                놀이
+            </a>
+
+        </nav>
+
+    </div>
+
+</header>
+
+
+<section class="page-title">
+
+    <div class="page-title-inner">
+
+        <div class="page-kicker">
+            ACADEMIC CALENDAR
+        </div>
+
+        <h1>
+            학급 일정
+        </h1>
+
+        <p>
+            김밥반의 주요 일정과 학급 행사를 확인할 수 있습니다.
+        </p>
+
+    </div>
+
+</section>
+
+
+<main>
+
+
+    <div class="calendar-header">
+
+        <div>
+
+            <div class="section-kicker">
+                MONTHLY CALENDAR
+            </div>
+
+            <div class="section-title" id="calendarTitle">
+                달력을 불러오는 중...
+            </div>
+
+        </div>
+
+        <div class="section-description">
+            <span id="englishMonth"></span>
+        </div>
+
+    </div>
+
+
+    <div class="calendar-control">
+
+        <button onclick="changeMonth(-1)">
+            ← 이전 달
+        </button>
+
+        <button onclick="goToday()">
+            오늘
+        </button>
+
+        <button onclick="changeMonth(1)">
+            다음 달 →
+        </button>
+
+    </div>
+
+
+    <section class="calendar">
+
+
+        <div class="calendar-week">
+
+            <div class="weekday">일</div>
+            <div class="weekday">월</div>
+            <div class="weekday">화</div>
+            <div class="weekday">수</div>
+            <div class="weekday">목</div>
+            <div class="weekday">금</div>
+            <div class="weekday">토</div>
+
+        </div>
+
+
+        <div class="calendar-grid" id="calendarGrid">
+
+        </div>
+
+
+    </section>
+
+
+    <div class="schedule-info">
+
+        <div class="schedule-info-title">
+            학급 일정 수정 방법(나를 위해)
+        </div>
+
+        <p>
+            아래 JavaScript의 <code>scheduleData</code> 부분만 수정하면
+            일정이 달력에 자동으로 표시된다.
+        </p>
+
+        <p>
+            예:
+            <code>"2026-09-03": ["체육대회"]</code>
+        </p>
+
+    </div>
+
+
+</main>
+
+
+<footer>
+
+    <div class="footer-inner">
+
+        <div>
+
+            <div class="footer-title">
+                나성초등학교 5학년 4반 김밥반
+            </div>
+
+            <div class="footer-text">
+                김처럼 단단하고 밥처럼 따뜻한 우리 김밥반
+                <br>
+                © 2026 Kimbap Class
+            </div>
+
+        </div>
+
+
+        <div class="footer-links">
+
+            <span>
+                학급 홈페이지
+            </span>
+
+            <span>
+                5·4 CLASS
+            </span>
+
+        </div>
+
+    </div>
+
+</footer>
+
+
+<script>
+
+
+/*
+========================================================
+                학급 일정 데이터
+========================================================
+
+여기만 수정하면 됩니다.
+
+형식:
+
+"YYYY-MM-DD": ["일정"]
+
+일정이 여러 개라면:
+
+"2026-09-03": [
+    "체육대회",
+    "학급회의"
+]
+
+========================================================
+*/
+
+
+const scheduleData = {
+
+    "2026-08-15": [
+        {
+            title: "광복절",
+            supplies: "없음",
+            description: "광복절입니다."
+        }
+    ],
+
+    "2026-08-17": [
+        {
+            title: "대체공휴일",
+            supplies: "없음",
+            description: "대체공휴일입니다."
+        }
+    ],
+
+    "2026-08-18": [
+        {
+            title: "개학식",
+            supplies: "없음",
+            description: "2학기 개학식이 진행됩니다."
+        }
+    ],
+
+    "2026-08-25": [
+        {
+            title: "학생동아리",
+            supplies: "각 동아리에 필요한 준비물",
+            description: "동아리 안내사항을 확인하세요."
+        }
+    ],
+
+    "2026-08-26": [
+        {
+            title: "학급임원선거",
+            supplies: "없음",
+            description: "학급임원선거가 진행됩니다."
+        }
+    ],
+    
+    "2026-08-31": [
+        {
+            title: "수학1단원평가",
+            supplies: "필기구와 단원 연습",
+            description: "수학단원평가가 진행됩니다."
+        }
+    ],
+
+    "2026-10-03": [
+        {
+            title: "개천절",
+            supplies: "없음",
+            description: "개천절입니다."
+        }
+    ],
+
+    "2026-10-05": [
+        {
+            title: "대체공휴일",
+            supplies: "없음",
+            description: "대체공휴일입니다."
+        }
+    ],
+
+    "2026-10-09": [
+        {
+            title: "한글날",
+            supplies: "없음",
+            description: "한글날입니다."
+        }
+    ]
+
+};
+
+
+/*
+========================================================
+                달력 시스템
+========================================================
+*/
+
+
+const today = new Date();
+
+let currentYear = today.getFullYear();
+
+let currentMonth = today.getMonth();
+
+
+const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December"
+];
+
+
+function renderCalendar() {
+
+    const calendarGrid =
+        document.getElementById("calendarGrid");
+
+    calendarGrid.innerHTML = "";
+
+
+    /*
+    해당 월의 1일이 무슨 요일인지 계산
+    */
+
+    const firstDay =
+        new Date(
+            currentYear,
+            currentMonth,
+            1
+        ).getDay();
+
+
+    /*
+    해당 월의 마지막 날짜
+    */
+
+    const lastDate =
+        new Date(
+            currentYear,
+            currentMonth + 1,
+            0
+        ).getDate();
+
+
+    /*
+    제목 변경
+    */
+
+    document.getElementById("calendarTitle").textContent =
+        currentYear + "년 " + (currentMonth + 1) + "월 학급 일정";
+
+
+    document.getElementById("englishMonth").textContent =
+        monthNames[currentMonth] + " " + currentYear;
+
+
+    /*
+    1일 이전 빈칸
+    */
+
+    for (let i = 0; i < firstDay; i++) {
+
+        const emptyDay =
+            document.createElement("div");
+
+        emptyDay.className = "day empty";
+
+        calendarGrid.appendChild(emptyDay);
+
+    }
+
+
+    /*
+    날짜 생성
+    */
+
+    for (let date = 1; date <= lastDate; date++) {
+
+
+        const day =
+            document.createElement("div");
+
+        day.className = "day";
+
+
+        /*
+        날짜 숫자
+        */
+
+        const number =
+            document.createElement("div");
+
+        number.className = "day-number";
+
+        number.textContent = date;
+
+        day.appendChild(number);
+
+
+        /*
+        YYYY-MM-DD 형식 만들기
+        */
+
+        const monthString =
+            String(currentMonth + 1).padStart(2, "0");
+
+        const dateString =
+            String(date).padStart(2, "0");
+
+        const dateKey =
+            currentYear +
+            "-" +
+            monthString +
+            "-" +
+            dateString;
+
+
+            // 3월 13일을 클릭하면 비밀 페이지로 이동
+if (dateKey === "2026-03-13") {
+
+    day.style.cursor = "pointer";
+
+    day.onclick = function () {
+        window.location.href = "secret.html";
+    };
+
+}
+
+if (dateKey === "2026-11-10") {
+    day.style.cursor = "pointer";
+
+    day.onclick = function () {
+        window.location.href = "secret2.html";
+    };
+}
+
+
+        /*
+        오늘 날짜인지 확인
+        */
+
+        if (
+            currentYear === today.getFullYear() &&
+            currentMonth === today.getMonth() &&
+            date === today.getDate()
+        ) {
+
+            day.classList.add("today");
+
+        }
+
+
+        /*
+        일정 가져오기
+        */
+
+        if (scheduleData[dateKey]) {
+
+
+        scheduleData[dateKey].forEach(
+    eventData => {
+
+        const event =
+            document.createElement("span");
+
+        event.className = "event";
+
+        // 일정 이름만 표시
+        event.textContent = eventData.title;
+
+        // 클릭하면 상세 정보 표시
+        event.onclick = function () {
+
+            alert(
+                "일정: " + eventData.title +
+                "\n\n준비물: " + eventData.supplies +
+                "\n\n안내: " + eventData.description
+            );
+
+        };
+
+        day.appendChild(event);
+
+    }
+);
+
+        }
+
+
+        /*
+        공휴일 색상
+        */
+
+        if (
+            dateKey === "2026-08-15" ||
+            dateKey === "2026-08-17" ||
+            dateKey === "2026-10-03" ||
+            dateKey === "2026-10-05" ||
+            dateKey === "2026-10-09"
+
+        ) {
+
+            day.classList.add("holiday");
+
+        }
+
+
+        calendarGrid.appendChild(day);
+
+    }
+
+
+    /*
+    마지막 주 빈칸 채우기
+    */
+
+    const totalCells =
+        firstDay + lastDate;
+
+    const remaining =
+        (7 - (totalCells % 7)) % 7;
+
+
+    for (let i = 0; i < remaining; i++) {
+
+        const emptyDay =
+            document.createElement("div");
+
+        emptyDay.className = "day empty";
+
+        calendarGrid.appendChild(emptyDay);
+
+    }
+
+}
+
+
+/*
+========================================================
+                이전 달 / 다음 달
+========================================================
+*/
+
+
+function changeMonth(amount) {
+
+    currentMonth += amount;
+
+
+    if (currentMonth < 0) {
+
+        currentMonth = 11;
+
+        currentYear--;
+
+    }
+
+
+    if (currentMonth > 11) {
+
+        currentMonth = 0;
+
+        currentYear++;
+
+    }
+
+
+    renderCalendar();
+
+}
+
+
+/*
+========================================================
+                    오늘
+========================================================
+*/
+
+
+function goToday() {
+
+    currentYear =
+        today.getFullYear();
+
+    currentMonth =
+        today.getMonth();
+
+    renderCalendar();
+
+}
+
+
+/*
+========================================================
+                최초 실행
+========================================================
+*/
+
+
+renderCalendar();
+
+
+</script>
+
+
+</body>
+
+</html>

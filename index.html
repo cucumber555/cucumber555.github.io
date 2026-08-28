@@ -1,0 +1,228 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>학교 포털</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            font-family:
+                "Pretendard",
+                "Noto Sans KR",
+                Arial,
+                sans-serif;
+
+            background:
+                linear-gradient(135deg, #eef5ff, #f8fbff);
+            color: #172033;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 520px;
+            padding: 45px 40px;
+
+            background: rgba(255, 255, 255, 0.92);
+            border-radius: 24px;
+
+            box-shadow:
+                0 20px 50px rgba(22, 74, 138, 0.12);
+
+            text-align: center;
+        }
+
+        .logo {
+            width: 64px;
+            height: 64px;
+
+            margin: 0 auto 20px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 18px;
+
+            background: #164A8A;
+            color: white;
+
+            font-size: 24px;
+            font-weight: 800;
+
+            box-shadow:
+                0 8px 20px rgba(22, 74, 138, 0.25);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            margin-top: 10px;
+            margin-bottom: 32px;
+
+            color: #7a8495;
+            font-size: 14px;
+        }
+
+        .links {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        a {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            width: 100%;
+            min-height: 58px;
+
+            padding: 0 20px;
+
+            border: 1px solid #e3eaf3;
+            border-radius: 14px;
+
+            background: white;
+
+            color: #26364d;
+            text-decoration: none;
+
+            font-size: 16px;
+            font-weight: 650;
+
+            transition:
+                transform 0.2s ease,
+                box-shadow 0.2s ease,
+                border-color 0.2s ease;
+        }
+
+        a::after {
+            content: "›";
+            font-size: 24px;
+            color: #9aa6b7;
+        }
+
+        a:hover {
+            transform: translateY(-2px);
+
+            border-color: #164A8A;
+
+            box-shadow:
+                0 8px 20px rgba(22, 74, 138, 0.12);
+        }
+
+        /* -------------------------
+           숨겨진 링크
+           ------------------------- */
+
+        .secret-link {
+            position: absolute;
+
+            width: 1px;
+            height: 1px;
+
+            padding: 0;
+            margin: -1px;
+
+            overflow: hidden;
+
+            clip: rect(0, 0, 0, 0);
+
+            white-space: nowrap;
+
+            border: 0;
+        }
+
+        /*
+           Tab으로 포커스했을 때만
+           원래 카드처럼 나타남
+        */
+        .secret-link:focus {
+            position: static;
+
+            width: 100%;
+            height: 58px;
+
+            padding: 0 20px;
+
+            margin: 0;
+
+            overflow: visible;
+
+            clip: auto;
+
+            white-space: normal;
+
+            display: flex;
+        }
+
+        .footer {
+            margin-top: 28px;
+
+            color: #a0a9b7;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="container">
+
+        <div class="logo">H</div>
+
+        <h1>School Portal</h1>
+
+        <p class="subtitle">
+            원하는 학급 페이지를 선택하세요
+        </p>
+
+        <div class="links">
+
+            <!-- 평소에 보이는 링크 -->
+            <a href="54/index.html">
+                <span>5학년 4반</span>
+            </a>
+
+            <!-- 숨겨진 링크 -->
+            <a href="fordifive/index.html" class="secret-link">
+                <span>FORDIFIVE</span>
+            </a>
+
+            <a href="48/index.html" class="secret-link">
+                <span>4학년 8반</span>
+            </a>
+
+            <a href="inpo/index.html" class="secret-link">
+                <span>인포학당</span>
+            </a>
+
+        </div>
+
+        <div class="footer">
+            © School Portal
+        </div>
+
+    </main>
+
+</body>
+</html>
