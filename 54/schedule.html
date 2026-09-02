@@ -672,17 +672,18 @@
     <div class="schedule-info">
 
         <div class="schedule-info-title">
-            학급 일정 수정 방법(나를 위해)
+            학급일정에서 이용 가능한 서비스
         </div>
 
         <p>
-            아래 JavaScript의 <code>scheduleData</code> 부분만 수정하면
-            일정이 달력에 자동으로 표시된다.
+            일정 뜬 부분을 클릭하면 그 일정에 필요한 
+            준비물, 정보 등을 알 수 있다. 
         </p>
 
         <p>
             예:
-            <code>"2026-09-03": ["체육대회"]</code>
+            <code>"2026-09-25": ["추석"]
+                -> 준비물: 없음</code>
         </p>
 
     </div>
@@ -796,17 +797,57 @@ const scheduleData = {
     
     "2026-08-31": [
         {
-            title: "수학1단원평가",
-            supplies: "필기구와 단원 연습",
-            description: "수학단원평가가 진행됩니다."
+            title: "수학1단원평가/예술 상상터 모집",
+            supplies: "없음/도화지에 주제(나의 일상/하루/취미)에 맞는 그림",
+            description: "수학단원평가 진행/9.3.까지 제출."
         }
     ],
 
     "2026-09-01": [
         {
-            title: "복컴체육",
-            supplies: "편한 복장, 물, 실내운동화",
-            description: "복컴에서 체육수업이 있습니다."
+            title: "복컴체육/리딩게이트 대회 시작",
+            supplies: "편한 복장, 물, 실내운동화/없음",
+            description: "복컴에서 체육수업/대회기간:9.1.~11.29."
+        }
+    ],
+
+    "2026-09-03": [
+        {
+            title: "국어수행평가/운동장공사",
+            supplies: "추천하고 싶은 책, 필기구/없음",
+            description: "도서관에서 추천하고 싶은 책 빌려서 서평 쓰기/14시부터 운동장 공사로 사용 금지."
+        }
+    ],
+
+    "2026-09-04": [
+        {
+            title: "1교시 독서록",
+            supplies: "(꽃들에게 희망을 책 다 읽기), 공책, 필기구",
+            description: "1교시에 독서감상문 쓰기."
+        }
+    ],
+
+    "2026-09-24": [
+        {
+            title: "추석연휴",
+            supplies: "없음",
+            description: "추석연휴입니다."
+        }
+    ],
+
+    "2026-09-25": [
+        {
+            title: "추석",
+            supplies: "없음",
+            description: "추석입니다."
+        }
+    ],
+
+    "2026-09-26": [
+        {
+            title: "추석연휴",
+            supplies: "없음",
+            description: "추석연휴입니다."
         }
     ],
 
@@ -991,6 +1032,14 @@ if (dateKey === "2025-11-10") {
     };
 }
 
+if (dateKey === "2025-12-12") {
+    day.style.cursor = "pointer";
+
+    day.onclick = function () {
+        window.location.href = "secret3.html";
+    };
+}
+
 
         /*
         오늘 날짜인지 확인
@@ -1053,7 +1102,10 @@ if (dateKey === "2025-11-10") {
             dateKey === "2026-08-17" ||
             dateKey === "2026-10-03" ||
             dateKey === "2026-10-05" ||
-            dateKey === "2026-10-09"
+            dateKey === "2026-10-09" || 
+            dateKey === "2026-09-24" ||
+            dateKey === "2026-09-25" ||
+            dateKey === "2026-09-26"
 
         ) {
 
