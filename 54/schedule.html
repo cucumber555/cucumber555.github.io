@@ -520,12 +520,96 @@
                 gap: 25px;
             }
         }
+.popup-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
 
+.popup-box {
+    position: relative;
+    width: min(90%, 450px);
+    background: white;
+    padding: 40px;
+    border-radius: 18px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    text-align: center;
+}
+
+.popup-close {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    border: none;
+    background: none;
+    font-size: 28px;
+    cursor: pointer;
+}
+
+.popup-label {
+    color: #69a83f;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+}
+
+.popup-box h2 {
+    margin: 0 0 15px;
+}
+
+.popup-box p {
+    color: #666;
+    line-height: 1.7;
+}
+
+.popup-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 25px;
+}
+
+.popup-buttons button {
+    padding: 11px 18px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: white;
+    cursor: pointer;
+}
+
+.popup-buttons button:first-child {
+    background: #69a83f;
+    color: white;
+    border-color: #69a83f;
+}
     </style>
 
 </head>
 
+<div id="noticePopup" class="popup-overlay">
+    <div class="popup-box">
+        <button class="popup-close" onclick="closePopup()">×</button>
 
+        <div class="popup-label">CLASS NOTICE</div>
+
+        <h2>html보물찾기</h2>
+
+        <p>
+            학급일정에서 이스터에그 찾기 행사 진행중<br>
+            힌트:0504.
+        </p>
+
+        <div class="popup-buttons">
+            <button onclick="hideFor30Days()">30일 동안 보지 않기</button>
+            <button onclick="closePopup()">닫기</button>
+        </div>
+    </div>
+</div>
 <body>
 
 
@@ -1064,6 +1148,13 @@ if (dateKey === "2025-05-04") {
     };
 }
 
+if (dateKey === "2026-05-04") {
+    day.style.cursor = "pointer";
+
+    day.onclick = function () {
+        window.location.href = "nothing.html";
+    };
+}
         /*
         오늘 날짜인지 확인
         */
@@ -1231,6 +1322,24 @@ function goToday() {
 
 renderCalendar();
 
+
+function closePopup() {
+    document.getElementById("noticePopup").style.display = "none";
+}
+
+function hideFor30Days() {
+    const expiry = Date.now() + (30 * 24 * 60 * 60 * 1000);
+    localStorage.setItem("schedulePopupHiddenUntil", expiry);
+    closePopup();
+}
+
+window.addEventListener("load", function () {
+    const hiddenUntil = localStorage.getItem("schedulePopupHiddenUntil");
+
+    if (hiddenUntil && Date.now() < Number(hiddenUntil)) {
+        closePopup();
+    }
+});
 
 </script>
 
