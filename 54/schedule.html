@@ -1140,7 +1140,9 @@ if (dateKey === "2027-06-07") {
     };
 }
 
-if (dateKey === "2025-05-04") {
+if (dateKey === "2025-05-04" || dateKey === "2026-05-04"
+    || dateKey === "2025-06-07" || dateKey === "2026-06-07"
+) {
     day.style.cursor = "pointer";
 
     day.onclick = function () {
@@ -1148,13 +1150,6 @@ if (dateKey === "2025-05-04") {
     };
 }
 
-if (dateKey === "2026-05-04") {
-    day.style.cursor = "pointer";
-
-    day.onclick = function () {
-        window.location.href = "nothing.html";
-    };
-}
         /*
         오늘 날짜인지 확인
         */

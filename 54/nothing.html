@@ -1,1 +1,105 @@
-이스터에그가 여기인줄 알았다면 그것은 오해이다. 아쉽군, 다시 찾아봐. 
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ㅋㅋㅋ</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f5f5f5;
+    }
+
+    /* 팝업 배경 */
+    .popup-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    /* 팝업 */
+    .popup {
+        width: min(90%, 480px);
+        background: white;
+        border-radius: 18px;
+        padding: 40px;
+        text-align: center;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    }
+
+    .popup-label {
+        color: #69a83f;
+        font-size: 12px;
+        font-weight: bold;
+        letter-spacing: 2px;
+        margin-bottom: 12px;
+    }
+
+    .popup h1 {
+        margin: 0 0 18px;
+        font-size: 30px;
+    }
+
+    .popup p {
+        color: #666;
+        line-height: 1.7;
+    }
+
+    .close-button {
+        margin-top: 25px;
+        padding: 12px 28px;
+        border: none;
+        border-radius: 8px;
+        background: #69a83f;
+        color: white;
+        font-size: 15px;
+        cursor: pointer;
+    }
+
+    .close-button:hover {
+        opacity: 0.85;
+    }
+</style>
+</head>
+
+<body>
+
+<div class="popup-overlay" id="popup">
+    <div class="popup">
+
+        <div class="popup-label">
+            CLASS NOTICE
+        </div>
+
+        <h1>ㅋㅋㅋ</h1>
+
+        <p>
+            이스터에그가 여기 있다 생각했다면 오해이다.<br>
+            아쉽군, 다시 찾아봐.
+        </p>
+
+        <button class="close-button" onclick="closePopup()">
+            확인
+        </button>
+
+    </div>
+</div>
+
+<script>
+function closePopup() {
+    document.getElementById("popup").style.display = "none";
+}
+</script>
+
+</body>
+</html>
