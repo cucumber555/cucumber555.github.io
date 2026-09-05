@@ -213,37 +213,49 @@ const startBtn=document.getElementById("startBtn");
 
 const sounds={
 
+  // 일반 스테이지 홀수
   bgm:new Audio("audio/space.mp3"),
+
+  // 일반 스테이지 짝수
+  bgm2:new Audio("audio/space2.mp3"),
+
+  // 보스
   boss:new Audio("audio/boss.mp3"),
+
+  // 최종 보스
   finalboss:new Audio("audio/finalboss.mp3"),
 
+  // 클리어
   clear:new Audio("audio/clear.mp3"),
-  gameover:new Audio("audio/gameover.mp3"),
 
-  shoot:new Audio("audio/shoot.wav"),
-  hit:new Audio("audio/hit.wav"),
-  shield:new Audio("audio/shield.wav"),
-  freeze:new Audio("audio/freeze.wav"),
-  bossAppear:new Audio("audio/boss.wav"),
-  explode:new Audio("audio/explode.wav")
+  // 게임오버
+  gameover:new Audio("audio/gameover.mp3"),
 
 };
 
 
-/* BGM 반복 */
+/* =========================
+   BGM 반복
+========================= */
 
 sounds.bgm.loop=true;
+sounds.bgm2.loop=true;
+
 sounds.boss.loop=true;
 sounds.finalboss.loop=true;
 
 
-/* 볼륨 */
+/* =========================
+   볼륨
+========================= */
 
 sounds.bgm.volume=.35;
+sounds.bgm2.volume=.35;
+
 sounds.boss.volume=.40;
 sounds.finalboss.volume=.45;
 
-sounds.clear.volume=.55;
+sounds.clear.volume=.70;
 sounds.gameover.volume=.55;
 
 sounds.shoot.volume=.22;
@@ -254,38 +266,73 @@ sounds.bossAppear.volume=.60;
 sounds.explode.volume=.40;
 
 
-/* 효과음 */
+/* =========================
+   효과음
+========================= */
 
 function playSound(name){
 
   const sound=sounds[name];
 
-  if(!sound)
+  if(!sound){
+
+    console.log(
+      "❌ 사운드를 찾을 수 없음:",
+      name
+    );
+
     return;
+
+  }
 
   sound.currentTime=0;
 
-  sound.play().catch(()=>{});
+  sound.play()
+    .then(()=>{
+
+      console.log(
+        "🔊 재생:",
+        name
+      );
+
+    })
+    .catch(err=>{
+
+      console.log(
+        "❌ 사운드 재생 실패:",
+        name,
+        err
+      );
+
+    });
 
 }
 
 
-/* BGM 정지 */
+/* =========================
+   🎵 BGM 정지
+========================= */
 
 function stopMusic(){
 
   sounds.bgm.pause();
+  sounds.bgm2.pause();
+
   sounds.boss.pause();
   sounds.finalboss.pause();
 
   sounds.bgm.currentTime=0;
+  sounds.bgm2.currentTime=0;
+
   sounds.boss.currentTime=0;
   sounds.finalboss.currentTime=0;
 
 }
 
 
-/* 스테이지별 음악 */
+/* =========================
+   🎵 스테이지별 음악
+========================= */
 
 function playStageMusic(){
 
@@ -293,25 +340,69 @@ function playStageMusic(){
 
   let music;
 
+
+  /* =========================
+     최종 보스
+  ========================= */
+
   if(stage===10){
 
     music=sounds.finalboss;
 
   }
+
+
+  /* =========================
+     5스테이지 보스
+  ========================= */
+
   else if(stage===5){
 
     music=sounds.boss;
 
   }
-  else{
+
+
+  /* =========================
+     일반 스테이지
+     
+     홀수 → space.mp3
+     짝수 → space2.mp3
+  ========================= */
+
+  else if(stage%2===1){
 
     music=sounds.bgm;
 
   }
 
+  else{
+
+    music=sounds.bgm2;
+
+  }
+
+
   music.currentTime=0;
 
-  music.play().catch(()=>{});
+  music.play()
+    .then(()=>{
+
+      console.log(
+        "🎵 STAGE",
+        stage,
+        "음악 재생"
+      );
+
+    })
+    .catch(err=>{
+
+      console.log(
+        "❌ BGM 재생 실패:",
+        err
+      );
+
+    });
 
 }
 
@@ -720,11 +811,11 @@ function shoot(){
 
   });
 
-  /* 🔫 발사음 */
-
   playSound("shoot");
 
 }
+
+
 function mobileShoot(event){
 
   event.preventDefault();
@@ -735,7 +826,6 @@ function mobileShoot(event){
   shoot();
 
 }
-
 
 
 /* =========================
@@ -939,20 +1029,24 @@ function gameOver(){
 
 
 /* =========================
-   올 클리어
+   👑 올 클리어
 ========================= */
 
 function gameClear(){
 
   running=false;
+  transitioning=true;
+
+  /* 전투 음악 정지 */
 
   stopMusic();
-
-  playSound("clear");
 
   rocks=[];
   bullets=[];
   boss=null;
+
+
+  /* 보상 */
 
   coins+=100;
 
@@ -960,6 +1054,9 @@ function gameClear(){
     high=score;
 
   save();
+
+
+  /* 클리어 화면 */
 
   menu.style.display="flex";
 
@@ -970,13 +1067,46 @@ function gameClear(){
   startBtn.textContent=
     "처음부터 다시";
 
+
   info.innerHTML=
     `👑 <b>ALL CLEAR!</b><br><br>
-     10개 스테이지 정복 성공!<br><br>
+     🎉 10개 스테이지 정복 성공!<br><br>
      최종 점수: ${score}<br>
      💰 코인: ${coins}`;
 
+
   stage=1;
+
+
+  /* =========================
+     🎵 클리어 음악
+  ========================= */
+
+  const clearMusic=
+    sounds.clear;
+
+  clearMusic.pause();
+
+  clearMusic.currentTime=0;
+
+  clearMusic.volume=.70;
+
+  clearMusic.play()
+    .then(()=>{
+
+      console.log(
+        "🎵 CLEAR 음악 재생 성공"
+      );
+
+    })
+    .catch(err=>{
+
+      console.log(
+        "❌ CLEAR 음악 재생 실패:",
+        err
+      );
+
+    });
 
 }
 
@@ -1204,6 +1334,10 @@ function update(dt){
       destroyed=true;
 
 
+      /* =========================
+         👑 보스 처치
+      ========================= */
+
       if(
         boss.hp<=0
       ){
@@ -1211,42 +1345,104 @@ function update(dt){
         score+=150;
         coins+=80;
 
-        explode(
+
+        const explosionX=
           boss.x+
-          boss.w/2,
+          boss.w/2;
 
+        const explosionY=
           boss.y+
-          boss.h/2,
+          boss.h/2;
 
+
+        /* 💥 대폭발 */
+
+        explode(
+          explosionX,
+          explosionY,
           "#ff3180",
-
-          70
+          100
         );
 
+        explode(
+          explosionX,
+          explosionY,
+          "#55f5ff",
+          60
+        );
+
+        explode(
+          explosionX,
+          explosionY,
+          "#ffe45c",
+          40
+        );
+
+
         playSound("explode");
+
+
+        /* 보스 제거 */
 
         boss=null;
 
 
-        setTimeout(()=>{
+        /* =========================
+           👑 최종 보스
+        ========================= */
 
-          if(
-            running &&
-            !boss
-          ){
+        if(stage===10){
 
-            nextStage();
+          /*
+            전투 음악을 바로 정지하고
+            폭발 연출을 보여준다.
+          */
 
-          }
+          stopMusic();
 
-        },700);
+
+          /*
+            1.2초 후 ALL CLEAR
+          */
+
+          setTimeout(()=>{
+
+            gameClear();
+
+          },1200);
+
+        }
+
+
+        /* =========================
+           일반 보스
+        ========================= */
+
+        else{
+
+          setTimeout(()=>{
+
+            if(
+              running &&
+              !boss
+            ){
+
+              nextStage();
+
+            }
+
+          },700);
+
+        }
 
       }
 
     }
 
 
-    /* 운석 공격 */
+    /* =========================
+       운석 공격
+    ========================= */
 
     for(
       let j=rocks.length-1;
