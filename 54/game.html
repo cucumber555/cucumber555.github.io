@@ -4,2310 +4,1315 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>운석 생존자</title>
-
 <style>
-*{
-  box-sizing:border-box;
-}
-
+*{box-sizing:border-box}
 body{
-  margin:0;
-  min-height:100vh;
-  background:#02030a;
-  color:white;
-  font-family:Arial,sans-serif;
-  display:flex;
-  justify-content:center;
-  align-items:center;
+margin:0;
+min-height:100vh;
+background:#02030a;
+color:white;
+font-family:Arial,sans-serif;
+display:flex;
+justify-content:center;
+align-items:center;
 }
-
 #wrap{
-  position:relative;
-  width:min(94vw,480px);
+position:relative;
+width:min(94vw,480px);
 }
-
 canvas{
-  width:100%;
-  height:auto;
-  display:block;
-  border:2px solid #6572ff;
-  border-radius:16px;
-  background:#070a18;
-  box-shadow:0 0 40px #3040ff77;
+width:100%;
+height:auto;
+display:block;
+border:2px solid #6572ff;
+border-radius:16px;
+background:#070a18;
+box-shadow:0 0 40px #3040ff77;
 }
-
 #menu{
-  position:absolute;
-  inset:0;
-  border-radius:16px;
-  background:#02030ae8;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  text-align:center;
-  padding:20px;
-  z-index:10;
+position:absolute;
+inset:0;
+border-radius:16px;
+background:#02030ae8;
+display:flex;
+flex-direction:column;
+justify-content:center;
+align-items:center;
+text-align:center;
+padding:20px;
+z-index:10;
 }
-
 h1{
-  color:#55f5ff;
-  text-shadow:0 0 20px #55f5ff;
+color:#55f5ff;
+text-shadow:0 0 20px #55f5ff;
 }
-
 button{
-  border:0;
-  border-radius:10px;
-  padding:12px 24px;
-  margin:6px;
-  background:#5969ff;
-  color:white;
-  font-size:16px;
-  font-weight:bold;
-  cursor:pointer;
+border:0;
+border-radius:10px;
+padding:12px 24px;
+margin:6px;
+background:#5969ff;
+color:white;
+font-size:16px;
+font-weight:bold;
+cursor:pointer;
 }
-
 button:hover{
-  background:#7885ff;
+background:#7885ff;
 }
-
 #shop{
-  display:none;
-  width:100%;
+display:none;
+width:100%;
 }
-
 .item{
-  background:#12172f;
-  border:1px solid #3f4c9d;
-  border-radius:10px;
-  padding:8px;
-  margin:5px;
+background:#12172f;
+border:1px solid #3f4c9d;
+border-radius:10px;
+padding:8px;
+margin:5px;
 }
-
 #touch{
-  position:absolute;
-  left:0;
-  right:0;
-  bottom:48px;
-  display:flex;
-  justify-content:space-between;
-  padding:0 12px;
-  pointer-events:none;
-  z-index:5;
+position:absolute;
+left:0;
+right:0;
+bottom:48px;
+display:flex;
+justify-content:space-between;
+padding:0 12px;
+pointer-events:none;
+z-index:5;
 }
-
 .touch{
-  pointer-events:auto;
-  width:65px;
-  height:52px;
-  opacity:.65;
-  padding:0;
-  font-size:24px;
+pointer-events:auto;
+width:65px;
+height:52px;
+opacity:.65;
+padding:0;
+font-size:24px;
 }
-
+.shootTouch{
+background:#ff4b24;
+box-shadow:
+0 0 15px #ff4b24,
+0 0 30px #ff4b2477;
+font-size:24px;
+}
+.shootTouch:active{
+background:#ffb300;
+transform:scale(.9);
+}
 </style>
 </head>
-
 <body>
-
 <div id="wrap">
-
 <canvas id="game" width="480" height="720"></canvas>
-
-
-<!-- =========================
-     모바일 조작
-========================= -->
-
 <div id="touch">
-
-  <button
-    class="touch"
-    ontouchstart="touchLeft=true"
-    ontouchend="touchLeft=false"
-    ontouchcancel="touchLeft=false">
-    ◀
-  </button>
-
-  <button
-    class="touch"
-    ontouchstart="mobileShoot(event)"
-    ontouchend="event.preventDefault()"
-    ontouchcancel="event.preventDefault()">
-    🔥
-  </button>
-
-  <button
-    class="touch"
-    ontouchstart="touchRight=true"
-    ontouchend="touchRight=false"
-    ontouchcancel="touchRight=false">
-    ▶
-  </button>
-
+<button class="touch"
+ontouchstart="touchLeft=true"
+ontouchend="touchLeft=false"
+ontouchcancel="touchLeft=false">
+◀
+</button>
+<button id="shootTouch"
+class="touch shootTouch"
+ontouchstart="mobileShoot(event)"
+ontouchend="event.preventDefault()"
+ontouchcancel="event.preventDefault()">
+🔥
+</button>
+<button class="touch"
+ontouchstart="touchRight=true"
+ontouchend="touchRight=false"
+ontouchcancel="touchRight=false">
+▶
+</button>
 </div>
-
-
-<!-- =========================
-     메뉴
-========================= -->
-
 <div id="menu">
-
-  <h1>☄️ 운석 생존자</h1>
-
-  <p id="info">
-    10개의 스테이지를 돌파하라!
-  </p>
-
-  <button
-    id="startBtn"
-    onclick="startNewGame()">
-    게임 시작
-  </button>
-
-
-  <div id="shop">
-
-    <h3>🛒 상점</h3>
-
-    <div class="item">
-
-      🛡️ 방어막 — 15 코인
-
-      <br>
-
-      <button onclick="buyShield()">
-        구매
-      </button>
-
-    </div>
-
-
-    <div class="item">
-
-      ⚡ 시간정지 — 25 코인
-
-      <br>
-
-      <button onclick="buyFreeze()">
-        구매
-      </button>
-
-    </div>
-
-
-    <div class="item">
-
-      🔥 레이저 — 35 코인
-
-      <br>
-
-      <button onclick="buyLaser()">
-        구매
-      </button>
-
-    </div>
-
-  </div>
-
+<h1>☄️ 운석 생존자</h1>
+<p id="info">
+10개의 스테이지를 돌파하라!
+</p>
+<button id="startBtn" onclick="startNewGame()">
+게임 시작
+</button>
+<div id="shop">
+<h3>🛒 상점</h3>
+<div class="item">
+🛡️ 방어막 — 15 코인
+<br>
+<button onclick="buyShield()">구매</button>
 </div>
-
+<div class="item">
+⚡ 시간정지 — 25 코인
+<br>
+<button onclick="buyFreeze()">구매</button>
 </div>
-
-
+<div class="item">
+🔥 레이저 — 35 코인
+<br>
+<button onclick="buyLaser()">구매</button>
+</div>
+</div>
+</div>
+</div>
 <script>
-
-/* =====================================================
-   기본 설정
-===================================================== */
-
-const canvas =
-  document.getElementById("game");
-
-const ctx =
-  canvas.getContext("2d");
-
-const menu =
-  document.getElementById("menu");
-
-const info =
-  document.getElementById("info");
-
-const shop =
-  document.getElementById("shop");
-
-const startBtn =
-  document.getElementById("startBtn");
-
-
-/* =====================================================
-   🎵 음악 시스템
-   사용하는 음악은 딱 6개
-===================================================== */
-
+/* =========================
+기본 설정
+========================= */
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+const menu=document.getElementById("menu");
+const info=document.getElementById("info");
+const shop=document.getElementById("shop");
+const startBtn=document.getElementById("startBtn");
+/* =========================
+🎵 사운드 시스템
+========================= */
 const sounds = {
-
-  space:
-    new Audio("audio/space.mp3"),
-
-  space2:
-    new Audio("audio/space2.mp3"),
-
-  boss:
-    new Audio("audio/boss.mp3"),
-
-  finalboss:
-    new Audio("audio/finalboss.mp3"),
-
-  clear:
-    new Audio("audio/clear.mp3"),
-
-  gameover:
-    new Audio("audio/gameover.mp3")
-
+  bgm: new Audio("audio/space.mp3"),
+  bgm2: new Audio("audio/space2.mp3"),
+  boss: new Audio("audio/boss.mp3"),
+  finalboss: new Audio("audio/finalboss.mp3"),
+  clear: new Audio("audio/clear.mp3"),
+  gameover: new Audio("audio/gameover.mp3")
 };
 
+Object.values(sounds).forEach(sound => {
+  sound.preload = "auto";
+});
 
-/* =========================
-   음악 반복
-========================= */
-
-sounds.space.loop = true;
-
-sounds.space2.loop = true;
-
+sounds.bgm.loop = true;
+sounds.bgm2.loop = true;
 sounds.boss.loop = true;
-
 sounds.finalboss.loop = true;
 
+sounds.bgm.volume = .35;
+sounds.bgm2.volume = .35;
+sounds.boss.volume = .40;
+sounds.finalboss.volume = .45;
+sounds.clear.volume = .70;
+sounds.gameover.volume = .55;
+
+function playGameOverSound(){
+  try{
+    sounds.gameover.pause();
+    sounds.gameover.currentTime = 0;
+    const p = sounds.gameover.play();
+    if(p) p.catch(()=>{});
+  }catch(e){}
+}
 
 /* =========================
-   음악 볼륨
+   BGM 정지
 ========================= */
-
-sounds.space.volume = 0.35;
-
-sounds.space2.volume = 0.35;
-
-sounds.boss.volume = 0.40;
-
-sounds.finalboss.volume = 0.45;
-
-sounds.clear.volume = 0.70;
-
-sounds.gameover.volume = 0.60;
-
-
-/* =====================================================
-   모든 음악 정지
-===================================================== */
-
 function stopMusic(){
+  sounds.bgm.pause();
+  sounds.bgm2.pause();
+  sounds.boss.pause();
+  sounds.finalboss.pause();
 
-  Object.values(sounds).forEach(sound => {
-
-    sound.pause();
-
-    try{
-      sound.currentTime = 0;
-    }
-    catch(e){}
-
-  });
-
+  sounds.bgm.currentTime=0;
+  sounds.bgm2.currentTime=0;
+  sounds.boss.currentTime=0;
+  sounds.finalboss.currentTime=0;
 }
 
-
-/* =====================================================
-   음악 재생
-===================================================== */
-
-function playMusic(sound){
-
-  if(!sound)
-    return;
-
-  sound.pause();
-
-  try{
-    sound.currentTime = 0;
-  }
-  catch(e){}
-
-  sound.play().catch(()=>{});
-
-}
-
-
-/* =====================================================
-   🎵 스테이지 음악
-===================================================== */
-
+/* =========================
+   스테이지별 BGM
+========================= */
 function playStageMusic(){
-
   stopMusic();
 
   let music;
 
-
-  /*
-    10 = 최종 보스
-  */
-
-  if(stage === 10){
-
-    music = sounds.finalboss;
-
+  if(stage===10){
+    music=sounds.finalboss;
   }
-
-
-  /*
-    5 = 일반 보스
-  */
-
-  else if(stage === 5){
-
-    music = sounds.boss;
-
+  else if(stage===5){
+    music=sounds.boss;
   }
-
-
-  /*
-    일반 스테이지
-    홀수 → space.mp3
-  */
-
-  else if(stage % 2 === 1){
-
-    music = sounds.space;
-
+  else if(stage%2===1){
+    music=sounds.bgm;
   }
-
-
-  /*
-    일반 스테이지
-    짝수 → space2.mp3
-  */
-
   else{
-
-    music = sounds.space2;
-
+    music=sounds.bgm2;
   }
 
+  music.currentTime=0;
 
-  playMusic(music);
-
+  const p=music.play();
+  if(p){
+    p.catch(()=>{});
+  }
 }
 
-
-/* =====================================================
+/* =========================
    변수
-===================================================== */
-
-let keys = {};
-
-let running = false;
-
-let transitioning = false;
-
-let stage = 1;
-
-let score = 0;
-
-let coins =
-  Number(
-    localStorage.getItem("coins") || 0
-  );
-
-let high =
-  Number(
-    localStorage.getItem("high") || 0
-  );
-
-
-let shield = false;
-
-let freeze = false;
-
-let laser = false;
-
-
-let rocks = [];
-
-let bullets = [];
-
-let particles = [];
-
-let boss = null;
-
-
-let stageTime = 0;
-
-let spawnTime = 0;
-
-let lastTime = 0;
-
-
-let touchLeft = false;
-
-let touchRight = false;
-
-
-/* =====================================================
-   플레이어
-===================================================== */
-
-const player = {
-
-  x:220,
-
-  y:625,
-
-  w:40,
-
-  h:40,
-
-  speed:340
-
+========================= */
+let keys={};
+let running=false;
+let transitioning=false;
+let stage=1;
+let score=0;
+let coins=Number(
+localStorage.getItem("coins")||0
+);
+let high=Number(
+localStorage.getItem("high")||0
+);
+let shield=false;
+let freeze=false;
+let laser=false;
+let rocks=[];
+let bullets=[];
+let particles=[];
+let boss=null;
+let stageTime=0;
+let spawnTime=0;
+let lastTime=0;
+let touchLeft=false;
+let touchRight=false;
+/* =========================
+플레이어
+========================= */
+const player={
+x:220,
+y:625,
+w:40,
+h:40,
+speed:340
 };
-
-
-/* =====================================================
-   스테이지
-===================================================== */
-
-const stages = [
-
-  {
-    name:"푸른 우주",
-    duration:15,
-    speed:150,
-    spawn:.65,
-    color:"#07152d"
-  },
-
-  {
-    name:"붉은 행성",
-    duration:17,
-    speed:175,
-    spawn:.58,
-    color:"#32100e"
-  },
-
-  {
-    name:"소행성 지대",
-    duration:19,
-    speed:200,
-    spawn:.52,
-    color:"#21112f"
-  },
-
-  {
-    name:"얼어붙은 우주",
-    duration:21,
-    speed:225,
-    spawn:.47,
-    color:"#082d3a"
-  },
-
-  {
-    name:"☠️ 운석왕의 영역",
-    duration:22,
-    speed:245,
-    spawn:.43,
-    boss:true,
-    color:"#30051c"
-  },
-
-  {
-    name:"암흑 성운",
-    duration:23,
-    speed:270,
-    spawn:.39,
-    color:"#12051f"
-  },
-
-  {
-    name:"번개 지대",
-    duration:24,
-    speed:295,
-    spawn:.35,
-    color:"#17112d"
-  },
-
-  {
-    name:"혼돈의 공간",
-    duration:25,
-    speed:325,
-    spawn:.31,
-    color:"#260b0b"
-  },
-
-  {
-    name:"최후의 관문",
-    duration:27,
-    speed:355,
-    spawn:.28,
-    color:"#19000d"
-  },
-
-  {
-    name:"👑 최종전",
-    duration:30,
-    speed:380,
-    spawn:.25,
-    boss:true,
-    color:"#300000"
-  }
-
+/* =========================
+스테이지
+========================= */
+const stages=[
+{
+name:"푸른 우주",
+duration:15,
+speed:150,
+spawn:.65,
+color:"#07152d"
+},
+{
+name:"붉은 행성",
+duration:17,
+speed:175,
+spawn:.58,
+color:"#32100e"
+},
+{
+name:"소행성 지대",
+duration:19,
+speed:200,
+spawn:.52,
+color:"#21112f"
+},
+{
+name:"얼어붙은 우주",
+duration:21,
+speed:225,
+spawn:.47,
+color:"#082d3a"
+},
+{
+name:"☠️ 운석왕의 영역",
+duration:22,
+speed:245,
+spawn:.43,
+boss:true,
+color:"#30051c"
+},
+{
+name:"암흑 성운",
+duration:23,
+speed:270,
+spawn:.39,
+color:"#12051f"
+},
+{
+name:"번개 지대",
+duration:24,
+speed:295,
+spawn:.35,
+color:"#17112d"
+},
+{
+name:"혼돈의 공간",
+duration:25,
+speed:325,
+spawn:.31,
+color:"#260b0b"
+},
+{
+name:"최후의 관문",
+duration:27,
+speed:355,
+spawn:.28,
+color:"#19000d"
+},
+{
+name:"👑 최종전",
+duration:30,
+speed:380,
+spawn:.25,
+boss:true,
+color:"#300000"
+}
 ];
-
-
-/* =====================================================
-   키보드
-===================================================== */
-
-document.addEventListener(
-  "keydown",
-  e => {
-
-    const key =
-      e.key.toLowerCase();
-
-    keys[key] = true;
-
-
-    if(
-      [
-        "arrowleft",
-        "arrowright",
-        " ",
-        "a",
-        "d"
-      ].includes(key)
-    ){
-
-      e.preventDefault();
-
-    }
-
-
-    if(
-      running &&
-      key === " "
-    ){
-
-      shoot();
-
-    }
-
-  }
-);
-
-
-document.addEventListener(
-  "keyup",
-  e => {
-
-    keys[
-      e.key.toLowerCase()
-    ] = false;
-
-  }
-);
-
-
-/* =====================================================
-   새 게임
-===================================================== */
-
-function startNewGame(){
-
-  stopMusic();
-
-  stage = 1;
-
-  score = 0;
-
-  shield = false;
-
-  freeze = false;
-
-  laser = false;
-
-  transitioning = false;
-
-  startStage();
-
-}
-
-
-/* =====================================================
-   스테이지 시작
-===================================================== */
-
-function startStage(){
-
-  if(stage > 10){
-
-    gameClear();
-
-    return;
-
-  }
-
-
-  running = true;
-
-  transitioning = false;
-
-
-  rocks = [];
-
-  bullets = [];
-
-  particles = [];
-
-  boss = null;
-
-
-  stageTime = 0;
-
-  spawnTime = 0;
-
-
-  player.x = 220;
-
-
-  menu.style.display =
-    "none";
-
-  startBtn.style.display =
-    "none";
-
-
-  /* 음악 시작 */
-
-  playStageMusic();
-
-
-  lastTime =
-    performance.now();
-
-
-  requestAnimationFrame(
-    gameLoop
-  );
-
-}
-
-
-/* =====================================================
-   다음 스테이지
-===================================================== */
-
-function nextStage(){
-
-  if(transitioning)
-    return;
-
-
-  transitioning = true;
-
-  running = false;
-
-
-  stage++;
-
-
-  rocks = [];
-
-  bullets = [];
-
-  boss = null;
-
-
-  stageTime = 0;
-
-  spawnTime = 0;
-
-
-  if(stage > 10){
-
-    gameClear();
-
-    return;
-
-  }
-
-
-  menu.style.display =
-    "flex";
-
-  shop.style.display =
-    "none";
-
-
-  startBtn.style.display =
-    "none";
-
-
-  info.innerHTML =
-    `🌟 <b>STAGE ${stage}</b><br><br>
-     ${stages[stage-1].name}`;
-
-
-  setTimeout(() => {
-
-    if(stage <= 10){
-
-      startBtn.style.display =
-        "block";
-
-      startStage();
-
-    }
-
-  },1500);
-
-}
-
-
-/* =====================================================
-   보스 생성
-===================================================== */
-
-function spawnBoss(){
-
-  boss = {
-
-    x:110,
-
-    y:-120,
-
-    w:260,
-
-    h:95,
-
-    hp:
-      500 +
-      stage * 120,
-
-    maxHp:
-      500 +
-      stage * 120,
-
-    speed:
-      80 +
-      stage * 10,
-
-    dir:1,
-
-    shot:0
-
-  };
-
-}
-
-
-/* =====================================================
-   운석 생성
-===================================================== */
-
-function spawnRock(){
-
-  const s =
-    stages[stage-1];
-
-
-  const size =
-    20 +
-    Math.random()*35;
-
-
-  rocks.push({
-
-    x:
-      Math.random() *
-      (canvas.width-size),
-
-    y:-size,
-
-    w:size,
-
-    h:size,
-
-    speed:
-      s.speed +
-      Math.random()*120 +
-      stage*8,
-
-    rot:
-      Math.random()*6,
-
-    type:
-      Math.random()
-
-  });
-
-}
-
-
-/* =====================================================
-   발사
-===================================================== */
-
-function shoot(){
-
-  if(!running)
-    return;
-
-
-  bullets.push({
-
-    x:
-      player.x+17,
-
-    y:
-      player.y-10,
-
-    w:6,
-
-    h:18,
-
-    speed:700,
-
-    damage:
-      laser ? 40 : 10
-
-  });
-
-}
-
-
-function mobileShoot(event){
-
-  event.preventDefault();
-
-  if(!running)
-    return;
-
-  shoot();
-
-}
-
-
-/* =====================================================
-   충돌
-===================================================== */
-
-function hit(a,b){
-
-  return(
-
-    a.x < b.x+b.w &&
-
-    a.x+a.w > b.x &&
-
-    a.y < b.y+b.h &&
-
-    a.y+a.h > b.y
-
-  );
-
-}
-
-
-/* =====================================================
-   방어막
-===================================================== */
-
-function activateShield(){
-
-  if(
-    !running ||
-    shield ||
-    coins < 15
-  )
-    return;
-
-
-  coins -= 15;
-
-  shield = true;
-
-  save();
-
-}
-
-
-/* =====================================================
-   시간 정지
-===================================================== */
-
-function activateFreeze(){
-
-  if(
-    !running ||
-    freeze ||
-    coins < 25
-  )
-    return;
-
-
-  coins -= 25;
-
-  freeze = true;
-
-  save();
-
-
-  setTimeout(() => {
-
-    freeze = false;
-
-  },5000);
-
-}
-
-
-/* =====================================================
-   상점
-===================================================== */
-
-function buyShield(){
-
-  if(coins < 15)
-    return;
-
-
-  coins -= 15;
-
-  shield = true;
-
-  save();
-
-
-  info.innerHTML =
-    "🛡️ 방어막 장착 완료!";
-
-}
-
-
-function buyFreeze(){
-
-  if(coins < 25)
-    return;
-
-
-  coins -= 25;
-
-  freeze = true;
-
-  save();
-
-
-  setTimeout(() => {
-
-    freeze = false;
-
-  },5000);
-
-
-  info.innerHTML =
-    "⚡ 시간정지 발동!";
-
-}
-
-
-function buyLaser(){
-
-  if(coins < 35)
-    return;
-
-
-  coins -= 35;
-
-  laser = true;
-
-  save();
-
-
-  info.innerHTML =
-    "🔥 레이저 장착 완료!";
-
-}
-
-
-/* =====================================================
-   저장
-===================================================== */
-
-function save(){
-
-  localStorage.setItem(
-    "coins",
-    coins
-  );
-
-  localStorage.setItem(
-    "high",
-    high
-  );
-
-}
-
-
-/* =====================================================
-   게임 오버
-===================================================== */
-
-function gameOver(){
-
-  if(!running)
-    return;
-
-
-  running = false;
-
-  transitioning = true;
-
-
-  stopMusic();
-
-
-  /* 게임 오버 음악 */
-
-  playMusic(
-    sounds.gameover
-  );
-
-
-  if(score > high)
-    high = score;
-
-
-  coins +=
-    Math.floor(score/8);
-
-
-  save();
-
-
-  menu.style.display =
-    "flex";
-
-
-  shop.style.display =
-    "block";
-
-
-  startBtn.style.display =
-    "block";
-
-
-  startBtn.textContent =
-    "다시 하기";
-
-
-  info.innerHTML =
-    `💥 GAME OVER<br><br>
-     스테이지 ${stage}<br>
-     점수 ${score}<br>
-     최고점수 ${high}<br>
-     💰 코인 ${coins}`;
-
-}
-
-
-/* =====================================================
-   👑 올 클리어
-===================================================== */
-
-function gameClear(){
-
-  running = false;
-
-  transitioning = true;
-
-
-  /* 전투 음악 정지 */
-
-  stopMusic();
-
-
-  rocks = [];
-
-  bullets = [];
-
-  boss = null;
-
-
-  /* 보상 */
-
-  coins += 100;
-
-
-  if(score > high)
-    high = score;
-
-
-  save();
-
-
-  /* 클리어 화면 */
-
-  menu.style.display =
-    "flex";
-
-  shop.style.display =
-    "none";
-
-
-  startBtn.style.display =
-    "block";
-
-
-  startBtn.textContent =
-    "처음부터 다시";
-
-
-  info.innerHTML =
-    `👑 <b>ALL CLEAR!</b><br><br>
-     🎉 10개 스테이지 정복 성공!<br><br>
-     최종 점수: ${score}<br>
-     💰 코인: ${coins}`;
-
-
-  stage = 1;
-
-
-  /* =========================
-     클리어 음악
-  ========================= */
-
-  playMusic(
-    sounds.clear
-  );
-
-}
-
-
-/* =====================================================
-   업데이트
-===================================================== */
-
-function update(dt){
-
-  if(!running)
-    return;
-
-
-  const s =
-    stages[stage-1];
-
-
-  /* =========================
-     플레이어
-  ========================= */
-
-  if(
-    keys["arrowleft"] ||
-    keys["a"] ||
-    touchLeft
-  ){
-
-    player.x -=
-      player.speed*dt;
-
-  }
-
-
-  if(
-    keys["arrowright"] ||
-    keys["d"] ||
-    touchRight
-  ){
-
-    player.x +=
-      player.speed*dt;
-
-  }
-
-
-  player.x =
-    Math.max(
-      0,
-      Math.min(
-        canvas.width-player.w,
-        player.x
-      )
-    );
-
-
-  /* =========================
-     시간
-  ========================= */
-
-  stageTime += dt;
-
-
-  /* =========================
-     운석 생성
-  ========================= */
-
-  spawnTime += dt;
-
-
-  if(
-    spawnTime >= s.spawn &&
-    !boss
-  ){
-
-    spawnTime = 0;
-
-    spawnRock();
-
-
-    if(
-      stage >= 3 &&
-      Math.random() < .3
-    ){
-
-      spawnRock();
-
-    }
-
-  }
-
-
-  /* =========================
-     보스 등장
-  ========================= */
-
-  if(
-    s.boss &&
-    stageTime >= 5 &&
-    !boss
-  ){
-
-    spawnBoss();
-
-  }
-
-
-  /* =========================
-     시간 정지
-  ========================= */
-
-  const slow =
-    freeze ? .3 : 1;
-
-
-  /* =================================================
-     운석
-  ================================================= */
-
-  for(
-    let i=rocks.length-1;
-    i>=0;
-    i--
-  ){
-
-    const r =
-      rocks[i];
-
-
-    r.y +=
-      r.speed *
-      dt *
-      slow;
-
-
-    r.rot +=
-      dt*2;
-
-
-    if(
-      stage >= 6 &&
-      r.type > .75
-    ){
-
-      r.x +=
-        Math.sin(r.y*.03) *
-        1.8;
-
-    }
-
-
-    /* 플레이어 충돌 */
-
-    if(hit(player,r)){
-
-      if(shield){
-
-        shield = false;
-
-
-        explode(
-          r.x+r.w/2,
-          r.y+r.h/2,
-          "#55f5ff",
-          25
-        );
-
-
-        rocks.splice(
-          i,
-          1
-        );
-
-
-        continue;
-
-      }
-
-
-      gameOver();
-
-      return;
-
-    }
-
-
-    /* 화면 밖 */
-
-    if(
-      r.y >
-      canvas.height+50
-    ){
-
-      rocks.splice(
-        i,
-        1
-      );
-
-      score++;
-
-      coins++;
-
-    }
-
-  }
-
-
-  /* =================================================
-     총알
-  ================================================= */
-
-  for(
-    let i=bullets.length-1;
-    i>=0;
-    i--
-  ){
-
-    const b =
-      bullets[i];
-
-
-    b.y -=
-      b.speed*dt;
-
-
-    let destroyed =
-      false;
-
-
-    /* =========================
-       보스 공격
-    ========================= */
-
-    if(
-      boss &&
-      hit(b,boss)
-    ){
-
-      boss.hp -=
-        b.damage;
-
-
-      explode(
-        b.x,
-        b.y,
-        "#ffe45c",
-        8
-      );
-
-
-      destroyed = true;
-
-
-      /* =========================
-         보스 처치
-      ========================= */
-
-      if(
-        boss.hp <= 0
-      ){
-
-        score += 150;
-
-        coins += 80;
-
-
-        const bx =
-          boss.x +
-          boss.w/2;
-
-        const by =
-          boss.y +
-          boss.h/2;
-
-
-        explode(
-          bx,
-          by,
-          "#ff3180",
-          100
-        );
-
-
-        explode(
-          bx,
-          by,
-          "#55f5ff",
-          60
-        );
-
-
-        explode(
-          bx,
-          by,
-          "#ffe45c",
-          40
-        );
-
-
-        boss = null;
-
-
-        /* =========================
-           최종 보스 처치
-        ========================= */
-
-        if(stage === 10){
-
-          stopMusic();
-
-
-          setTimeout(() => {
-
-            gameClear();
-
-          },1200);
-
-        }
-
-
-        /* =========================
-           5스테이지 보스 처치
-        ========================= */
-
-        else{
-
-          setTimeout(() => {
-
-            if(
-              running &&
-              !boss
-            ){
-
-              nextStage();
-
-            }
-
-          },700);
-
-        }
-
-      }
-
-    }
-
-
-    /* =========================
-       운석 공격
-    ========================= */
-
-    for(
-      let j=rocks.length-1;
-      j>=0 && !destroyed;
-      j--
-    ){
-
-      if(
-        hit(
-          b,
-          rocks[j]
-        )
-      ){
-
-        explode(
-          rocks[j].x,
-          rocks[j].y,
-          "#ff465d",
-          12
-        );
-
-
-        rocks.splice(
-          j,
-          1
-        );
-
-
-        score += 2;
-
-        coins++;
-
-        destroyed = true;
-
-      }
-
-    }
-
-
-    if(
-      destroyed ||
-      b.y < -40
-    ){
-
-      bullets.splice(
-        i,
-        1
-      );
-
-    }
-
-  }
-
-
-  /* =================================================
-     보스 움직임
-  ================================================= */
-
-  if(boss){
-
-    boss.x +=
-      boss.dir *
-      boss.speed *
-      dt;
-
-
-    if(
-      boss.x < 0 ||
-      boss.x+boss.w >
-      canvas.width
-    ){
-
-      boss.dir *= -1;
-
-    }
-
-
-    boss.shot += dt;
-
-
-    if(
-      boss.shot >= .9
-    ){
-
-      boss.shot = 0;
-
-
-      for(
-        let i=0;
-        i<2;
-        i++
-      ){
-
-        rocks.push({
-
-          x:
-            boss.x +
-            Math.random() *
-            boss.w,
-
-          y:
-            boss.y +
-            boss.h,
-
-          w:25,
-
-          h:25,
-
-          speed:
-            250 +
-            stage*15,
-
-          rot:0,
-
-          type:.9
-
-        });
-
-      }
-
-    }
-
-
-    if(
-      boss.y < 65
-    ){
-
-      boss.y +=
-        55*dt;
-
-    }
-
-  }
-
-
-  /* =================================================
-     스테이지 클리어
-  ================================================= */
-
-  if(
-    stageTime >=
-    s.duration &&
-
-    !boss &&
-
-    !transitioning
-  ){
-
-    nextStage();
-
-    return;
-
-  }
-
-
-  /* =================================================
-     파티클
-  ================================================= */
-
-  for(
-    let i=particles.length-1;
-    i>=0;
-    i--
-  ){
-
-    const p =
-      particles[i];
-
-
-    p.x +=
-      p.vx*dt;
-
-    p.y +=
-      p.vy*dt;
-
-
-    p.vy +=
-      80*dt;
-
-
-    p.life -= dt;
-
-
-    if(
-      p.life <= 0
-    ){
-
-      particles.splice(
-        i,
-        1
-      );
-
-    }
-
-  }
-
-}
-
-
-/* =====================================================
-   폭발
-===================================================== */
-
-function explode(
-  x,
-  y,
-  color,
-  count=12
+/* =========================
+키보드
+========================= */
+document.addEventListener("keydown",e=>{
+keys[e.key.toLowerCase()]=true;
+const key=e.key.toLowerCase();
+if(
+[
+"arrowleft",
+"arrowright",
+" ",
+"a",
+"d",
+"q",
+"e"
+].includes(key)
 ){
-
-  for(
-    let i=0;
-    i<count;
-    i++
-  ){
-
-    const angle =
-      Math.random() *
-      Math.PI*2;
-
-
-    const speed =
-      60 +
-      Math.random()*220;
-
-
-    particles.push({
-
-      x:x,
-
-      y:y,
-
-      vx:
-        Math.cos(angle) *
-        speed,
-
-      vy:
-        Math.sin(angle) *
-        speed,
-
-      life:
-        .4 +
-        Math.random()*.8,
-
-      color:color
-
-    });
-
-  }
-
+e.preventDefault();
 }
-
-
-/* =====================================================
-   화면 그리기
-===================================================== */
-
+if(running && key===" ")
+shoot();
+if(running && key==="q")
+activateShield();
+if(running && key==="e")
+activateFreeze();
+});
+document.addEventListener("keyup",e=>{
+keys[e.key.toLowerCase()]=false;
+});
+/* =========================
+새 게임
+========================= */
+function startNewGame(){
+stage=1;
+score=0;
+shield=false;
+freeze=false;
+laser=false;
+startStage();
+}
+/* =========================
+스테이지 시작
+========================= */
+function startStage(){
+if(stage>10){
+gameClear();
+return;
+}
+running=true;
+transitioning=false;
+rocks=[];
+bullets=[];
+particles=[];
+boss=null;
+stageTime=0;
+spawnTime=0;
+player.x=220;
+menu.style.display="none";
+startBtn.style.display="none";
+/* 🎵 스테이지 음악 */
+playStageMusic();
+lastTime=performance.now();
+requestAnimationFrame(gameLoop);
+}
+/* =========================
+다음 스테이지
+========================= */
+function nextStage(){
+if(transitioning)
+return;
+transitioning=true;
+running=false;
+stage++;
+rocks=[];
+bullets=[];
+boss=null;
+stageTime=0;
+spawnTime=0;
+if(stage>10){
+gameClear();
+return;
+}
+menu.style.display="flex";
+shop.style.display="none";
+startBtn.style.display="none";
+info.innerHTML=
+`🌟 <b>STAGE ${stage}</b><br><br>
+${stages[stage-1].name}`;
+setTimeout(()=>{
+if(stage<=10){
+startBtn.style.display="block";
+startStage();
+}
+},1500);
+}
+/* =========================
+보스 생성
+========================= */
+function spawnBoss(){
+boss={
+x:110,
+y:-120,
+w:260,
+h:95,
+hp:500+stage*120,
+maxHp:500+stage*120,
+speed:80+stage*10,
+dir:1,
+shot:0
+};
+}
+/* =========================
+운석 생성
+========================= */
+function spawnRock(){
+const s=stages[stage-1];
+const size=
+20+Math.random()*35;
+rocks.push({
+x:
+Math.random()*
+(canvas.width-size),
+y:-size,
+w:size,
+h:size,
+speed:
+s.speed+
+Math.random()*120+
+stage*8,
+rot:Math.random()*6,
+type:Math.random()
+});
+}
+/* =========================
+발사
+========================= */
+function shoot(){
+if(!running)
+return;
+bullets.push({
+x:player.x+17,
+y:player.y-10,
+w:6,
+h:18,
+speed:700,
+damage:
+laser?40:10
+});
+}
+function mobileShoot(event){
+event.preventDefault();
+if(!running)
+return;
+shoot();
+}
+/* =========================
+충돌
+========================= */
+function hit(a,b){
+return(
+a.x<b.x+b.w &&
+a.x+a.w>b.x &&
+a.y<b.y+b.h &&
+a.y+a.h>b.y
+);
+}
+/* =========================
+방어막
+========================= */
+function activateShield(){
+if(
+!running ||
+shield ||
+coins<15
+)
+return;
+coins-=15;
+shield=true;
+save();
+}
+/* =========================
+시간정지
+========================= */
+function activateFreeze(){
+if(
+!running ||
+freeze ||
+coins<25
+)
+return;
+coins-=25;
+freeze=true;
+save();
+setTimeout(()=>{
+freeze=false;
+},5000);
+}
+/* =========================
+상점
+========================= */
+function buyShield(){
+if(coins<15)
+return;
+coins-=15;
+shield=true;
+save();
+info.innerHTML=
+"🛡️ 방어막 장착 완료!";
+}
+function buyFreeze(){
+if(coins<25)
+return;
+coins-=25;
+freeze=true;
+save();
+setTimeout(()=>{
+freeze=false;
+},5000);
+info.innerHTML=
+"⚡ 시간정지 발동!";
+}
+function buyLaser(){
+if(coins<35)
+return;
+coins-=35;
+laser=true;
+save();
+info.innerHTML=
+"🔥 레이저 장착 완료!";
+}
+/* =========================
+저장
+========================= */
+function save(){
+localStorage.setItem(
+"coins",
+coins
+);
+localStorage.setItem(
+"high",
+high
+);
+}
+/* =========================
+게임 오버
+========================= */
+function gameOver(){
+  playGameOverSound();
+if(!running)
+return;
+running=false;
+stopMusic();
+if(score>high)
+high=score;
+coins+=Math.floor(score/8);
+save();
+menu.style.display="flex";
+shop.style.display="block";
+startBtn.style.display="block";
+startBtn.textContent="다시 하기";
+info.innerHTML=
+`💥 GAME OVER<br><br>
+스테이지 ${stage}<br>
+점수 ${score}<br>
+최고점수 ${high}<br>
+💰 코인 ${coins}`;
+}
+/* =========================
+👑 올 클리어
+========================= */
+function gameClear(){
+running=false;
+transitioning=true;
+/* 전투 음악 정지 */
+stopMusic();
+rocks=[];
+bullets=[];
+boss=null;
+/* 보상 */
+coins+=100;
+if(score>high)
+high=score;
+save();
+/* 클리어 화면 */
+menu.style.display="flex";
+shop.style.display="none";
+startBtn.style.display="block";
+startBtn.textContent=
+"처음부터 다시";
+info.innerHTML=
+`👑 <b>ALL CLEAR!</b><br><br>
+🎉 10개 스테이지 정복 성공!<br><br>
+최종 점수: ${score}<br>
+💰 코인: ${coins}`;
+stage=1;
+/* =========================
+🎵 클리어 음악
+========================= */
+const clearMusic=
+sounds.clear;
+clearMusic.pause();
+clearMusic.currentTime=0;
+clearMusic.volume=.70;
+clearMusic.play()
+.then(()=>{
+console.log(
+"🎵 CLEAR 음악 재생 성공"
+);
+})
+.catch(err=>{
+console.log(
+"❌ CLEAR 음악 재생 실패:",
+err
+);
+});
+}
+/* =========================
+업데이트
+========================= */
+function update(dt){
+if(!running)
+return;
+const s=
+stages[stage-1];
+/* 플레이어 */
+if(
+keys["arrowleft"] ||
+keys["a"] ||
+touchLeft
+){
+player.x-=
+player.speed*dt;
+}
+if(
+keys["arrowright"] ||
+keys["d"] ||
+touchRight
+){
+player.x+=
+player.speed*dt;
+}
+player.x=Math.max(
+0,
+Math.min(
+canvas.width-player.w,
+player.x
+)
+);
+/* 시간 */
+stageTime+=dt;
+/* 운석 생성 */
+spawnTime+=dt;
+if(
+spawnTime>=s.spawn &&
+!boss
+){
+spawnTime=0;
+spawnRock();
+if(
+stage>=3 &&
+Math.random()<.3
+){
+spawnRock();
+}
+}
+/* 보스 등장 */
+if(
+s.boss &&
+stageTime>=5 &&
+!boss
+){
+spawnBoss();
+}
+const slow=
+freeze?.3:1;
+/* =========================
+운석
+========================= */
+for(
+let i=rocks.length-1;
+i>=0;
+i--
+){
+const r=rocks[i];
+r.y+=
+r.speed*
+dt*
+slow;
+r.rot+=dt*2;
+/* 특수 운석 */
+if(
+stage>=6 &&
+r.type>.75
+){
+r.x+=
+Math.sin(r.y*.03)*
+1.8;
+}
+/* 플레이어 충돌 */
+if(hit(player,r)){
+if(shield){
+shield=false;
+explode(
+r.x+r.w/2,
+r.y+r.h/2,
+"#55f5ff",
+25
+);
+rocks.splice(i,1);
+continue;
+}
+gameOver();
+return;
+}
+/* 화면 밖 */
+if(
+r.y>
+canvas.height+50
+){
+rocks.splice(i,1);
+score++;
+coins++;
+}
+}
+/* =========================
+총알
+========================= */
+for(
+let i=bullets.length-1;
+i>=0;
+i--
+){
+const b=bullets[i];
+b.y-=
+b.speed*dt;
+let destroyed=false;
+/* 보스 공격 */
+if(
+boss &&
+hit(b,boss)
+){
+boss.hp-=
+b.damage;
+explode(
+b.x,
+b.y,
+"#ffe45c",
+8
+);
+destroyed=true;
+/* =========================
+👑 보스 처치
+========================= */
+if(
+boss.hp<=0
+){
+score+=150;
+coins+=80;
+const explosionX=
+boss.x+
+boss.w/2;
+const explosionY=
+boss.y+
+boss.h/2;
+/* 💥 대폭발 */
+explode(
+explosionX,
+explosionY,
+"#ff3180",
+100
+);
+explode(
+explosionX,
+explosionY,
+"#55f5ff",
+60
+);
+explode(
+explosionX,
+explosionY,
+"#ffe45c",
+40
+);
+/* 보스 제거 */
+boss=null;
+/* =========================
+👑 최종 보스
+========================= */
+if(stage===10){
+/*
+전투 음악을 바로 정지하고
+폭발 연출을 보여준다.
+*/
+stopMusic();
+/*
+1.2초 후 ALL CLEAR
+*/
+setTimeout(()=>{
+gameClear();
+},1200);
+}
+/* =========================
+일반 보스
+========================= */
+else{
+setTimeout(()=>{
+if(
+running &&
+!boss
+){
+nextStage();
+}
+},700);
+}
+}
+}
+/* =========================
+운석 공격
+========================= */
+for(
+let j=rocks.length-1;
+j>=0 &&
+!destroyed;
+j--
+){
+if(
+hit(b,rocks[j])
+){
+explode(
+rocks[j].x,
+rocks[j].y,
+"#ff465d",
+12
+);
+rocks.splice(j,1);
+score+=2;
+coins++;
+destroyed=true;
+}
+}
+if(
+destroyed ||
+b.y<-40
+){
+bullets.splice(i,1);
+}
+}
+/* =========================
+보스
+========================= */
+if(boss){
+boss.x+=
+boss.dir*
+boss.speed*
+dt;
+if(
+boss.x<0 ||
+boss.x+boss.w>
+canvas.width
+){
+boss.dir*=-1;
+}
+boss.shot+=dt;
+if(
+boss.shot>=.9
+){
+boss.shot=0;
+for(
+let i=0;
+i<2;
+i++
+){
+rocks.push({
+x:
+boss.x+
+Math.random()*
+boss.w,
+y:
+boss.y+
+boss.h,
+w:25,
+h:25,
+speed:
+250+
+stage*15,
+rot:0,
+type:.9
+});
+}
+}
+if(
+boss.y<65
+){
+boss.y+=
+55*dt;
+}
+}
+/* =========================
+스테이지 클리어
+========================= */
+if(
+stageTime>=
+s.duration &&
+!boss &&
+!transitioning
+){
+nextStage();
+return;
+}
+/* =========================
+파티클
+========================= */
+for(
+let i=particles.length-1;
+i>=0;
+i--
+){
+const p=
+particles[i];
+p.x+=p.vx*dt;
+p.y+=p.vy*dt;
+p.vy+=80*dt;
+p.life-=dt;
+if(
+p.life<=0
+){
+particles.splice(i,1);
+}
+}
+}
+/* =========================
+폭발
+========================= */
+function explode(
+x,
+y,
+color,
+count=12
+){
+for(
+let i=0;
+i<count;
+i++
+){
+const angle=
+Math.random()*
+Math.PI*2;
+const speed=
+60+
+Math.random()*220;
+particles.push({
+x:x,
+y:y,
+vx:
+Math.cos(angle)*
+speed,
+vy:
+Math.sin(angle)*
+speed,
+life:
+.4+
+Math.random()*.8,
+color:color
+});
+}
+}
+/* =========================
+화면
+========================= */
 function draw(){
-
-  const s =
-    stages[stage-1] ||
-    stages[0];
-
-
-  /* =========================
-     배경
-  ========================= */
-
-  ctx.fillStyle =
-    s.color;
-
-
-  ctx.fillRect(
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
-
-
-  /* =========================
-     별
-  ========================= */
-
-  for(
-    let i=0;
-    i<100;
-    i++
-  ){
-
-    const x =
-      (i*71) %
-      canvas.width;
-
-
-    const y =
-      (
-        i*127 +
-        stageTime*40
-      ) %
-      canvas.height;
-
-
-    ctx.fillStyle =
-      i%7 === 0
-      ? "#7f8cff"
-      : "#ffffff";
-
-
-    ctx.globalAlpha =
-      .45;
-
-
-    ctx.fillRect(
-      x,
-      y,
-      2,
-      2
-    );
-
-  }
-
-
-  ctx.globalAlpha = 1;
-
-
-  /* =========================
-     HUD
-  ========================= */
-
-  ctx.fillStyle =
-    "#fff";
-
-
-  ctx.font =
-    "bold 16px Arial";
-
-
-  ctx.fillText(
-    `STAGE ${stage}/10`,
-    15,
-    27
-  );
-
-
-  ctx.fillText(
-    `점수 ${score}`,
-    145,
-    27
-  );
-
-
-  ctx.fillText(
-    `💰 ${coins}`,
-    280,
-    27
-  );
-
-
-  ctx.fillText(
-    `최고 ${high}`,
-    380,
-    27
-  );
-
-
-  /* =========================
-     진행바
-  ========================= */
-
-  const progress =
-    Math.min(
-      stageTime /
-      s.duration,
-      1
-    );
-
-
-  ctx.fillStyle =
-    "#222";
-
-
-  ctx.fillRect(
-    15,
-    42,
-    450,
-    7
-  );
-
-
-  ctx.fillStyle =
-    "#55f5ff";
-
-
-  ctx.fillRect(
-    15,
-    42,
-    450*progress,
-    7
-  );
-
-
-  /* =========================
-     플레이어
-  ========================= */
-
-  ctx.save();
-
-
-  ctx.translate(
-    player.x+20,
-    player.y+20
-  );
-
-
-  ctx.fillStyle =
-    laser
-    ? "#ffc400"
-    : "#55f5ff";
-
-
-  ctx.shadowBlur =
-    20;
-
-
-  ctx.shadowColor =
-    laser
-    ? "#ff9800"
-    : "#55f5ff";
-
-
-  ctx.beginPath();
-
-
-  ctx.moveTo(
-    0,
-    -23
-  );
-
-
-  ctx.lineTo(
-    22,
-    19
-  );
-
-
-  ctx.lineTo(
-    0,
-    10
-  );
-
-
-  ctx.lineTo(
-    -22,
-    19
-  );
-
-
-  ctx.closePath();
-
-  ctx.fill();
-
-  ctx.restore();
-
-
-  /* =========================
-     방어막
-  ========================= */
-
-  if(shield){
-
-    ctx.strokeStyle =
-      "#55f5ff";
-
-
-    ctx.lineWidth = 3;
-
-
-    ctx.beginPath();
-
-
-    ctx.arc(
-      player.x+20,
-      player.y+20,
-      32,
-      0,
-      Math.PI*2
-    );
-
-
-    ctx.stroke();
-
-  }
-
-
-  /* =========================
-     운석
-  ========================= */
-
-  for(
-    const r of rocks
-  ){
-
-    ctx.save();
-
-
-    ctx.translate(
-      r.x+r.w/2,
-      r.y+r.h/2
-    );
-
-
-    ctx.rotate(
-      r.rot
-    );
-
-
-    ctx.fillStyle =
-      stage >= 8
-      ? "#ff1744"
-      : "#ff405d";
-
-
-    ctx.shadowBlur =
-      12;
-
-
-    ctx.shadowColor =
-      "#ff1744";
-
-
-    ctx.beginPath();
-
-
-    ctx.arc(
-      0,
-      0,
-      r.w/2,
-      0,
-      Math.PI*2
-    );
-
-
-    ctx.fill();
-
-
-    ctx.restore();
-
-  }
-
-
-  /* =========================
-     총알
-  ========================= */
-
-  ctx.fillStyle =
-    laser
-    ? "#ffd000"
-    : "#55f5ff";
-
-
-  for(
-    const b of bullets
-  ){
-
-    ctx.fillRect(
-      b.x,
-      b.y,
-      b.w,
-      b.h
-    );
-
-  }
-
-
-  /* =========================
-     보스
-  ========================= */
-
-  if(boss){
-
-    ctx.fillStyle =
-      stage === 10
-      ? "#ff003c"
-      : "#d822ff";
-
-
-    ctx.shadowBlur =
-      25;
-
-
-    ctx.shadowColor =
-      ctx.fillStyle;
-
-
-    ctx.beginPath();
-
-
-    ctx.roundRect(
-      boss.x,
-      boss.y,
-      boss.w,
-      boss.h,
-      20
-    );
-
-
-    ctx.fill();
-
-
-    ctx.shadowBlur = 0;
-
-
-    ctx.fillStyle =
-      "#fff";
-
-
-    ctx.font =
-      "bold 22px Arial";
-
-
-    ctx.fillText(
-
-      stage === 10
-      ? "👑 FINAL BOSS"
-      : "☠️ BOSS",
-
-      boss.x+65,
-      boss.y+58
-
-    );
-
-
-    /* HP 배경 */
-
-    ctx.fillStyle =
-      "#300";
-
-
-    ctx.fillRect(
-      70,
-      62,
-      340,
-      12
-    );
-
-
-    /* HP */
-
-    ctx.fillStyle =
-      "#52ff72";
-
-
-    ctx.fillRect(
-
-      70,
-      62,
-
-      340 *
-      Math.max(
-        0,
-        boss.hp /
-        boss.maxHp
-      ),
-
-      12
-
-    );
-
-  }
-
-
-  /* =========================
-     파티클
-  ========================= */
-
-  for(
-    const p of particles
-  ){
-
-    ctx.globalAlpha =
-      Math.max(
-        0,
-        p.life
-      );
-
-
-    ctx.fillStyle =
-      p.color;
-
-
-    ctx.fillRect(
-      p.x,
-      p.y,
-      5,
-      5
-    );
-
-  }
-
-
-  ctx.globalAlpha = 1;
-
-
-  /* =========================
-     조작 안내
-  ========================= */
-
-  ctx.fillStyle =
-    "#aeb5d8";
-
-
-  ctx.font =
-    "13px Arial";
-
-
-  ctx.fillText(
-    "← → 이동 | SPACE 공격",
-    125,
-    700
-  );
-
+const s=
+stages[stage-1] ||
+stages[0];
+/* 배경 */
+ctx.fillStyle=
+s.color;
+ctx.fillRect(
+0,
+0,
+canvas.width,
+canvas.height
+);
+/* 별 */
+for(
+let i=0;
+i<100;
+i++
+){
+const x=
+(i*71)%
+canvas.width;
+const y=
+(
+i*127+
+stageTime*40
+)%
+canvas.height;
+ctx.fillStyle=
+i%7===0
+?"#7f8cff"
+:"#ffffff";
+ctx.globalAlpha=.45;
+ctx.fillRect(
+x,
+y,
+2,
+2
+);
 }
-
-
-/* =====================================================
-   게임 루프
-===================================================== */
-
+ctx.globalAlpha=1;
+/* =========================
+HUD
+========================= */
+ctx.fillStyle="#fff";
+ctx.font=
+"bold 16px Arial";
+ctx.fillText(
+`STAGE ${stage}/10`,
+15,
+27
+);
+ctx.fillText(
+`점수 ${score}`,
+145,
+27
+);
+ctx.fillText(
+`💰 ${coins}`,
+280,
+27
+);
+ctx.fillText(
+`최고 ${high}`,
+380,
+27
+);
+/* 진행바 */
+const progress=
+Math.min(
+stageTime/
+s.duration,
+1
+);
+ctx.fillStyle="#222";
+ctx.fillRect(
+15,
+42,
+450,
+7
+);
+ctx.fillStyle="#55f5ff";
+ctx.fillRect(
+15,
+42,
+450*progress,
+7
+);
+/* =========================
+플레이어
+========================= */
+ctx.save();
+ctx.translate(
+player.x+20,
+player.y+20
+);
+ctx.fillStyle=
+laser
+?"#ffc400"
+:"#55f5ff";
+ctx.shadowBlur=20;
+ctx.shadowColor=
+laser
+?"#ff9800"
+:"#55f5ff";
+ctx.beginPath();
+ctx.moveTo(0,-23);
+ctx.lineTo(22,19);
+ctx.lineTo(0,10);
+ctx.lineTo(-22,19);
+ctx.closePath();
+ctx.fill();
+ctx.restore();
+/* 방어막 */
+if(shield){
+ctx.strokeStyle=
+"#55f5ff";
+ctx.lineWidth=3;
+ctx.beginPath();
+ctx.arc(
+player.x+20,
+player.y+20,
+32,
+0,
+Math.PI*2
+);
+ctx.stroke();
+}
+/* =========================
+운석
+========================= */
+for(
+const r of rocks
+){
+ctx.save();
+ctx.translate(
+r.x+r.w/2,
+r.y+r.h/2
+);
+ctx.rotate(r.rot);
+ctx.fillStyle=
+stage>=8
+?"#ff1744"
+:"#ff405d";
+ctx.shadowBlur=12;
+ctx.shadowColor=
+"#ff1744";
+ctx.beginPath();
+ctx.arc(
+0,
+0,
+r.w/2,
+0,
+Math.PI*2
+);
+ctx.fill();
+ctx.restore();
+}
+/* =========================
+총알
+========================= */
+ctx.fillStyle=
+laser
+?"#ffd000"
+:"#55f5ff";
+for(
+const b of bullets
+){
+ctx.fillRect(
+b.x,
+b.y,
+b.w,
+b.h
+);
+}
+/* =========================
+보스
+========================= */
+if(boss){
+ctx.fillStyle=
+stage===10
+?"#ff003c"
+:"#d822ff";
+ctx.shadowBlur=25;
+ctx.shadowColor=
+ctx.fillStyle;
+ctx.beginPath();
+ctx.roundRect(
+boss.x,
+boss.y,
+boss.w,
+boss.h,
+20
+);
+ctx.fill();
+ctx.shadowBlur=0;
+ctx.fillStyle="#fff";
+ctx.font=
+"bold 22px Arial";
+ctx.fillText(
+stage===10
+?"👑 FINAL BOSS"
+:"☠️ BOSS",
+boss.x+65,
+boss.y+58
+);
+/* HP 바 */
+ctx.fillStyle="#300";
+ctx.fillRect(
+70,
+62,
+340,
+12
+);
+ctx.fillStyle="#52ff72";
+ctx.fillRect(
+70,
+62,
+340*
+Math.max(
+0,
+boss.hp/
+boss.maxHp
+),
+12
+);
+}
+/* =========================
+파티클
+========================= */
+for(
+const p of particles
+){
+ctx.globalAlpha=
+Math.max(
+0,
+p.life
+);
+ctx.fillStyle=
+p.color;
+ctx.fillRect(
+p.x,
+p.y,
+5,
+5
+);
+}
+ctx.globalAlpha=1;
+/* =========================
+조작
+========================= */
+ctx.fillStyle="#aeb5d8";
+ctx.font=
+"13px Arial";
+ctx.fillText(
+"← → 이동 | SPACE 공격 | Q 방어막 | E 시간정지",
+65,
+700
+);
+}
+/* =========================
+게임 루프
+========================= */
 function gameLoop(now){
-
-  if(!running)
-    return;
-
-
-  const dt =
-    Math.min(
-      (now-lastTime)/1000,
-      .033
-    );
-
-
-  lastTime = now;
-
-
-  update(dt);
-
-  draw();
-
-
-  if(running){
-
-    requestAnimationFrame(
-      gameLoop
-    );
-
-  }
-
-}
-
-
-/* =====================================================
-   초기 화면
-===================================================== */
-
+if(!running)
+return;
+const dt=
+Math.min(
+(now-lastTime)/
+1000,
+.033
+);
+lastTime=now;
+update(dt);
 draw();
-
+if(running){
+requestAnimationFrame(
+gameLoop
+);
+}
+}
+/* =========================
+초기 화면
+========================= */
+draw();
 </script>
-
 </body>
 </html>
