@@ -380,9 +380,9 @@ e.preventDefault();
 }
 if(running && key===" ")
 shoot();
-if(running && key==="q")
+if(running && key==="q" && !e.repeat)
 activateShield();
-if(running && key==="e")
+if(running && key==="e" && !e.repeat)
 activateFreeze();
 });
 document.addEventListener("keyup",e=>{
@@ -529,32 +529,27 @@ a.y+a.h>b.y
 방어막
 ========================= */
 function activateShield(){
-if(
-!running ||
-shield ||
-coins<15
-)
-return;
-coins-=15;
-shield=true;
-save();
+  if(!running || shield)
+    return;
+
+  shield=true;
+  save();
+  info.innerHTML="🛡️ 방어막 활성화!";
 }
 /* =========================
 시간정지
 ========================= */
 function activateFreeze(){
-if(
-!running ||
-freeze ||
-coins<25
-)
-return;
-coins-=25;
-freeze=true;
-save();
-setTimeout(()=>{
-freeze=false;
-},5000);
+  if(!running || freeze)
+    return;
+
+  freeze=true;
+  save();
+  info.innerHTML="⚡ 시간정지 발동!";
+
+  setTimeout(()=>{
+    freeze=false;
+  },5000);
 }
 /* =========================
 상점
