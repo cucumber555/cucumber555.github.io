@@ -102,6 +102,20 @@ button:hover{
   padding:0;
   font-size:24px;
 }
+
+.shootTouch{
+  background:#ff4b24;
+  box-shadow:
+    0 0 15px #ff4b24,
+    0 0 30px #ff4b2477;
+  font-size:24px;
+}
+
+.shootTouch:active{
+  background:#ffb300;
+  transform:scale(.9);
+}
+
 </style>
 </head>
 
@@ -120,6 +134,14 @@ button:hover{
     ◀
   </button>
 
+  <button id="shootTouch"
+    class="touch shootTouch"
+    ontouchstart="mobileShoot(event)"
+    ontouchend="event.preventDefault()"
+    ontouchcancel="event.preventDefault()">
+    🔥
+  </button>
+
   <button class="touch"
     ontouchstart="touchRight=true"
     ontouchend="touchRight=false"
@@ -128,6 +150,7 @@ button:hover{
   </button>
 
 </div>
+
 
 <div id="menu">
 
@@ -702,6 +725,17 @@ function shoot(){
   playSound("shoot");
 
 }
+function mobileShoot(event){
+
+  event.preventDefault();
+
+  if(!running)
+    return;
+
+  shoot();
+
+}
+
 
 
 /* =========================
