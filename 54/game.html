@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>운석 생존자 </title>
+<title>운석 생존자</title>
 
 <style>
 *{box-sizing:border-box}
@@ -112,18 +112,26 @@ button:hover{
 <canvas id="game" width="480" height="720"></canvas>
 
 <div id="touch">
+
   <button class="touch"
     ontouchstart="touchLeft=true"
-    ontouchend="touchLeft=false">◀</button>
+    ontouchend="touchLeft=false"
+    ontouchcancel="touchLeft=false">
+    ◀
+  </button>
 
   <button class="touch"
     ontouchstart="touchRight=true"
-    ontouchend="touchRight=false">▶</button>
+    ontouchend="touchRight=false"
+    ontouchcancel="touchRight=false">
+    ▶
+  </button>
+
 </div>
 
 <div id="menu">
 
-  <h1>☄️ 운석 생존자 </h1>
+  <h1>☄️ 운석 생존자</h1>
 
   <p id="info">
     10개의 스테이지를 돌파하라!
@@ -175,6 +183,120 @@ const info=document.getElementById("info");
 const shop=document.getElementById("shop");
 const startBtn=document.getElementById("startBtn");
 
+
+/* =========================
+   🎵 사운드 시스템
+========================= */
+
+const sounds={
+
+  bgm:new Audio("audio/space.mp3"),
+  boss:new Audio("audio/boss.mp3"),
+  finalboss:new Audio("audio/finalboss.mp3"),
+
+  clear:new Audio("audio/clear.mp3"),
+  gameover:new Audio("audio/gameover.mp3"),
+
+  shoot:new Audio("audio/shoot.wav"),
+  hit:new Audio("audio/hit.wav"),
+  shield:new Audio("audio/shield.wav"),
+  freeze:new Audio("audio/freeze.wav"),
+  bossAppear:new Audio("audio/boss.wav"),
+  explode:new Audio("audio/explode.wav")
+
+};
+
+
+/* BGM 반복 */
+
+sounds.bgm.loop=true;
+sounds.boss.loop=true;
+sounds.finalboss.loop=true;
+
+
+/* 볼륨 */
+
+sounds.bgm.volume=.35;
+sounds.boss.volume=.40;
+sounds.finalboss.volume=.45;
+
+sounds.clear.volume=.55;
+sounds.gameover.volume=.55;
+
+sounds.shoot.volume=.22;
+sounds.hit.volume=.30;
+sounds.shield.volume=.50;
+sounds.freeze.volume=.50;
+sounds.bossAppear.volume=.60;
+sounds.explode.volume=.40;
+
+
+/* 효과음 */
+
+function playSound(name){
+
+  const sound=sounds[name];
+
+  if(!sound)
+    return;
+
+  sound.currentTime=0;
+
+  sound.play().catch(()=>{});
+
+}
+
+
+/* BGM 정지 */
+
+function stopMusic(){
+
+  sounds.bgm.pause();
+  sounds.boss.pause();
+  sounds.finalboss.pause();
+
+  sounds.bgm.currentTime=0;
+  sounds.boss.currentTime=0;
+  sounds.finalboss.currentTime=0;
+
+}
+
+
+/* 스테이지별 음악 */
+
+function playStageMusic(){
+
+  stopMusic();
+
+  let music;
+
+  if(stage===10){
+
+    music=sounds.finalboss;
+
+  }
+  else if(stage===5){
+
+    music=sounds.boss;
+
+  }
+  else{
+
+    music=sounds.bgm;
+
+  }
+
+  music.currentTime=0;
+
+  music.play().catch(()=>{});
+
+}
+
+
+/* =========================
+   변수
+========================= */
+
 let keys={};
 
 let running=false;
@@ -183,8 +305,13 @@ let transitioning=false;
 let stage=1;
 let score=0;
 
-let coins=Number(localStorage.getItem("coins")||0);
-let high=Number(localStorage.getItem("high")||0);
+let coins=Number(
+  localStorage.getItem("coins")||0
+);
+
+let high=Number(
+  localStorage.getItem("high")||0
+);
 
 let shield=false;
 let freeze=false;
@@ -210,11 +337,15 @@ let touchRight=false;
 ========================= */
 
 const player={
+
   x:220,
   y:625,
+
   w:40,
   h:40,
+
   speed:340
+
 };
 
 
@@ -223,6 +354,7 @@ const player={
 ========================= */
 
 const stages=[
+
   {
     name:"푸른 우주",
     duration:15,
@@ -304,6 +436,7 @@ const stages=[
     boss:true,
     color:"#300000"
   }
+
 ];
 
 
@@ -318,25 +451,40 @@ document.addEventListener("keydown",e=>{
   const key=e.key.toLowerCase();
 
   if(
-    ["arrowleft","arrowright"," ","a","d","q","e"]
-    .includes(key)
+    [
+      "arrowleft",
+      "arrowright",
+      " ",
+      "a",
+      "d",
+      "q",
+      "e"
+    ].includes(key)
   ){
+
     e.preventDefault();
+
   }
+
 
   if(running && key===" ")
     shoot();
 
+
   if(running && key==="q")
     activateShield();
+
 
   if(running && key==="e")
     activateFreeze();
 
 });
 
+
 document.addEventListener("keyup",e=>{
+
   keys[e.key.toLowerCase()]=false;
+
 });
 
 
@@ -369,7 +517,9 @@ function startStage(){
     gameClear();
 
     return;
+
   }
+
 
   running=true;
   transitioning=false;
@@ -386,6 +536,12 @@ function startStage(){
   player.x=220;
 
   menu.style.display="none";
+
+  startBtn.style.display="none";
+
+  /* 🎵 스테이지 음악 */
+
+  playStageMusic();
 
   lastTime=performance.now();
 
@@ -415,12 +571,15 @@ function nextStage(){
   stageTime=0;
   spawnTime=0;
 
+
   if(stage>10){
 
     gameClear();
 
     return;
+
   }
+
 
   menu.style.display="flex";
 
@@ -432,9 +591,6 @@ function nextStage(){
     `🌟 <b>STAGE ${stage}</b><br><br>
      ${stages[stage-1].name}`;
 
-  /*
-    1.5초 후 자동 시작
-  */
 
   setTimeout(()=>{
 
@@ -541,6 +697,10 @@ function shoot(){
 
   });
 
+  /* 🔫 발사음 */
+
+  playSound("shoot");
+
 }
 
 
@@ -551,10 +711,12 @@ function shoot(){
 function hit(a,b){
 
   return(
+
     a.x<b.x+b.w &&
     a.x+a.w>b.x &&
     a.y<b.y+b.h &&
     a.y+a.h>b.y
+
   );
 
 }
@@ -574,7 +736,10 @@ function activateShield(){
     return;
 
   coins-=15;
+
   shield=true;
+
+  playSound("shield");
 
   save();
 
@@ -595,9 +760,13 @@ function activateFreeze(){
     return;
 
   coins-=25;
+
   freeze=true;
 
+  playSound("freeze");
+
   save();
+
 
   setTimeout(()=>{
 
@@ -618,7 +787,10 @@ function buyShield(){
     return;
 
   coins-=15;
+
   shield=true;
+
+  playSound("shield");
 
   save();
 
@@ -634,13 +806,20 @@ function buyFreeze(){
     return;
 
   coins-=25;
+
   freeze=true;
+
+  playSound("freeze");
 
   save();
 
+
   setTimeout(()=>{
+
     freeze=false;
+
   },5000);
+
 
   info.innerHTML=
     "⚡ 시간정지 발동!";
@@ -654,6 +833,7 @@ function buyLaser(){
     return;
 
   coins-=35;
+
   laser=true;
 
   save();
@@ -694,6 +874,11 @@ function gameOver(){
 
   running=false;
 
+  stopMusic();
+
+  playSound("gameover");
+
+
   if(score>high)
     high=score;
 
@@ -726,6 +911,10 @@ function gameOver(){
 function gameClear(){
 
   running=false;
+
+  stopMusic();
+
+  playSound("clear");
 
   rocks=[];
   bullets=[];
@@ -784,6 +973,7 @@ function update(dt){
 
   }
 
+
   if(
     keys["arrowright"] ||
     keys["d"] ||
@@ -795,12 +985,16 @@ function update(dt){
 
   }
 
+
   player.x=Math.max(
+
     0,
+
     Math.min(
       canvas.width-player.w,
       player.x
     )
+
   );
 
 
@@ -813,6 +1007,7 @@ function update(dt){
 
   spawnTime+=dt;
 
+
   if(
     spawnTime>=s.spawn &&
     !boss
@@ -821,6 +1016,7 @@ function update(dt){
     spawnTime=0;
 
     spawnRock();
+
 
     if(
       stage>=3 &&
@@ -844,6 +1040,8 @@ function update(dt){
 
     spawnBoss();
 
+    playSound("bossAppear");
+
   }
 
 
@@ -851,7 +1049,9 @@ function update(dt){
     freeze?.3:1;
 
 
-  /* 운석 */
+  /* =========================
+     운석
+  ========================= */
 
   for(
     let i=rocks.length-1;
@@ -883,7 +1083,7 @@ function update(dt){
     }
 
 
-    /* 충돌 */
+    /* 플레이어 충돌 */
 
     if(hit(player,r)){
 
@@ -898,11 +1098,14 @@ function update(dt){
           25
         );
 
+        playSound("shield");
+
         rocks.splice(i,1);
 
         continue;
 
       }
+
 
       gameOver();
 
@@ -921,6 +1124,7 @@ function update(dt){
       rocks.splice(i,1);
 
       score++;
+
       coins++;
 
     }
@@ -928,7 +1132,9 @@ function update(dt){
   }
 
 
-  /* 총알 */
+  /* =========================
+     총알
+  ========================= */
 
   for(
     let i=bullets.length-1;
@@ -983,12 +1189,10 @@ function update(dt){
           70
         );
 
+        playSound("explode");
+
         boss=null;
 
-        /*
-          보스 처치 후
-          다음 스테이지
-        */
 
         setTimeout(()=>{
 
@@ -1028,9 +1232,12 @@ function update(dt){
           12
         );
 
+        playSound("hit");
+
         rocks.splice(j,1);
 
         score+=2;
+
         coins++;
 
         destroyed=true;
@@ -1052,7 +1259,9 @@ function update(dt){
   }
 
 
-  /* 보스 */
+  /* =========================
+     보스
+  ========================= */
 
   if(boss){
 
@@ -1060,6 +1269,7 @@ function update(dt){
       boss.dir*
       boss.speed*
       dt;
+
 
     if(
       boss.x<0 ||
@@ -1074,11 +1284,13 @@ function update(dt){
 
     boss.shot+=dt;
 
+
     if(
       boss.shot>=.9
     ){
 
       boss.shot=0;
+
 
       for(
         let i=0;
@@ -1127,7 +1339,9 @@ function update(dt){
   }
 
 
-  /* 스테이지 클리어 */
+  /* =========================
+     스테이지 클리어
+  ========================= */
 
   if(
     stageTime>=
@@ -1143,7 +1357,9 @@ function update(dt){
   }
 
 
-  /* 파티클 */
+  /* =========================
+     파티클
+  ========================= */
 
   for(
     let i=particles.length-1;
@@ -1160,6 +1376,7 @@ function update(dt){
     p.vy+=80*dt;
 
     p.life-=dt;
+
 
     if(
       p.life<=0
@@ -1287,12 +1504,15 @@ function draw(){
   ctx.globalAlpha=1;
 
 
-  /* HUD */
+  /* =========================
+     HUD
+  ========================= */
 
   ctx.fillStyle="#fff";
 
   ctx.font=
     "bold 16px Arial";
+
 
   ctx.fillText(
     `STAGE ${stage}/10`,
@@ -1300,17 +1520,20 @@ function draw(){
     27
   );
 
+
   ctx.fillText(
     `점수 ${score}`,
     145,
     27
   );
 
+
   ctx.fillText(
     `💰 ${coins}`,
     280,
     27
   );
+
 
   ctx.fillText(
     `최고 ${high}`,
@@ -1328,6 +1551,7 @@ function draw(){
       1
     );
 
+
   ctx.fillStyle="#222";
 
   ctx.fillRect(
@@ -1336,6 +1560,7 @@ function draw(){
     450,
     7
   );
+
 
   ctx.fillStyle="#55f5ff";
 
@@ -1347,7 +1572,9 @@ function draw(){
   );
 
 
-  /* 플레이어 */
+  /* =========================
+     플레이어
+  ========================= */
 
   ctx.save();
 
@@ -1356,17 +1583,21 @@ function draw(){
     player.y+20
   );
 
+
   ctx.fillStyle=
     laser
     ?"#ffc400"
     :"#55f5ff";
 
+
   ctx.shadowBlur=20;
+
 
   ctx.shadowColor=
     laser
     ?"#ff9800"
     :"#55f5ff";
+
 
   ctx.beginPath();
 
@@ -1409,7 +1640,9 @@ function draw(){
   }
 
 
-  /* 운석 */
+  /* =========================
+     운석
+  ========================= */
 
   for(
     const r of rocks
@@ -1424,15 +1657,18 @@ function draw(){
 
     ctx.rotate(r.rot);
 
+
     ctx.fillStyle=
       stage>=8
       ?"#ff1744"
       :"#ff405d";
 
+
     ctx.shadowBlur=12;
 
     ctx.shadowColor=
       "#ff1744";
+
 
     ctx.beginPath();
 
@@ -1451,12 +1687,15 @@ function draw(){
   }
 
 
-  /* 총알 */
+  /* =========================
+     총알
+  ========================= */
 
   ctx.fillStyle=
     laser
     ?"#ffd000"
     :"#55f5ff";
+
 
   for(
     const b of bullets
@@ -1472,7 +1711,9 @@ function draw(){
   }
 
 
-  /* 보스 */
+  /* =========================
+     보스
+  ========================= */
 
   if(boss){
 
@@ -1481,10 +1722,12 @@ function draw(){
       ?"#ff003c"
       :"#d822ff";
 
+
     ctx.shadowBlur=25;
 
     ctx.shadowColor=
       ctx.fillStyle;
+
 
     ctx.beginPath();
 
@@ -1498,17 +1741,21 @@ function draw(){
 
     ctx.fill();
 
+
     ctx.shadowBlur=0;
+
 
     ctx.fillStyle="#fff";
 
     ctx.font=
       "bold 22px Arial";
 
+
     ctx.fillText(
       stage===10
       ?"👑 FINAL BOSS"
       :"☠️ BOSS",
+
       boss.x+65,
       boss.y+58
     );
@@ -1524,6 +1771,7 @@ function draw(){
       340,
       12
     );
+
 
     ctx.fillStyle="#52ff72";
 
@@ -1542,7 +1790,9 @@ function draw(){
   }
 
 
-  /* 파티클 */
+  /* =========================
+     파티클
+  ========================= */
 
   for(
     const p of particles
@@ -1569,7 +1819,9 @@ function draw(){
   ctx.globalAlpha=1;
 
 
-  /* 조작 */
+  /* =========================
+     조작
+  ========================= */
 
   ctx.fillStyle="#aeb5d8";
 
@@ -1594,6 +1846,7 @@ function gameLoop(now){
   if(!running)
     return;
 
+
   const dt=
     Math.min(
       (now-lastTime)/
@@ -1601,21 +1854,29 @@ function gameLoop(now){
       .033
     );
 
+
   lastTime=now;
+
 
   update(dt);
 
   draw();
 
-  if(running)
+
+  if(running){
+
     requestAnimationFrame(
       gameLoop
     );
 
+  }
+
 }
 
 
-/* 초기 화면 */
+/* =========================
+   초기 화면
+========================= */
 
 draw();
 
