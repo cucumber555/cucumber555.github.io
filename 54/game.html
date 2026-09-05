@@ -163,6 +163,9 @@ ontouchcancel="touchRight=false">
     <button onclick="closeRanking()" style="display:block;margin:16px auto 0;">닫기</button>
   </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
 <script>
 /* =========================
 기본 설정
@@ -173,6 +176,20 @@ const menu=document.getElementById("menu");
 const info=document.getElementById("info");
 const shop=document.getElementById("shop");
 const startBtn=document.getElementById("startBtn");
+// =========================
+// ☁️ 온라인 순위 시스템
+// =========================
+
+const SUPABASE_URL = "https://mujmwouyopgxwtezhlzv.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_uiChi46cHC53f6QAm8TALQ_MGknEOQ9";
+
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY
+);
+
+let playerName =
+  localStorage.getItem("meteorSurvivorPlayerName") || "";
 /* =========================
 🎵 사운드 시스템
 ========================= */
@@ -281,7 +298,6 @@ let lastTime=0;
 let touchLeft=false;
 let touchRight=false;
 let shooting=false;
-let playerName=localStorage.getItem("meteorSurvivorPlayerName")||"";
 let shootCooldown=0;
 /* =========================
 플레이어
@@ -412,16 +428,24 @@ document.addEventListener("keyup",e=>{
 새 게임
 ========================= */
 function startNewGame(){
+
   if(!playerName){
-    const name=prompt("게임에 사용할 이름을 입력하세요.");
-    
+
+    const name=prompt(
+      "게임에 사용할 이름을 입력하세요."
+    );
+
     if(!name || !name.trim()){
       alert("이름을 입력해야 게임을 시작할 수 있습니다.");
       return;
     }
 
     playerName=name.trim().slice(0,12);
-    localStorage.setItem("meteorSurvivorPlayerName",playerName);
+
+    localStorage.setItem(
+      "meteorSurvivorPlayerName",
+      playerName
+    );
   }
 
   stage=1;
@@ -429,6 +453,7 @@ function startNewGame(){
   shield=false;
   freeze=false;
   laser=false;
+
   startStage();
 }
 /* =========================
@@ -634,42 +659,127 @@ high
 /* =========================
 🏆 순위 시스템
 ========================= */
-const RANKING_KEY="meteorSurvivorRanking";
-function getRanking(){
-  try{
-    const r=JSON.parse(localStorage.getItem(RANKING_KEY)||"[]");
-    return Array.isArray(r)?r:[];
-  }catch(e){return [];}
-}
-function addRanking(){
-  const ranking=getRanking();
-  ranking.push({
-  name:playerName||"PLAYER",
-  stage:Number(stage)||1,
-  score:Number(score)||0,
-  time:Number(stageTime)||0,
-  date:Date.now()
-});
-  ranking.sort((a,b)=>Number(b.stage)-Number(a.stage)||Number(b.score)-Number(a.score)||Number(b.time)-Number(a.time)||Number(a.date)-Number(b.date));
-  localStorage.setItem(RANKING_KEY,JSON.stringify(ranking.slice(0,20)));
-}
-function openRanking(){
-  const modal=document.getElementById("rankingModal");
-  const list=document.getElementById("rankingList");
-  const ranking=getRanking();
-  if(!ranking.length){
-    list.innerHTML='<p style="text-align:center;opacity:.75;">아직 등록된 기록이 없습니다.</p>';
-  }else{
-    list.innerHTML=ranking.slice(0,20).map((r,i)=>{
-      const medal=i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"위";
-      return '<div style="display:flex;align-items:center;gap:8px;padding:10px 5px;border-bottom:1px solid #27305b;">'+
-        '<b style="width:40px;text-align:center;">'+medal+'</b>'+
-        '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+String(r.name).replace(/[&<>]/g,"")+
-        '</span><span>STAGE '+Number(r.stage)+'</span><span style="width:70px;text-align:right;">'+Number(r.score)+'점</span></div>';
-    }).join("");
+
+/* =========================
+   🏆 온라인 순위 시스템
+========================= */
+
+async function addRanking(){
+
+  if(!playerName){
+    playerName="PLAYER";
   }
-  modal.style.display="flex";
+
+  const { error } = await supabaseClient
+    .from("ranking")
+    .insert({
+      name: playerName,
+      stage: Number(stage) || 1,
+      score: Number(score) || 0,
+      time: Number(stageTime) || 0
+    });
+
+  if(error){
+    console.error("순위 저장 실패:",error);
+  }
 }
+
+
+/* =========================
+   온라인 TOP 20 불러오기
+========================= */
+
+async function openRanking(){
+
+  const modal =
+    document.getElementById("rankingModal");
+
+  const list =
+    document.getElementById("rankingList");
+
+  modal.style.display="flex";
+
+  list.innerHTML=
+    '<p style="text-align:center;">순위를 불러오는 중...</p>';
+
+  const { data, error } =
+    await supabaseClient
+      .from("ranking")
+      .select("name,stage,score,time")
+      .order("stage",{ascending:false})
+      .order("score",{ascending:false})
+      .order("time",{ascending:false})
+      .limit(20);
+
+  if(error){
+
+    console.error("순위 불러오기 실패:",error);
+
+    list.innerHTML=
+      '<p style="text-align:center;color:#ff6677;">순위를 불러오지 못했습니다.</p>';
+
+    return;
+  }
+
+  if(!data || data.length===0){
+
+    list.innerHTML=
+      '<p style="text-align:center;opacity:.75;">아직 등록된 기록이 없습니다.</p>';
+
+    return;
+  }
+
+  list.innerHTML=data.map((r,i)=>{
+
+    const medal =
+      i===0 ? "🥇" :
+      i===1 ? "🥈" :
+      i===2 ? "🥉" :
+      (i+1)+"위";
+
+    const safeName =
+      String(r.name || "PLAYER")
+        .replace(/[&<>]/g,"");
+
+    return `
+      <div style="
+        display:flex;
+        align-items:center;
+        gap:8px;
+        padding:10px 5px;
+        border-bottom:1px solid #27305b;
+      ">
+
+        <b style="
+          width:40px;
+          text-align:center;
+        ">${medal}</b>
+
+        <span style="
+          flex:1;
+          overflow:hidden;
+          text-overflow:ellipsis;
+          white-space:nowrap;
+        ">${safeName}</span>
+
+        <span>
+          STAGE ${Number(r.stage)}
+        </span>
+
+        <span style="
+          width:70px;
+          text-align:right;
+        ">
+          ${Number(r.score)}점
+        </span>
+
+      </div>
+    `;
+
+  }).join("");
+}
+
+
 function closeRanking(){
   document.getElementById("rankingModal").style.display="none";
 }
