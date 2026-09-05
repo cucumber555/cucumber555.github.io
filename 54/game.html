@@ -363,30 +363,30 @@ color:"#300000"
 키보드
 ========================= */
 document.addEventListener("keydown",e=>{
-keys[e.key.toLowerCase()]=true;
-const key=e.key.toLowerCase();
-if(
-[
-"arrowleft",
-"arrowright",
-" ",
-"a",
-"d",
-"q",
-"e"
-].includes(key)
-){
-e.preventDefault();
-}
-if(running && key===" ")
-shoot();
-if(running && key==="q" && !e.repeat)
-activateShield();
-if(running && key==="e" && !e.repeat)
-activateFreeze();
+  const key=e.key.toLowerCase();
+  const code=e.code;
+
+  if(code==="ArrowLeft") keys.arrowleft=true;
+  if(code==="ArrowRight") keys.arrowright=true;
+  if(code==="KeyA") keys.a=true;
+  if(code==="KeyD") keys.d=true;
+
+  if(["ArrowLeft","ArrowRight","Space","KeyA","KeyD","KeyQ","KeyE"].includes(code)){
+    e.preventDefault();
+  }
+
+  // Q/E는 한글 입력 상태에서도 물리 키 기준으로 확실하게 인식
+  if(running && !e.repeat){
+    if(code==="Space") shoot();
+    else if(code==="KeyQ") activateShield();
+    else if(code==="KeyE") activateFreeze();
+  }
 });
 document.addEventListener("keyup",e=>{
-keys[e.key.toLowerCase()]=false;
+  if(e.code==="ArrowLeft") keys.arrowleft=false;
+  if(e.code==="ArrowRight") keys.arrowright=false;
+  if(e.code==="KeyA") keys.a=false;
+  if(e.code==="KeyD") keys.d=false;
 });
 /* =========================
 새 게임
