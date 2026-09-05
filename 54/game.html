@@ -272,6 +272,8 @@ let spawnTime=0;
 let lastTime=0;
 let touchLeft=false;
 let touchRight=false;
+let shooting=false;
+let shootCooldown=0;
 /* =========================
 플레이어
 ========================= */
@@ -366,6 +368,12 @@ document.addEventListener("keydown",e=>{
   const key=e.key.toLowerCase();
   const code=e.code;
 
+  // 이동 방향을 누르면 자동 연사를 멈춤.
+  // 다시 스페이스바를 눌러야 연사가 재개됨.
+  if(code==="ArrowLeft" || code==="ArrowRight" || code==="KeyA" || code==="KeyD"){
+    shooting=false;
+  }
+
   if(code==="ArrowLeft") keys.arrowleft=true;
   if(code==="ArrowRight") keys.arrowright=true;
   if(code==="KeyA") keys.a=true;
@@ -376,6 +384,8 @@ document.addEventListener("keydown",e=>{
   }
 
   // Q/E는 한글 입력 상태에서도 물리 키 기준으로 확실하게 인식
+  if(code==="Space") shooting=true;
+
   if(running && !e.repeat){
     if(code==="Space") shoot();
     else if(code==="KeyQ") activateShield();
@@ -383,6 +393,7 @@ document.addEventListener("keydown",e=>{
   }
 });
 document.addEventListener("keyup",e=>{
+  if(e.code==="Space") shooting=false;
   if(e.code==="ArrowLeft") keys.arrowleft=false;
   if(e.code==="ArrowRight") keys.arrowright=false;
   if(e.code==="KeyA") keys.a=false;
@@ -415,6 +426,8 @@ particles=[];
 boss=null;
 stageTime=0;
 spawnTime=0;
+shooting=false;
+shootCooldown=0;
 player.x=220;
 menu.style.display="none";
 startBtn.style.display="none";
@@ -676,6 +689,14 @@ err
 function update(dt){
 if(!running)
 return;
+
+// 스페이스바를 누르고 있으면 자동 연사
+shootCooldown-=dt;
+if(shooting && shootCooldown<=0){
+  shoot();
+  shootCooldown=0.12;
+}
+
 const s=
 stages[stage-1];
 /* 플레이어 */
