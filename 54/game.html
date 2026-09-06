@@ -978,21 +978,22 @@ i--
 ){
 const r=rocks[i];
 
-r.y+=
-r.speed*
-dt*
-slow;
+r.y += r.speed * dt * slow;
+r.rot += dt * 2;
 
-r.rot+=dt*2;
+// 6단계부터 일반 운석도 좌우로 흔들림
+if(stage>=6 && r.type===0){
+  r.x += Math.sin(r.y * 0.05) * 1.5;
+}
 
 // ⚡ 고속 운석
 if(r.type===1){
-  r.x+=Math.sin(r.y*.05)*1.5;
+  r.x += Math.sin(r.y * 0.05) * 1.5;
 }
 
 // 🌀 분열 운석
 if(r.type===5){
-  r.x+=Math.sin(r.y*.035)*2.5;
+  r.x += Math.sin(r.y * 0.035) * 2.5;
 }
 
 // 화면 밖으로 나가는 운석 처리
