@@ -534,23 +534,64 @@ shot:0
 운석 생성
 ========================= */
 function spawnRock(){
-const s=stages[stage-1];
-const size=
-20+Math.random()*35;
-rocks.push({
-x:
-Math.random()*
-(canvas.width-size),
-y:-size,
-w:size,
-h:size,
-speed:
-s.speed+
-Math.random()*120+
-stage*8,
-rot:Math.random()*6,
-type:Math.random()
-});
+  const s=stages[stage-1];
+
+  // 스테이지가 올라갈수록 특수 운석 등장 확률 증가
+  let roll=Math.random();
+  let type=0;
+
+  if(stage>=8 && roll<0.12){
+    type=5; // 🌀 분열
+  }else if(stage>=6 && roll<0.24){
+    type=4; // 💥 폭발
+  }else if(stage>=4 && roll<0.38){
+    type=3; // 💎 보너스
+  }else if(stage>=3 && roll<0.52){
+    type=2; // 🛡️ 중장
+  }else if(stage>=2 && roll<0.68){
+    type=1; // ⚡ 고속
+  }
+
+  let size=20+Math.random()*35;
+  let speed=s.speed+Math.random()*120+stage*8;
+  let hp=1;
+
+  if(type===1){
+    size=16+Math.random()*15;
+    speed*=1.8;
+  }
+
+  if(type===2){
+    size=35+Math.random()*15;
+    speed*=.75;
+    hp=3;
+  }
+
+  if(type===3){
+    size=25+Math.random()*20;
+    speed*=.9;
+  }
+
+  if(type===4){
+    size=28+Math.random()*18;
+    speed*=.85;
+  }
+
+  if(type===5){
+    size=30+Math.random()*18;
+    speed*=.8;
+  }
+
+  rocks.push({
+    x:Math.random()*(canvas.width-size),
+    y:-size,
+    w:size,
+    h:size,
+    speed:speed,
+    rot:Math.random()*6,
+    type:type,
+    hp:hp
+  });
 }
 /* =========================
 발사
@@ -936,20 +977,25 @@ i>=0;
 i--
 ){
 const r=rocks[i];
+
 r.y+=
 r.speed*
 dt*
 slow;
+
 r.rot+=dt*2;
-/* 특수 운석 */
-if(
-stage>=6 &&
-r.type>.75
-){
-r.x+=
-Math.sin(r.y*.03)*
-1.8;
+
+// ⚡ 고속 운석
+if(r.type===1){
+  r.x+=Math.sin(r.y*.05)*1.5;
 }
+
+// 🌀 분열 운석
+if(r.type===5){
+  r.x+=Math.sin(r.y*.035)*2.5;
+}
+
+// 화면 밖으로 나가는 운석 처리
 /* 플레이어 충돌 */
 if(hit(player,r)){
 if(shield){
@@ -1077,19 +1123,105 @@ j>=0 &&
 !destroyed;
 j--
 ){
-if(
-hit(b,rocks[j])
-){
-explode(
-rocks[j].x,
-rocks[j].y,
-"#ff465d",
-12
-);
-rocks.splice(j,1);
-score+=2;
-coins++;
-destroyed=true;
+if(hit(b,rocks[j])){
+
+  const r=rocks[j];
+
+  // 중장 운석은 3번 맞아야 파괴
+  r.hp--;
+
+  if(r.hp>0){
+    explode(
+      r.x+r.w/2,
+      r.y+r.h/2,
+      "#ffffff",
+      5
+    );
+    destroyed=true;
+    continue;
+  }
+
+  // 💎 보너스 운석
+  if(r.type===3){
+    score+=8;
+    coins+=3;
+
+    explode(
+      r.x+r.w/2,
+      r.y+r.h/2,
+      "#55f5ff",
+      20
+    );
+  }
+
+  // 💥 폭발 운석
+  else if(r.type===4){
+
+    score+=4;
+    coins+=2;
+
+    const cx=r.x+r.w/2;
+    const cy=r.y+r.h/2;
+
+    explode(cx,cy,"#ff7b00",30);
+
+    // 주변 운석 제거
+    for(let k=rocks.length-1;k>=0;k--){
+      if(k===j) continue;
+
+      const other=rocks[k];
+      const dx=(other.x+other.w/2)-cx;
+      const dy=(other.y+other.h/2)-cy;
+      const distance=Math.sqrt(dx*dx+dy*dy);
+
+      if(distance<90){
+        rocks.splice(k,1);
+        score+=2;
+        coins++;
+      }
+    }
+  }
+
+  // 🌀 분열 운석
+  else if(r.type===5){
+
+    score+=5;
+    coins+=2;
+
+    const cx=r.x+r.w/2;
+    const cy=r.y+r.h/2;
+
+    explode(cx,cy,"#b84cff",25);
+
+    // 작은 운석 3개 생성
+    for(let k=0;k<3;k++){
+      rocks.push({
+        x:cx-10+Math.random()*20,
+        y:cy,
+        w:14,
+        h:14,
+        speed:300+Math.random()*100,
+        rot:Math.random()*6,
+        type:0,
+        hp:1
+      });
+    }
+  }
+
+  // 일반 / 고속 / 중장
+  else{
+    score+=2;
+    coins++;
+    explode(
+      r.x+r.w/2,
+      r.y+r.h/2,
+      r.type===1 ? "#ffe45c" : "#ff465d",
+      12
+    );
+  }
+
+  rocks.splice(j,1);
+  destroyed=true;
 }
 }
 if(
@@ -1138,7 +1270,8 @@ speed:
 250+
 stage*15,
 rot:0,
-type:.9
+type:0,
+hp:1
 });
 }
 }
@@ -1350,34 +1483,143 @@ Math.PI*2
 ctx.stroke();
 }
 /* =========================
-운석
+   운석
 ========================= */
-for(
-const r of rocks
-){
-ctx.save();
-ctx.translate(
-r.x+r.w/2,
-r.y+r.h/2
-);
-ctx.rotate(r.rot);
-ctx.fillStyle=
-stage>=8
-?"#ff1744"
-:"#ff405d";
-ctx.shadowBlur=12;
-ctx.shadowColor=
-"#ff1744";
-ctx.beginPath();
-ctx.arc(
-0,
-0,
-r.w/2,
-0,
-Math.PI*2
-);
-ctx.fill();
-ctx.restore();
+
+for(const r of rocks){
+
+  ctx.save();
+
+  ctx.translate(
+    r.x+r.w/2,
+    r.y+r.h/2
+  );
+
+  ctx.rotate(r.rot);
+
+  ctx.shadowBlur=12;
+
+  // 🪨 일반
+  if(r.type===0){
+
+    ctx.fillStyle="#ff405d";
+    ctx.shadowColor="#ff1744";
+
+    ctx.beginPath();
+    ctx.arc(0,0,r.w/2,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  // ⚡ 고속
+  else if(r.type===1){
+
+    ctx.fillStyle="#ffe45c";
+    ctx.shadowColor="#ffe45c";
+
+    ctx.beginPath();
+    ctx.moveTo(0,-r.h/2);
+    ctx.lineTo(r.w/2,r.h/2);
+    ctx.lineTo(0,r.h/3);
+    ctx.lineTo(-r.w/2,r.h/2);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // 🛡️ 중장
+  else if(r.type===2){
+
+    ctx.fillStyle="#8f9cff";
+    ctx.shadowColor="#6977ff";
+
+    ctx.beginPath();
+
+    for(let i=0;i<6;i++){
+      const a=Math.PI/3*i;
+      const x=Math.cos(a)*r.w/2;
+      const y=Math.sin(a)*r.h/2;
+
+      if(i===0) ctx.moveTo(x,y);
+      else ctx.lineTo(x,y);
+    }
+
+    ctx.closePath();
+    ctx.fill();
+
+    // HP 표시
+    ctx.fillStyle="#fff";
+    ctx.font="bold 12px Arial";
+    ctx.textAlign="center";
+    ctx.fillText(r.hp,0,4);
+  }
+
+  // 💎 보너스
+  else if(r.type===3){
+
+    ctx.fillStyle="#55f5ff";
+    ctx.shadowColor="#55f5ff";
+
+    ctx.beginPath();
+    ctx.moveTo(0,-r.h/2);
+    ctx.lineTo(r.w/2,0);
+    ctx.lineTo(0,r.h/2);
+    ctx.lineTo(-r.w/2,0);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // 💥 폭발
+  else if(r.type===4){
+
+    ctx.fillStyle="#ff7b00";
+    ctx.shadowColor="#ff4d00";
+
+    ctx.beginPath();
+
+    for(let i=0;i<10;i++){
+
+      const a=Math.PI*2*i/10;
+      const radius=i%2===0
+        ? r.w/2
+        : r.w/3;
+
+      const x=Math.cos(a)*radius;
+      const y=Math.sin(a)*radius;
+
+      if(i===0) ctx.moveTo(x,y);
+      else ctx.lineTo(x,y);
+    }
+
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // 🌀 분열
+  else if(r.type===5){
+
+    ctx.fillStyle="#b84cff";
+    ctx.shadowColor="#b84cff";
+
+    ctx.beginPath();
+
+    for(let i=0;i<8;i++){
+
+      const a=Math.PI*2*i/8;
+      const radius=i%2===0
+        ? r.w/2
+        : r.w/3;
+
+      const x=Math.cos(a)*radius;
+      const y=Math.sin(a)*radius;
+
+      if(i===0) ctx.moveTo(x,y);
+      else ctx.lineTo(x,y);
+    }
+
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  ctx.restore();
 }
 /* =========================
 총알
