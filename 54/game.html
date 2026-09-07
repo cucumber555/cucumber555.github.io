@@ -433,11 +433,11 @@ function startNewGame(){
   if(!playerName){
 
     const name=prompt(
-      "게임에 사용할 이름을 입력하세요."
+      "게임에 사용할 닉네임을 입력하세요."
     );
 
     if(!name || !name.trim()){
-      alert("이름을 입력해야 게임을 시작할 수 있습니다.");
+      alert("닉네임을 입력해야 게임을 시작할 수 있습니다.");
       return;
     }
 
@@ -770,7 +770,7 @@ async function openRanking(){
 
     return;
   }
-// 같은 이름은 최고 기록 하나만 남김
+// 같은 닉네임은 최고 기록 하나만 남김
 const bestByName = {};
 
 data.forEach(r => {
