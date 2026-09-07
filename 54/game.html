@@ -887,10 +887,10 @@ info.innerHTML=
 /* =========================
 👑 올 클리어
 ========================= */
-function gameClear(){
+async function gameClear(){
 running=false;
 transitioning=true;
-addRanking();
+await addRanking();
 /* 전투 음악 정지 */
 stopMusic();
 rocks=[];
