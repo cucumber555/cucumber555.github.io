@@ -706,23 +706,24 @@ high
    🏆 온라인 순위 시스템
 ========================= */
 
-async function addRanking(){
+async function addRanking(rankStage = stage){
 
   if(!playerName){
-    playerName="PLAYER";
+    playerName = "PLAYER";
   }
 
   const { error } = await supabaseClient
     .from("ranking")
     .insert({
       name: playerName,
-      stage: Number(stage) || 1,
+      stage: Math.min(Number(rankStage) || 1, 10),
       score: Number(score) || 0,
       time: Number(stageTime) || 0
     });
 
   if(error){
-    console.error("순위 저장 실패:",error);
+    console.error("순위 저장 실패:", error);
+    alert("순위 저장 실패!\n" + error.message);
   }
 }
 
@@ -890,7 +891,7 @@ info.innerHTML=
 async function gameClear(){
 running=false;
 transitioning=true;
-await addRanking();
+await addRanking(10);
 /* 전투 음악 정지 */
 stopMusic();
 rocks=[];
