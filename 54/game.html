@@ -751,7 +751,7 @@ async function openRanking(){
       .order("stage",{ascending:false})
       .order("score",{ascending:false})
       .order("time",{ascending:false})
-      .limit(20);
+      .limit(100);
 
   if(error){
 
@@ -770,8 +770,41 @@ async function openRanking(){
 
     return;
   }
+// 같은 이름은 최고 기록 하나만 남김
+const bestByName = {};
 
-  list.innerHTML=data.map((r,i)=>{
+data.forEach(r => {
+  if(!bestByName[r.name]){
+    bestByName[r.name] = r;
+    return;
+  }
+
+  const best = bestByName[r.name];
+
+  if(
+    r.stage > best.stage ||
+    (
+      r.stage === best.stage &&
+      r.score > best.score
+    ) ||
+    (
+      r.stage === best.stage &&
+      r.score === best.score &&
+      r.time > best.time
+    )
+  ){
+    bestByName[r.name] = r;
+  }
+});
+
+const bestData = Object.values(bestByName)
+  .sort((a,b) =>
+    b.stage - a.stage ||
+    b.score - a.score ||
+    b.time - a.time
+  )
+  .slice(0,20);
+  list.innerHTML=bestData.map((r,i)=>{
 
     const medal =
       i===0 ? "🥇" :
