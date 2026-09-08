@@ -440,6 +440,16 @@ const skinData={
   fire:{
     name:"불꽃 우주선",
     price:150
+  },
+
+  nebula:{
+    name:"네뷸라 우주선",
+    price:50000
+  },
+
+  emperor:{
+    name:"갤럭시 엠퍼러",
+    price:90000
   }
 
 };
@@ -1549,7 +1559,19 @@ function getSkinIcon(id){
     return "◆";
   }
 
-  return "🔥";
+  if(id==="fire"){
+    return "🔥";
+  }
+
+  if(id==="nebula"){
+    return "✦";
+  }
+
+  if(id==="emperor"){
+    return "👑";
+  }
+
+  return "▲";
 
 }
 
@@ -1593,23 +1615,59 @@ function renderSkins(){
 
       b.innerHTML=
 
-        `
-          <div style="font-size:22px">
-            ${getSkinIcon(id)}
-          </div>
+  `
+    <div style="
+      font-size:32px;
+      margin-bottom:5px;
+      ${
+        id==="nebula"
+        ? "color:#b77cff;text-shadow:0 0 15px #8d5cff;"
+        :id==="emperor"
+        ? "color:#ffd84a;text-shadow:0 0 18px #ffd84a;"
+        : ""
+      }
+    ">
+      ${getSkinIcon(id)}
+    </div>
 
-          <b>${s.name}</b>
+    <b>${s.name}</b>
 
-          <br>
+    <br>
 
-          ${
-            equipped
-            ? "장착 중"
-            : owned
-            ? "장착하기"
-            : "🪙 "+s.price+" 코인"
-          }
-        `;
+    <span style="
+      font-size:13px;
+      opacity:.85;
+    ">
+      ${
+        s.price===0
+        ? "무료"
+        : "🪙 "+s.price.toLocaleString()+" 코인"
+      }
+    </span>
+
+    <br>
+
+    <span style="
+      display:inline-block;
+      margin-top:5px;
+      font-size:12px;
+      color:${
+        equipped
+        ? "#55f5ff"
+        :owned
+        ? "#8cff9a"
+        :"#ddd"
+      };
+    ">
+      ${
+        equipped
+        ? "★ 장착 중"
+        :owned
+        ? "장착하기"
+        : "구매하기"
+      }
+    </span>
+  `;
 
 
       b.onclick=()=>{
@@ -3545,6 +3603,678 @@ function draw(){
 
   }
 
+  /* =========================
+     네뷸라 우주선
+     50,000 코인
+  ========================= */
+
+  else if(playerSkin==="nebula"){
+
+    /* 외부 네온 */
+
+    ctx.shadowBlur=30;
+
+    ctx.shadowColor="#9b5cff";
+
+
+    /* 보라색 → 청록색 몸체 */
+
+    const nebulaGradient=
+      ctx.createLinearGradient(
+        0,-26,
+        0,25
+      );
+
+    nebulaGradient.addColorStop(
+      0,
+      "#d98cff"
+    );
+
+    nebulaGradient.addColorStop(
+      .45,
+      "#7b4dff"
+    );
+
+    nebulaGradient.addColorStop(
+      1,
+      "#19e6ff"
+    );
+
+    ctx.fillStyle=nebulaGradient;
+
+
+    /* 메인 선체 */
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      0,
+      -28
+    );
+
+    ctx.lineTo(
+      13,
+      -7
+    );
+
+    ctx.lineTo(
+      27,
+      15
+    );
+
+    ctx.lineTo(
+      10,
+      11
+    );
+
+    ctx.lineTo(
+      0,
+      22
+    );
+
+    ctx.lineTo(
+      -10,
+      11
+    );
+
+    ctx.lineTo(
+      -27,
+      15
+    );
+
+    ctx.lineTo(
+      -13,
+      -7
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    /* 날개 내부 */
+
+    ctx.shadowBlur=12;
+
+    ctx.fillStyle="#b77cff";
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      -11,
+      -5
+    );
+
+    ctx.lineTo(
+      -25,
+      14
+    );
+
+    ctx.lineTo(
+      -7,
+      9
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    ctx.fillStyle="#38eaff";
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      11,
+      -5
+    );
+
+    ctx.lineTo(
+      25,
+      14
+    );
+
+    ctx.lineTo(
+      7,
+      9
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    /* 중앙 우주 코어 */
+
+    ctx.shadowBlur=25;
+
+    ctx.shadowColor="#ffffff";
+
+    const core=
+      ctx.createRadialGradient(
+        0,
+        -2,
+        1,
+        0,
+        -2,
+        10
+      );
+
+    core.addColorStop(
+      0,
+      "#ffffff"
+    );
+
+    core.addColorStop(
+      .35,
+      "#bdfcff"
+    );
+
+    core.addColorStop(
+      1,
+      "#687cff"
+    );
+
+    ctx.fillStyle=core;
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+      0,
+      -2,
+      9,
+      0,
+      Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /* 엔진 불꽃 */
+
+    ctx.shadowBlur=20;
+
+    ctx.shadowColor="#8d5cff";
+
+    ctx.fillStyle="#8d5cff";
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      -9,
+      14
+    );
+
+    ctx.lineTo(
+      -4,
+      29
+    );
+
+    ctx.lineTo(
+      0,
+      17
+    );
+
+    ctx.lineTo(
+      4,
+      29
+    );
+
+    ctx.lineTo(
+      9,
+      14
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    /* 작은 별빛 */
+
+    ctx.shadowBlur=10;
+
+    ctx.shadowColor="#ffffff";
+
+    ctx.fillStyle="#ffffff";
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+      -17,
+      -2,
+      2,
+      0,
+      Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+      18,
+      -8,
+      2,
+      0,
+      Math.PI*2
+    );
+
+    ctx.fill();
+
+  }
+
+
+  /* =========================
+     갤럭시 엠퍼러
+     90,000 코인
+     최고급 스킨
+  ========================= */
+
+  else if(playerSkin==="emperor"){
+
+    /* 황금빛 외부 광원 */
+
+    ctx.shadowBlur=35;
+
+    ctx.shadowColor="#ffd84a";
+
+
+    /* 검정 → 금색 메인 선체 */
+
+    const emperorGradient=
+      ctx.createLinearGradient(
+        0,-30,
+        0,28
+      );
+
+    emperorGradient.addColorStop(
+      0,
+      "#fff2a3"
+    );
+
+    emperorGradient.addColorStop(
+      .18,
+      "#ffd84a"
+    );
+
+    emperorGradient.addColorStop(
+      .5,
+      "#c99718"
+    );
+
+    emperorGradient.addColorStop(
+      .78,
+      "#17120a"
+    );
+
+    emperorGradient.addColorStop(
+      1,
+      "#050505"
+    );
+
+    ctx.fillStyle=emperorGradient;
+
+
+    /* 왕실형 메인 선체 */
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      0,
+      -31
+    );
+
+    ctx.lineTo(
+      9,
+      -17
+    );
+
+    ctx.lineTo(
+      18,
+      -10
+    );
+
+    ctx.lineTo(
+      30,
+      14
+    );
+
+    ctx.lineTo(
+      12,
+      11
+    );
+
+    ctx.lineTo(
+      6,
+      24
+    );
+
+    ctx.lineTo(
+      0,
+      17
+    );
+
+    ctx.lineTo(
+      -6,
+      24
+    );
+
+    ctx.lineTo(
+      -12,
+      11
+    );
+
+    ctx.lineTo(
+      -30,
+      14
+    );
+
+    ctx.lineTo(
+      -18,
+      -10
+    );
+
+    ctx.lineTo(
+      -9,
+      -17
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    /* 검은 중앙 장갑 */
+
+    ctx.shadowBlur=10;
+
+    ctx.shadowColor="#000";
+
+    ctx.fillStyle="#080808";
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      0,
+      -20
+    );
+
+    ctx.lineTo(
+      11,
+      -4
+    );
+
+    ctx.lineTo(
+      8,
+      13
+    );
+
+    ctx.lineTo(
+      0,
+      18
+    );
+
+    ctx.lineTo(
+      -8,
+      13
+    );
+
+    ctx.lineTo(
+      -11,
+      -4
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    /* 황금 테두리 */
+
+    ctx.shadowBlur=15;
+
+    ctx.shadowColor="#ffd84a";
+
+    ctx.strokeStyle="#ffe98a";
+
+    ctx.lineWidth=2;
+
+    ctx.stroke();
+
+
+    /* 황금 코어 */
+
+    ctx.shadowBlur=30;
+
+    ctx.shadowColor="#fff1a0";
+
+
+    const emperorCore=
+      ctx.createRadialGradient(
+        0,
+        0,
+        1,
+        0,
+        0,
+        11
+      );
+
+    emperorCore.addColorStop(
+      0,
+      "#ffffff"
+    );
+
+    emperorCore.addColorStop(
+      .25,
+      "#fff8c7"
+    );
+
+    emperorCore.addColorStop(
+      .6,
+      "#ffd21c"
+    );
+
+    emperorCore.addColorStop(
+      1,
+      "#9a6800"
+    );
+
+    ctx.fillStyle=emperorCore;
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+      0,
+      0,
+      10,
+      0,
+      Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /* 왕관 */
+
+    ctx.shadowBlur=25;
+
+    ctx.shadowColor="#ffd84a";
+
+    ctx.fillStyle="#ffd84a";
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      -12,
+      -24
+    );
+
+    ctx.lineTo(
+      -7,
+      -34
+    );
+
+    ctx.lineTo(
+      0,
+      -25
+    );
+
+    ctx.lineTo(
+      7,
+      -34
+    );
+
+    ctx.lineTo(
+      12,
+      -24
+    );
+
+    ctx.lineTo(
+      8,
+      -19
+    );
+
+    ctx.lineTo(
+      -8,
+      -19
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    /* 왕관 보석 */
+
+    ctx.shadowBlur=18;
+
+    ctx.shadowColor="#ffffff";
+
+    ctx.fillStyle="#ffffff";
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+      0,
+      -25,
+      2.5,
+      0,
+      Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /* 양쪽 황금 장식 */
+
+    ctx.strokeStyle="#fff0a0";
+
+    ctx.lineWidth=3;
+
+    ctx.shadowBlur=15;
+
+    ctx.shadowColor="#ffd84a";
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      -16,
+      -7
+    );
+
+    ctx.lineTo(
+      -27,
+      10
+    );
+
+    ctx.moveTo(
+      16,
+      -7
+    );
+
+    ctx.lineTo(
+      27,
+      10
+    );
+
+    ctx.stroke();
+
+
+    /* 황금 엔진 */
+
+    ctx.fillStyle="#ffb300";
+
+    ctx.shadowBlur=30;
+
+    ctx.shadowColor="#ff9d00";
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      -8,
+      13
+    );
+
+    ctx.lineTo(
+      -4,
+      32
+    );
+
+    ctx.lineTo(
+      0,
+      18
+    );
+
+    ctx.lineTo(
+      4,
+      32
+    );
+
+    ctx.lineTo(
+      8,
+      13
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    /* 엔진 중심 */
+
+    ctx.fillStyle="#fff7b0";
+
+    ctx.shadowBlur=20;
+
+    ctx.shadowColor="#ffffff";
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+      0,
+      17,
+      4,
+      0,
+      Math.PI*2
+    );
+
+    ctx.fill();
+
+  }
 
   ctx.restore();
 
