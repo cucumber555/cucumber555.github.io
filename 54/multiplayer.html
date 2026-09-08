@@ -1,0 +1,2103 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>☄️ 운석 서바이버 - 멀티플레이</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#02030a;color:#fff;font-family:Arial,sans-serif;display:flex;justify-content:center;align-items:center;overflow:hidden}
+button,input{font:inherit}button{border:0;border-radius:12px;padding:12px 18px;cursor:pointer;background:#164a8a;color:#fff;font-weight:700}button:hover{filter:brightness(1.2)}button:disabled{opacity:.45;cursor:not-allowed}
+#app{width:min(1100px,96vw);height:min(820px,96vh);position:relative}.screen{position:absolute;inset:0;display:none;align-items:center;justify-content:center}.screen.active{display:flex}
+.card{width:min(650px,94vw);padding:32px;border:1px solid #263452;border-radius:24px;background:linear-gradient(145deg,#0b1020,#050711);box-shadow:0 20px 70px #0008;text-align:center}
+h1{margin:0 0 10px;font-size:38px}h2{margin:0 0 18px}.sub{color:#9eabc5;margin-bottom:24px}.row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+input{width:180px;padding:13px 14px;border-radius:12px;border:1px solid #35415d;background:#090d18;color:#fff;text-align:center;letter-spacing:3px}
+.mode{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:22px 0}.mode button{padding:22px;background:#10192b;border:1px solid #34415e}.mode button.selected{background:#164a8a;border-color:#73b4ff}
+#roomCode{font-size:35px;letter-spacing:8px;margin:15px 0}#players{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:20px 0}.player{padding:12px;border:1px solid #28344e;border-radius:12px;background:#080c17}
+#gameScreen{align-items:stretch}#game{width:100%;height:100%;position:relative;overflow:hidden;border-radius:22px;border:2px solid #273650;background:radial-gradient(circle at 50% 50%,#111b2d 0,#050914 42%,#02030a 100%)}
+#hud{position:absolute;z-index:20;left:12px;right:12px;top:10px;display:flex;justify-content:space-between;align-items:center;pointer-events:none}.badge{background:#050811dd;border:1px solid #2c3a55;padding:8px 12px;border-radius:10px}
+#arena{position:absolute;inset:0}.playerShip{position:absolute;width:34px;height:34px;z-index:8;transform:translate(-50%,-50%);filter:drop-shadow(0 0 9px #5bbcff)}
+.playerShip:before{content:"";position:absolute;left:50%;top:0;transform:translateX(-50%);border-left:17px solid transparent;border-right:17px solid transparent;border-bottom:32px solid #69c6ff}
+.enemyShip{filter:drop-shadow(0 0 9px #ff5d6c)}.enemyShip:before{border-bottom:32px solid #ff6573}
+.shipLabel{position:absolute;left:50%;top:38px;transform:translateX(-50%);font-size:11px;white-space:nowrap;color:#dbe7ff}
+.hp{position:absolute;left:50%;top:-9px;transform:translateX(-50%);width:46px;height:5px;background:#29141a;border-radius:5px;overflow:hidden}.hp i{display:block;height:100%;background:#57e389}.enemyShip .hp i{background:#ff6673}
+.laser{position:absolute;width:5px;height:25px;border-radius:5px;z-index:6;box-shadow:0 0 12px currentColor}.laser.me{background:#72d7ff;color:#72d7ff}.laser.enemy{background:#ff6975;color:#ff6975}
+.obstacle{position:absolute;width:48px;height:48px;z-index:4;background:#555d6d;border:3px solid #9da8bb;transform:translate(-50%,-50%) rotate(45deg);border-radius:8px;box-shadow:0 0 12px #000}
+.item{position:absolute;width:30px;height:30px;z-index:5;transform:translate(-50%,-50%);border-radius:50%;display:flex;align-items:center;justify-content:center;background:#ffd35a;color:#211900;font-weight:900;box-shadow:0 0 18px #ffd35a}
+#message{position:absolute;inset:0;z-index:30;display:none;align-items:center;justify-content:center;background:#0009;text-align:center}#message.show{display:flex}#message .box{background:#090d18;border:1px solid #33425f;border-radius:20px;padding:30px}
+#controls{position:absolute;z-index:25;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:10px}#controls button{width:58px;height:48px;padding:0}.small{font-size:13px;color:#8997b2}
+</style>
+</head>
+<body>
+<div id="app">
+<section id="menu" class="screen active"><div class="card">
+<h1>☄️ 멀티플레이</h1><div class="sub">운석 서바이버 전용 대전</div>
+<div class="mode"><button id="oneMode" class="selected">1 : 1<br><span class="small">두 명이 대결</span></button><button id="teamMode">팀전<br><span class="small">최대 2 : 2</span></button></div>
+<div class="row"><button id="createBtn">방 만들기</button><input id="joinCode" maxlength="6" placeholder="방 코드"><button id="joinBtn">방 참가</button></div>
+<br><button onclick="location.href='game.html'">← 운석 서바이버로</button>
+<p class="small">3판 2선승 · 상대 전멸 시 1판 승리 · 시간 정지 없음</p>
+</div></section>
+
+<section id="lobby" class="screen"><div class="card">
+<h2 id="lobbyTitle">대기실</h2><div class="small">친구에게 이 코드를 알려주세요.</div><div id="roomCode">------</div><div id="players"></div>
+<div class="row"><button id="readyBtn">준비</button><button id="startBtn" disabled>게임 시작</button><button id="leaveBtn">나가기</button></div>
+<p id="lobbyStatus" class="sub"></p>
+</div></section>
+
+<section id="gameScreen" class="screen"><div id="game">
+<div id="hud"><div class="badge" id="roundText">1 / 3 판</div><div class="badge" id="scoreText">내 팀 0 : 0 상대</div></div>
+<div id="arena"></div><div id="message"><div class="box" id="messageBox"></div></div>
+<div id="controls"><button data-key="ArrowLeft">◀</button><button data-key="ArrowUp">▲</button><button data-key="ArrowDown">▼</button><button data-key="ArrowRight">▶</button><button id="fireBtn">🔫</button></div>
+</div></section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+/* =========================
+   SUPABASE
+========================= */
+
+const SUPABASE_URL = "https://aqtutjsubqplnjphinjq.supabase.co";
+
+const SUPABASE_KEY = "sb_publishable__oSX4ddCVrL3SbHY1m_fEw_OOzfidzO";
+
+const { createClient } = supabase;
+
+const db = createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+
+/* =========================
+   ELEMENTS
+========================= */
+
+const $ = id => document.getElementById(id);
+
+const menu = $("menu");
+const lobby = $("lobby");
+const gameScreen = $("gameScreen");
+const arena = $("arena");
+const message = $("message");
+const messageBox = $("messageBox");
+
+
+/* =========================
+   STATE
+========================= */
+
+let mode = "1v1";
+
+let roomCode = "";
+let isHost = false;
+
+let myId = crypto.randomUUID();
+let myName = "플레이어";
+
+let channel = null;
+
+let ready = false;
+
+let players = [];
+
+let gameRunning = false;
+let round = 1;
+
+let teamScore = {
+  0: 0,
+  1: 0
+};
+
+let keys = {};
+
+let localInput = {
+  left: false,
+  right: false,
+  up: false,
+  down: false
+};
+
+let lastInputSend = 0;
+
+let lasers = [];
+let obstacles = [];
+let items = [];
+
+let lastTime = 0;
+let spawnTimer = 0;
+let itemTimer = 0;
+
+
+/* =========================
+   MODE
+========================= */
+
+$("oneMode").onclick = () => {
+
+  mode = "1v1";
+
+  $("oneMode").classList.add("selected");
+  $("teamMode").classList.remove("selected");
+
+};
+
+$("teamMode").onclick = () => {
+
+  mode = "team";
+
+  $("teamMode").classList.add("selected");
+  $("oneMode").classList.remove("selected");
+
+};
+
+
+/* =========================
+   SCREEN
+========================= */
+
+function show(screen){
+
+  [menu,lobby,gameScreen].forEach(
+    s => s.classList.remove("active")
+  );
+
+  screen.classList.add("active");
+
+}
+
+
+/* =========================
+   ROOM CODE
+========================= */
+
+function randomCode(){
+
+  return Math.floor(
+    100000 + Math.random() * 900000
+  ).toString();
+
+}
+
+
+/* =========================
+   CREATE ROOM
+========================= */
+
+async function createRoom(){
+
+  roomCode = randomCode();
+  isHost = true;
+
+  const { error } = await db
+    .from("rooms")
+    .insert({
+
+      room_code: roomCode,
+      mode: mode,
+      host_id: myId,
+      status: "waiting"
+
+    });
+
+  if(error){
+
+    console.error(error);
+
+    alert(
+      "방 생성 실패\n\n" +
+      error.message
+    );
+
+    return;
+
+  }
+
+  await joinPlayer();
+
+  await connectRoom();
+
+  show(lobby);
+
+  renderLobby();
+
+}
+
+
+/* =========================
+   JOIN ROOM
+========================= */
+
+async function joinRoom(){
+
+  const code =
+    $("joinCode").value
+      .trim();
+
+  if(
+    code.length !== 6 ||
+    !/^\d+$/.test(code)
+  ){
+
+    alert("6자리 방 코드를 입력하세요.");
+    return;
+
+  }
+
+  const { data: room, error } =
+    await db
+      .from("rooms")
+      .select("*")
+      .eq("room_code", code)
+      .maybeSingle();
+
+  if(error || !room){
+
+    alert("존재하지 않는 방입니다.");
+    return;
+
+  }
+
+  if(room.status !== "waiting"){
+
+    alert("이미 시작된 게임입니다.");
+    return;
+
+  }
+
+  roomCode = code;
+  isHost = false;
+  mode = room.mode;
+
+  const { count } =
+    await db
+      .from("players")
+      .select("*", {
+        count: "exact",
+        head: true
+      })
+      .eq("room_code", roomCode);
+
+  const maxPlayers =
+    mode === "1v1" ? 2 : 4;
+
+  if(count >= maxPlayers){
+
+    alert("방이 가득 찼습니다.");
+    return;
+
+  }
+
+  await joinPlayer();
+
+  await connectRoom();
+
+  show(lobby);
+
+  await refreshPlayers();
+
+  renderLobby();
+
+}
+
+
+/* =========================
+   JOIN PLAYER
+========================= */
+
+async function joinPlayer(){
+
+  const { data: existing } =
+    await db
+      .from("players")
+      .select("*")
+      .eq("room_code", roomCode);
+
+  const team = chooseTeam(existing || []);
+
+  const { error } =
+    await db
+      .from("players")
+      .insert({
+
+        id: myId,
+        room_code: roomCode,
+        name: myName,
+        team: team,
+        ready: isHost,
+        x: 50,
+        y: 90,
+        hp: 100,
+        score: 0,
+        connected: true
+
+      });
+
+  if(error){
+
+    console.error(error);
+
+    alert(
+      "플레이어 참가 실패\n\n" +
+      error.message
+    );
+
+  }
+
+}
+
+
+/* =========================
+   TEAM ASSIGN
+========================= */
+
+function chooseTeam(list){
+
+  if(mode === "1v1"){
+
+    return list.length === 0 ? 0 : 1;
+
+  }
+
+  const team0 =
+    list.filter(p => p.team === 0).length;
+
+  const team1 =
+    list.filter(p => p.team === 1).length;
+
+  if(team0 <= team1) return 0;
+
+  return 1;
+
+}
+
+
+/* =========================
+   CONNECT REALTIME
+========================= */
+
+async function connectRoom(){
+
+  if(channel){
+
+    await db.removeChannel(channel);
+
+  }
+
+  channel =
+    db.channel(
+      "room-" + roomCode
+    );
+
+
+  /* 플레이어 변화 */
+
+  channel.on(
+    "postgres_changes",
+    {
+      event: "*",
+      schema: "public",
+      table: "players",
+      filter: "room_code=eq." + roomCode
+    },
+    async () => {
+
+      await refreshPlayers();
+
+      renderLobby();
+
+    }
+  );
+
+
+  /* 방 변화 */
+
+  channel.on(
+    "postgres_changes",
+    {
+      event: "*",
+      schema: "public",
+      table: "rooms",
+      filter: "room_code=eq." + roomCode
+    },
+    payload => {
+
+      const room = payload.new;
+
+      if(!room) return;
+
+      if(
+        room.status === "playing" &&
+        !gameRunning
+      ){
+
+        round = room.round;
+
+        teamScore[0] =
+          room.score_a;
+
+        teamScore[1] =
+          room.score_b;
+
+        show(gameScreen);
+
+        startRound();
+
+      }
+
+    }
+  );
+
+
+  /* 게임 상태 */
+
+  channel.on(
+    "broadcast",
+    { event: "game_state" },
+    payload => {
+
+      if(isHost) return;
+
+      applyGameState(
+        payload.payload
+      );
+
+    }
+  );
+
+
+  /* 입력 */
+
+  channel.on(
+    "broadcast",
+    { event: "input" },
+    payload => {
+
+      if(!isHost) return;
+
+      const p =
+        players.find(
+          x => x.id === payload.payload.id
+        );
+
+      if(!p) return;
+
+      p.input =
+        payload.payload.input;
+
+    }
+  );
+
+
+  /* 발사 */
+
+  channel.on(
+    "broadcast",
+    { event: "fire" },
+    payload => {
+
+      if(!isHost) return;
+
+      const p =
+        players.find(
+          x => x.id === payload.payload.id
+        );
+
+      if(!p) return;
+
+      shoot(p);
+
+    }
+  );
+
+
+  /* 라운드 시작 */
+
+  channel.on(
+    "broadcast",
+    { event: "round_start" },
+    payload => {
+
+      if(isHost) return;
+
+      round = payload.payload.round;
+
+      show(gameScreen);
+
+      startRound();
+
+    }
+  );
+
+
+  /* 라운드 결과 */
+
+  channel.on(
+    "broadcast",
+    { event: "round_result" },
+    payload => {
+
+      showRoundResult(
+        payload.payload.winnerTeam
+      );
+
+    }
+  );
+
+
+  const status =
+    await new Promise(resolve => {
+
+      channel.subscribe(
+        status => resolve(status)
+      );
+
+    });
+
+  console.log(
+    "Realtime:",
+    status
+  );
+
+}
+
+
+/* =========================
+   REFRESH PLAYERS
+========================= */
+
+async function refreshPlayers(){
+
+  const { data, error } =
+    await db
+      .from("players")
+      .select("*")
+      .eq("room_code", roomCode)
+      .eq("connected", true)
+      .order("created_at");
+
+  if(error){
+
+    console.error(error);
+    return;
+
+  }
+
+  players = data || [];
+
+}
+
+
+/* =========================
+   LOBBY
+========================= */
+
+function renderLobby(){
+
+  $("roomCode").textContent =
+    roomCode || "------";
+
+  $("lobbyTitle").textContent =
+    mode === "1v1"
+      ? "1 : 1 대기실"
+      : "팀전 대기실";
+
+
+  $("players").innerHTML =
+    players.map(p => {
+
+      const isMe =
+        p.id === myId;
+
+      return `
+        <div class="player">
+
+          👤 ${p.name}
+          ${isMe ? " <b>(나)</b>" : ""}
+
+          <br>
+
+          <span class="small">
+            팀 ${p.team + 1}
+            ·
+            ${p.ready ? "준비 완료" : "대기 중"}
+          </span>
+
+        </div>
+      `;
+
+    }).join("");
+
+
+  const max =
+    mode === "1v1" ? 2 : 4;
+
+
+  const allReady =
+    players.length >= 2 &&
+    players.every(p => p.ready);
+
+
+  $("startBtn").disabled =
+    !(
+      isHost &&
+      players.length >= 2 &&
+      players.length <= max &&
+      allReady
+    );
+
+
+  $("lobbyStatus").textContent =
+    mode === "1v1"
+      ? `${players.length} / 2명 참가`
+      : `${players.length} / 4명 참가 · 팀당 최대 2명`;
+
+}
+
+
+/* =========================
+   READY
+========================= */
+
+$("readyBtn").onclick =
+  async () => {
+
+    ready = !ready;
+
+    await db
+      .from("players")
+      .update({
+        ready: ready
+      })
+      .eq("id", myId);
+
+
+    $("readyBtn").textContent =
+      ready
+        ? "준비 취소"
+        : "준비";
+
+
+    await refreshPlayers();
+
+    renderLobby();
+
+  };
+
+
+/* =========================
+   START GAME
+========================= */
+
+$("startBtn").onclick =
+  async () => {
+
+    if(!isHost) return;
+
+    await db
+      .from("rooms")
+      .update({
+
+        status: "playing",
+        round: 1,
+        score_a: 0,
+        score_b: 0
+
+      })
+      .eq("room_code", roomCode);
+
+
+    round = 1;
+
+    teamScore[0] = 0;
+    teamScore[1] = 0;
+
+
+    await channel.send({
+
+      type: "broadcast",
+      event: "round_start",
+
+      payload: {
+        round: 1
+      }
+
+    });
+
+
+    show(gameScreen);
+
+    startRound();
+
+  };
+
+
+/* =========================
+   LEAVE
+========================= */
+
+$("leaveBtn").onclick =
+  async () => {
+
+    await db
+      .from("players")
+      .delete()
+      .eq("id", myId);
+
+    if(isHost){
+
+      await db
+        .from("rooms")
+        .delete()
+        .eq("room_code", roomCode);
+
+    }
+
+    location.reload();
+
+  };
+
+
+/* =========================
+   START ROUND
+========================= */
+
+function startRound(){
+
+  gameRunning = false;
+
+  lasers = [];
+  obstacles = [];
+  items = [];
+
+  arena.innerHTML = "";
+
+  message.classList.remove("show");
+
+
+  const w =
+    arena.clientWidth;
+
+  const h =
+    arena.clientHeight;
+
+
+  players.forEach((p, index) => {
+
+    p.hp = 100;
+    p.maxHp = 100;
+
+    p.shield = 0;
+    p.rapid = 0;
+
+    p.firePower = 1;
+
+    p.input = {
+      left:false,
+      right:false,
+      up:false,
+      down:false
+    };
+
+
+    if(p.team === 0){
+
+      const teamPlayers =
+        players.filter(
+          x => x.team === 0
+        );
+
+      const pos =
+        teamPlayers.indexOf(p);
+
+      p.x =
+        w *
+        (
+          .35 +
+          pos * .3
+        );
+
+      p.y =
+        h - 100;
+
+    }else{
+
+      const teamPlayers =
+        players.filter(
+          x => x.team === 1
+        );
+
+      const pos =
+        teamPlayers.indexOf(p);
+
+      p.x =
+        w *
+        (
+          .35 +
+          pos * .3
+        );
+
+      p.y = 100;
+
+    }
+
+  });
+
+
+  spawnInitialObstacles();
+
+  updateHUD();
+
+  lastTime =
+    performance.now();
+
+  spawnTimer = 1600;
+  itemTimer = 4000;
+
+  gameRunning = true;
+
+  requestAnimationFrame(loop);
+
+}
+
+
+/* =========================
+   OBSTACLES
+========================= */
+
+function spawnInitialObstacles(){
+
+  const w =
+    arena.clientWidth;
+
+  const h =
+    arena.clientHeight;
+
+
+  for(let i = 0; i < 7; i++){
+
+    obstacles.push({
+
+      id: "o" + i,
+
+      x:
+        70 +
+        Math.random() *
+        (w - 140),
+
+      y:
+        h * .25 +
+        Math.random() *
+        h * .5,
+
+      hp: 35,
+      maxHp: 35
+
+    });
+
+  }
+
+}
+
+
+function spawnObstacle(){
+
+  const w =
+    arena.clientWidth;
+
+  const h =
+    arena.clientHeight;
+
+
+  obstacles.push({
+
+    id:
+      "o" +
+      Date.now() +
+      Math.random(),
+
+    x:
+      60 +
+      Math.random() *
+      (w - 120),
+
+    y:
+      h * .25 +
+      Math.random() *
+      h * .5,
+
+    hp: 35,
+    maxHp: 35
+
+  });
+
+}
+
+
+/* =========================
+   ITEMS
+========================= */
+
+function spawnItem(){
+
+  const w =
+    arena.clientWidth;
+
+  const h =
+    arena.clientHeight;
+
+
+  const types =
+    ["⚡","🛡"];
+
+
+  items.push({
+
+    id:
+      "i" +
+      Date.now(),
+
+    x:
+      50 +
+      Math.random() *
+      (w - 100),
+
+    y:
+      h * .35 +
+      Math.random() *
+      h * .3,
+
+    type:
+      types[
+        Math.floor(
+          Math.random() *
+          types.length
+        )
+      ]
+
+  });
+
+}
+
+
+/* =========================
+   LOOP
+========================= */
+
+function loop(t){
+
+  if(!gameRunning) return;
+
+
+  const dt =
+    Math.min(
+      (t - lastTime) / 1000,
+      .04
+    );
+
+  lastTime = t;
+
+
+  if(isHost){
+
+    updateHost(dt);
+
+  }else{
+
+    sendInput();
+
+  }
+
+
+  render();
+
+  requestAnimationFrame(loop);
+
+}
+
+
+/* =========================
+   HOST UPDATE
+========================= */
+
+function updateHost(dt){
+
+  const speed = 280;
+
+
+  players.forEach(p => {
+
+    if(p.hp <= 0) return;
+
+    const input =
+      p.input || {};
+
+
+    p.x +=
+      (
+        (input.right ? 1 : 0) -
+        (input.left ? 1 : 0)
+      ) *
+      speed *
+      dt;
+
+
+    p.y +=
+      (
+        (input.down ? 1 : 0) -
+        (input.up ? 1 : 0)
+      ) *
+      speed *
+      dt;
+
+
+    if(p.team === 0){
+
+      p.y =
+        Math.max(
+          arena.clientHeight * .55,
+          p.y
+        );
+
+    }else{
+
+      p.y =
+        Math.min(
+          arena.clientHeight * .45,
+          p.y
+        );
+
+    }
+
+
+    p.x =
+      Math.max(
+        25,
+        Math.min(
+          arena.clientWidth - 25,
+          p.x
+        )
+      );
+
+
+    p.y =
+      Math.max(
+        45,
+        Math.min(
+          arena.clientHeight - 45,
+          p.y
+        )
+      );
+
+
+    if(p.rapid > 0)
+      p.rapid -= dt * 1000;
+
+    if(p.shield > 0)
+      p.shield -= dt * 1000;
+
+  });
+
+
+  spawnTimer -=
+    dt * 1000;
+
+  itemTimer -=
+    dt * 1000;
+
+
+  if(
+    spawnTimer <= 0
+  ){
+
+    spawnTimer = 1800;
+
+    if(obstacles.length < 10)
+      spawnObstacle();
+
+  }
+
+
+  if(
+    itemTimer <= 0
+  ){
+
+    itemTimer = 5000;
+
+    if(items.length < 2)
+      spawnItem();
+
+  }
+
+
+  lasers.forEach(
+    l =>
+      l.y +=
+      l.vy * dt
+  );
+
+
+  checkLaserHits();
+
+  checkItemsHost();
+
+
+  lasers =
+    lasers.filter(
+      l =>
+        l.y > -60 &&
+        l.y <
+        arena.clientHeight + 60
+    );
+
+
+  checkRoundEndHost();
+
+
+  broadcastGameState();
+
+}
+
+
+/* =========================
+   INPUT
+========================= */
+
+function sendInput(){
+
+  const now =
+    performance.now();
+
+  if(
+    now - lastInputSend < 40
+  ) return;
+
+  lastInputSend = now;
+
+
+  channel.send({
+
+    type: "broadcast",
+
+    event: "input",
+
+    payload: {
+
+      id: myId,
+
+      input: localInput
+
+    }
+
+  });
+
+}
+
+
+/* =========================
+   FIRE
+========================= */
+
+function shoot(p){
+
+  if(!gameRunning) return;
+
+  if(p.hp <= 0) return;
+
+
+  lasers.push({
+
+    x: p.x,
+
+    y:
+      p.team === 0
+        ? p.y - 25
+        : p.y + 25,
+
+    vy:
+      p.team === 0
+        ? -520
+        : 520,
+
+    owner: p.id,
+
+    team: p.team,
+
+    damage:
+      p.firePower === 2
+        ? 18
+        : 12
+
+  });
+
+}
+
+
+$("fireBtn").onclick =
+  () => {
+
+    if(isHost){
+
+      const p =
+        players.find(
+          x => x.id === myId
+        );
+
+      if(p) shoot(p);
+
+    }else{
+
+      channel.send({
+
+        type: "broadcast",
+
+        event: "fire",
+
+        payload: {
+          id: myId
+        }
+
+      });
+
+    }
+
+  };
+
+
+/* =========================
+   KEYBOARD
+========================= */
+
+document.addEventListener(
+  "keydown",
+  e => {
+
+    if(
+      e.key === "ArrowLeft" ||
+      e.key.toLowerCase() === "a"
+    )
+      localInput.left = true;
+
+
+    if(
+      e.key === "ArrowRight" ||
+      e.key.toLowerCase() === "d"
+    )
+      localInput.right = true;
+
+
+    if(
+      e.key === "ArrowUp" ||
+      e.key.toLowerCase() === "w"
+    )
+      localInput.up = true;
+
+
+    if(
+      e.key === "ArrowDown" ||
+      e.key.toLowerCase() === "s"
+    )
+      localInput.down = true;
+
+
+    if(e.code === "Space"){
+
+      e.preventDefault();
+
+      $("fireBtn").click();
+
+    }
+
+  }
+);
+
+
+document.addEventListener(
+  "keyup",
+  e => {
+
+    if(
+      e.key === "ArrowLeft" ||
+      e.key.toLowerCase() === "a"
+    )
+      localInput.left = false;
+
+
+    if(
+      e.key === "ArrowRight" ||
+      e.key.toLowerCase() === "d"
+    )
+      localInput.right = false;
+
+
+    if(
+      e.key === "ArrowUp" ||
+      e.key.toLowerCase() === "w"
+    )
+      localInput.up = false;
+
+
+    if(
+      e.key === "ArrowDown" ||
+      e.key.toLowerCase() === "s"
+    )
+      localInput.down = false;
+
+  }
+);
+
+
+/* =========================
+   MOBILE CONTROLS
+========================= */
+
+document
+  .querySelectorAll("[data-key]")
+  .forEach(btn => {
+
+    const key =
+      btn.dataset.key;
+
+
+    btn.onpointerdown =
+      e => {
+
+        e.preventDefault();
+
+        setControl(key, true);
+
+      };
+
+
+    btn.onpointerup =
+      e => {
+
+        e.preventDefault();
+
+        setControl(key, false);
+
+      };
+
+
+    btn.onpointerleave =
+      () => setControl(key, false);
+
+  });
+
+
+function setControl(key,value){
+
+  if(key === "ArrowLeft")
+    localInput.left = value;
+
+  if(key === "ArrowRight")
+    localInput.right = value;
+
+  if(key === "ArrowUp")
+    localInput.up = value;
+
+  if(key === "ArrowDown")
+    localInput.down = value;
+
+}
+
+
+/* =========================
+   LASER COLLISION
+========================= */
+
+function dist(a,b){
+
+  return Math.hypot(
+    a.x - b.x,
+    a.y - b.y
+  );
+
+}
+
+
+function checkLaserHits(){
+
+  for(const l of lasers){
+
+    const targets =
+      players.filter(
+        p =>
+          p.team !== l.team &&
+          p.hp > 0
+      );
+
+
+    for(const target of targets){
+
+      if(
+        dist(l,target) < 25
+      ){
+
+        if(
+          target.shield <= 0
+        ){
+
+          target.hp -=
+            l.damage;
+
+        }
+
+        l.y = -999;
+
+        break;
+
+      }
+
+    }
+
+
+    for(const o of obstacles){
+
+      if(
+        dist(l,o) < 35
+      ){
+
+        o.hp -=
+          l.damage;
+
+        l.y = -999;
+
+        break;
+
+      }
+
+    }
+
+  }
+
+
+  obstacles =
+    obstacles.filter(
+      o => o.hp > 0
+    );
+
+}
+
+
+/* =========================
+   ITEMS
+========================= */
+
+function checkItemsHost(){
+
+  for(
+    let i = items.length - 1;
+    i >= 0;
+    i--
+  ){
+
+    const item =
+      items[i];
+
+
+    for(const p of players){
+
+      if(p.hp <= 0) continue;
+
+
+      if(
+        dist(p,item) < 35
+      ){
+
+        if(item.type === "⚡")
+          p.rapid = 6000;
+
+        if(item.type === "🛡")
+          p.shield = 5000;
+
+
+        items.splice(i,1);
+
+        break;
+
+      }
+
+    }
+
+  }
+
+}
+
+
+/* =========================
+   ROUND END
+========================= */
+
+function checkRoundEndHost(){
+
+  const team0Alive =
+    players.some(
+      p =>
+        p.team === 0 &&
+        p.hp > 0
+    );
+
+
+  const team1Alive =
+    players.some(
+      p =>
+        p.team === 1 &&
+        p.hp > 0
+    );
+
+
+  if(
+    team0Alive &&
+    team1Alive
+  ) return;
+
+
+  gameRunning = false;
+
+
+  const winnerTeam =
+    team0Alive ? 0 : 1;
+
+
+  teamScore[winnerTeam]++;
+
+
+  channel.send({
+
+    type: "broadcast",
+
+    event: "round_result",
+
+    payload: {
+      winnerTeam
+    }
+
+  });
+
+
+  setTimeout(
+    nextRoundHost,
+    2200
+  );
+
+}
+
+
+/* =========================
+   NEXT ROUND
+========================= */
+
+async function nextRoundHost(){
+
+  if(
+    teamScore[0] >= 2 ||
+    teamScore[1] >= 2 ||
+    round >= 3
+  ){
+
+    const winner =
+      teamScore[0] >
+      teamScore[1]
+        ? 0
+        : 1;
+
+
+    showFinalResult(winner);
+
+    await db
+      .from("rooms")
+      .update({
+        status: "finished",
+        score_a: teamScore[0],
+        score_b: teamScore[1]
+      })
+      .eq(
+        "room_code",
+        roomCode
+      );
+
+    return;
+
+  }
+
+
+  round++;
+
+
+  await db
+    .from("rooms")
+    .update({
+      round: round,
+      score_a: teamScore[0],
+      score_b: teamScore[1]
+    })
+    .eq(
+      "room_code",
+      roomCode
+    );
+
+
+  channel.send({
+
+    type: "broadcast",
+
+    event: "round_start",
+
+    payload: {
+      round
+    }
+
+  });
+
+
+  startRound();
+
+}
+
+
+/* =========================
+   GAME STATE
+========================= */
+
+function broadcastGameState(){
+
+  channel.send({
+
+    type: "broadcast",
+
+    event: "game_state",
+
+    payload: {
+
+      players:
+        players.map(p => ({
+          id: p.id,
+          name: p.name,
+          team: p.team,
+          x: p.x,
+          y: p.y,
+          hp: p.hp,
+          maxHp: p.maxHp,
+          shield: p.shield,
+          rapid: p.rapid
+        })),
+
+      lasers:
+        lasers.map(l => ({
+          x: l.x,
+          y: l.y,
+          vy: l.vy,
+          owner: l.owner,
+          team: l.team
+        })),
+
+      obstacles,
+      items,
+
+      round,
+
+      score0:
+        teamScore[0],
+
+      score1:
+        teamScore[1]
+
+    }
+
+  });
+
+}
+
+
+/* =========================
+   APPLY REMOTE STATE
+========================= */
+
+function applyGameState(state){
+
+  players =
+    state.players || [];
+
+  lasers =
+    state.lasers || [];
+
+  obstacles =
+    state.obstacles || [];
+
+  items =
+    state.items || [];
+
+  round =
+    state.round;
+
+  teamScore[0] =
+    state.score0;
+
+  teamScore[1] =
+    state.score1;
+
+  updateHUD();
+
+}
+
+
+/* =========================
+   RENDER SHIPS
+========================= */
+
+function createShip(p){
+
+  let el =
+    document.getElementById(
+      "ship_" + p.id
+    );
+
+
+  if(!el){
+
+    el =
+      document.createElement("div");
+
+    el.id =
+      "ship_" + p.id;
+
+    el.className =
+      "playerShip" +
+      (
+        p.team === 1
+          ? " enemyShip"
+          : ""
+      );
+
+
+    el.innerHTML = `
+
+      <div class="hp">
+        <i></i>
+      </div>
+
+      <span class="shipLabel">
+        ${p.id === myId ? "YOU" : p.name}
+      </span>
+
+    `;
+
+
+    arena.appendChild(el);
+
+  }
+
+
+  el.style.left =
+    p.x + "px";
+
+  el.style.top =
+    p.y + "px";
+
+
+  const hp =
+    el.querySelector(".hp i");
+
+
+  hp.style.width =
+    Math.max(
+      0,
+      p.hp / p.maxHp * 100
+    ) + "%";
+
+
+  el.style.opacity =
+    p.hp <= 0
+      ? .25
+      : 1;
+
+}
+
+
+/* =========================
+   RENDER
+========================= */
+
+function render(){
+
+  players.forEach(
+    createShip
+  );
+
+
+  document
+    .querySelectorAll(".laser")
+    .forEach(
+      e => e.remove()
+    );
+
+
+  lasers.forEach(l => {
+
+    const e =
+      document.createElement("div");
+
+    e.className =
+      "laser " +
+      (
+        l.team ===
+        players.find(
+          p => p.id === myId
+        )?.team
+          ? "me"
+          : "enemy"
+      );
+
+
+    e.style.left =
+      l.x + "px";
+
+    e.style.top =
+      l.y + "px";
+
+
+    arena.appendChild(e);
+
+  });
+
+
+  document
+    .querySelectorAll(".obstacle")
+    .forEach(
+      e => e.remove()
+    );
+
+
+  obstacles.forEach(o => {
+
+    const e =
+      document.createElement("div");
+
+    e.className =
+      "obstacle";
+
+    e.style.left =
+      o.x + "px";
+
+    e.style.top =
+      o.y + "px";
+
+    e.style.opacity =
+      Math.max(
+        .3,
+        o.hp / o.maxHp
+      );
+
+
+    arena.appendChild(e);
+
+  });
+
+
+  document
+    .querySelectorAll(".item")
+    .forEach(
+      e => e.remove()
+    );
+
+
+  items.forEach(it => {
+
+    const e =
+      document.createElement("div");
+
+    e.className =
+      "item";
+
+    e.textContent =
+      it.type;
+
+    e.style.left =
+      it.x + "px";
+
+    e.style.top =
+      it.y + "px";
+
+
+    arena.appendChild(e);
+
+  });
+
+}
+
+
+/* =========================
+   HUD
+========================= */
+
+function updateHUD(){
+
+  $("roundText").textContent =
+    `${round} / 3 판`;
+
+
+  const me =
+    players.find(
+      p => p.id === myId
+    );
+
+
+  if(!me){
+
+    $("scoreText").textContent =
+      `팀 0 : 0 상대`;
+
+    return;
+
+  }
+
+
+  const myTeam =
+    me.team;
+
+
+  const enemyTeam =
+    myTeam === 0 ? 1 : 0;
+
+
+  $("scoreText").textContent =
+    `내 팀 ${teamScore[myTeam]} : ${teamScore[enemyTeam]} 상대`;
+
+}
+
+
+/* =========================
+   ROUND RESULT
+========================= */
+
+function showRoundResult(winnerTeam){
+
+  message.classList.add("show");
+
+
+  const me =
+    players.find(
+      p => p.id === myId
+    );
+
+
+  const won =
+    me &&
+    me.team === winnerTeam;
+
+
+  messageBox.innerHTML = `
+
+    <h2>
+      ${
+        won
+          ? "⚡ 우리 팀 승리!"
+          : "💥 우리 팀 패배"
+      }
+    </h2>
+
+    <p>
+      ${teamScore[0]} : ${teamScore[1]}
+    </p>
+
+    <p class="small">
+      다음 판을 준비하는 중...
+    </p>
+
+  `;
+
+}
+
+
+/* =========================
+   FINAL RESULT
+========================= */
+
+function showFinalResult(winnerTeam){
+
+  gameRunning = false;
+
+  message.classList.add("show");
+
+
+  const me =
+    players.find(
+      p => p.id === myId
+    );
+
+
+  const won =
+    me &&
+    me.team === winnerTeam;
+
+
+  messageBox.innerHTML = `
+
+    <h2>
+      ${
+        won
+          ? "🏆 최종 승리!"
+          : "💥 최종 패배"
+      }
+    </h2>
+
+    <p>
+      ${teamScore[0]} : ${teamScore[1]}
+    </p>
+
+    <br>
+
+    <button onclick="location.reload()">
+      다시 하기
+    </button>
+
+    <button onclick="location.href='game.html'">
+      나가기
+    </button>
+
+  `;
+
+}
+
+
+/* =========================
+   INITIAL
+========================= */
+
+$("createBtn").onclick =
+  createRoom;
+
+$("joinBtn").onclick =
+  joinRoom;
+
+
+/* =========================
+   DISCONNECT
+========================= */
+
+window.addEventListener(
+  "beforeunload",
+  async () => {
+
+    try{
+
+      await db
+        .from("players")
+        .update({
+          connected: false
+        })
+        .eq("id", myId);
+
+    }catch(e){
+
+      console.log(e);
+
+    }
+
+  }
+);
+
+</script>
+</body>
+</html>
