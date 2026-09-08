@@ -292,8 +292,9 @@ button:hover{
   <div id="skinShop">
 
     <h3>🚀 우주선 스킨</h3>
-
-    <div id="skinList"></div>
+    
+    <div id="coinDisplay"></div>
+    <div id="skinList"></div>    
 
   </div>
 
@@ -1580,16 +1581,18 @@ function getSkinIcon(id){
    🚀 스킨 상점 렌더링
 ========================================================= */
 
-function renderSkins(){
+function renderSkins(){ 
 
-  const list=
-    document.getElementById("skinList");
+  document.getElementById("coinDisplay").textContent = 
+    `💰 보유 코인: ${coins.toLocaleString()}`; 
 
-  if(!list){
-    return;
-  }
+  const list = document.getElementById("skinList"); 
 
-  list.innerHTML="";
+  if(!list){ 
+    return; 
+  } 
+
+  list.innerHTML = "";
 
 
   Object.entries(skinData).forEach(
