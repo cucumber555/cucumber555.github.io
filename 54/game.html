@@ -274,8 +274,7 @@ button:hover{
   <p id="info">
     30개의 스테이지를 돌파하라!<br>
     5스테이지마다 중간 보스 등장!<br>
-    🔥 레이저 구매 후 게임 배경을 클릭하면 발사<br>
-    📱 모바일에서는 🛡️ 버튼으로 방어막 사용
+    *데스크톱/PC 이용 추천
   </p>
 
   <button id="startBtn" onclick="startNewGame()">
@@ -337,9 +336,9 @@ button:hover{
     </div>
 
     <div class="item">
-      🔥 레이저 — 35 코인
+      🔥 레이저 — 기본 제공
       <br>
-      <button onclick="buyLaser()">구매</button>
+      게임 화면의 배경을 클릭/탭하면 바로 발사됩니다.
     </div>
 
   </div>
@@ -876,7 +875,7 @@ function startNewGame(){
 
   shield=false;
   freeze=false;
-  laser=false;
+  laser=true;
 
   startStage();
 
@@ -1520,18 +1519,11 @@ function buyFreeze(){
 
 function buyLaser(){
 
-  if(coins<35){
-    return;
-  }
-
-  coins-=35;
-
+  /* 레이저는 이제 기본 제공 */
   laser=true;
 
-  save();
-
   info.innerHTML=
-    "🔥 레이저 장착 완료!";
+    "🔥 레이저는 무료로 사용할 수 있습니다!";
 
 }
 
@@ -3474,16 +3466,9 @@ function draw(){
 
   /* 기본 색 */
 
-  ctx.fillStyle=
-    laser
-    ? "#ffc400"
-    : "#55f5ff";
+  ctx.fillStyle="#55f5ff";
 
-
-  ctx.shadowColor=
-    laser
-    ? "#ff9800"
-    : "#55f5ff";
+  ctx.shadowColor="#55f5ff";
 
 
   /* =========================
