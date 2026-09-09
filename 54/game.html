@@ -117,6 +117,19 @@ button:hover{
   transform:scale(.9);
 }
 
+.shieldTouch{
+  background:#168cff;
+  box-shadow:
+    0 0 15px #168cff,
+    0 0 30px #168cff77;
+  font-size:24px;
+}
+
+.shieldTouch:active{
+  background:#55f5ff;
+  transform:scale(.9);
+}
+
 .game2-btn{
   margin-top:10px;
   padding:11px 30px;
@@ -231,12 +244,12 @@ button:hover{
 </button>
 
 <button
-  id="shootTouch"
-  class="touch shootTouch"
-  ontouchstart="mobileShoot(event)"
+  id="shieldTouch"
+  class="touch shieldTouch"
+  ontouchstart="mobileShield(event)"
   ontouchend="event.preventDefault()"
   ontouchcancel="event.preventDefault()">
-  🔥
+  🛡️
 </button>
 
 <button
@@ -261,7 +274,8 @@ button:hover{
   <p id="info">
     30개의 스테이지를 돌파하라!<br>
     5스테이지마다 중간 보스 등장!<br>
-    *데스크톱/PC 이용 추천
+    🔥 레이저 구매 후 게임 배경을 클릭하면 발사<br>
+    📱 모바일에서는 🛡️ 버튼으로 방어막 사용
   </p>
 
   <button id="startBtn" onclick="startNewGame()">
@@ -1366,7 +1380,7 @@ function shoot(){
 }
 
 
-function mobileShoot(event){
+function mobileShield(event){
 
   event.preventDefault();
 
@@ -1374,7 +1388,7 @@ function mobileShoot(event){
     return;
   }
 
-  shoot();
+  activateShield();
 
 }
 
@@ -1395,6 +1409,21 @@ function hit(a,b){
   );
 
 }
+
+/* =========================================================
+   🖱️/📱 게임 배경 클릭으로 레이저 발사
+   레이저를 구매한 상태에서 게임 화면의 배경을 클릭/탭하면 발사
+========================================================= */
+
+canvas.addEventListener("pointerdown",event=>{
+
+  if(!running || !laser){
+    return;
+  }
+
+  shoot();
+
+});
 
 
 /* =========================================================
@@ -2278,9 +2307,11 @@ async function gameClear(){
   boss=null;
 
 
-  /* 보상 */
+  /* 보상: 30스테이지 올클리어 = 30,000 코인 */
 
-  coins+=100;
+  const clearReward=30000;
+
+  coins+=clearReward;
 
 
   if(score>high){
@@ -2309,6 +2340,9 @@ async function gameClear(){
 
       🎉 30개 스테이지 정복 성공!
       <br><br>
+
+      🪙 올클리어 보상: +30,000 코인
+      <br>
 
       최종 점수: ${score}
       <br>

@@ -17,7 +17,7 @@ input{width:180px;padding:13px 14px;border-radius:12px;border:1px solid #35415d;
 #hud{position:absolute;z-index:20;left:12px;right:12px;top:10px;display:flex;justify-content:space-between;align-items:center;pointer-events:none}.badge{background:#050811dd;border:1px solid #2c3a55;padding:8px 12px;border-radius:10px}
 #arena{position:absolute;inset:0}.playerShip{position:absolute;width:34px;height:34px;z-index:8;transform:translate(-50%,-50%);filter:drop-shadow(0 0 9px #5bbcff)}
 .playerShip:before{content:"";position:absolute;left:50%;top:0;transform:translateX(-50%);border-left:17px solid transparent;border-right:17px solid transparent;border-bottom:32px solid #69c6ff}
-.enemyShip{filter:drop-shadow(0 0 9px #ff5d6c)}.enemyShip:before{border-bottom:32px solid #ff6573}
+.enemyShip{filter:drop-shadow(0 0 9px #ff5d6c)}.enemyShip:before{border-bottom:0;border-top:32px solid #ff6573;top:2px}
 .shipLabel{position:absolute;left:50%;top:38px;transform:translateX(-50%);font-size:11px;white-space:nowrap;color:#dbe7ff}
 .hp{position:absolute;left:50%;top:-9px;transform:translateX(-50%);width:46px;height:5px;background:#29141a;border-radius:5px;overflow:hidden}.hp i{display:block;height:100%;background:#57e389}.enemyShip .hp i{background:#ff6673}
 .laser{position:absolute;width:5px;height:25px;border-radius:5px;z-index:6;box-shadow:0 0 12px currentColor}.laser.me{background:#72d7ff;color:#72d7ff}.laser.enemy{background:#ff6975;color:#ff6975}
@@ -186,23 +186,31 @@ function randomCode(){
 
 async function createRoom(){
 
+  console.log("방 만들기 버튼 클릭");
+
   roomCode = randomCode();
   isHost = true;
 
-  const { error } = await db
+  console.log("생성할 방 코드:", roomCode);
+  console.log("현재 모드:", mode);
+
+  const { data, error } = await db
     .from("rooms")
     .insert({
-
       room_code: roomCode,
       mode: mode,
       host_id: myId,
-      status: "waiting"
-
-    });
+      status: "waiting",
+      round: 1,
+      score_a: 0,
+      score_b: 0
+    })
+    .select()
+    .single();
 
   if(error){
 
-    console.error(error);
+    console.error("ROOM CREATE ERROR:", error);
 
     alert(
       "방 생성 실패\n\n" +
@@ -210,17 +218,30 @@ async function createRoom(){
     );
 
     return;
-
   }
 
-  await joinPlayer();
+  console.log("방 생성 성공:", data);
+
+  const joined = await joinPlayer();
+
+  if(!joined){
+    await db
+      .from("rooms")
+      .delete()
+      .eq("room_code", roomCode);
+
+    return;
+  }
 
   await connectRoom();
 
   show(lobby);
 
+  await refreshPlayers();
+
   renderLobby();
 
+  console.log("대기실 입장 완료");
 }
 
 
@@ -288,7 +309,8 @@ async function joinRoom(){
 
   }
 
-  await joinPlayer();
+  const joined = await joinPlayer();
+  if(!joined) return;
 
   await connectRoom();
 
@@ -307,19 +329,30 @@ async function joinRoom(){
 
 async function joinPlayer(){
 
-  const { data: existing } =
+  const { data: existing, error: selectError } =
     await db
       .from("players")
       .select("*")
       .eq("room_code", roomCode);
 
+  if(selectError){
+
+    console.error("PLAYER SELECT ERROR:", selectError);
+
+    alert(
+      "플레이어 확인 실패\n\n" +
+      selectError.message
+    );
+
+    return false;
+  }
+
   const team = chooseTeam(existing || []);
 
-  const { error } =
+  const { data, error } =
     await db
       .from("players")
       .insert({
-
         id: myId,
         room_code: roomCode,
         name: myName,
@@ -330,20 +363,25 @@ async function joinPlayer(){
         hp: 100,
         score: 0,
         connected: true
-
-      });
+      })
+      .select()
+      .single();
 
   if(error){
 
-    console.error(error);
+    console.error("PLAYER INSERT ERROR:", error);
 
     alert(
       "플레이어 참가 실패\n\n" +
       error.message
     );
 
+    return false;
   }
 
+  console.log("플레이어 참가 성공:", data);
+
+  return true;
 }
 
 
@@ -1024,6 +1062,9 @@ function updateHost(dt){
 
   const speed = 280;
 
+  // 호스트도 자신의 입력을 직접 물리 엔진에 전달
+  const me = players.find(p => p.id === myId);
+  if(me) me.input = { ...localInput };
 
   players.forEach(p => {
 
@@ -1088,6 +1129,24 @@ function updateHost(dt){
           p.y
         )
       );
+
+    // 플레이어가 장애물을 통과하지 못하도록 충돌 처리
+    for(const o of obstacles){
+      const dx = p.x - o.x;
+      const dy = p.y - o.y;
+      const d = Math.hypot(dx, dy);
+      const minDist = 52;
+
+      if(d < minDist){
+        const nx = d > 0.001 ? dx / d : 1;
+        const ny = d > 0.001 ? dy / d : 0;
+        p.x = o.x + nx * minDist;
+        p.y = o.y + ny * minDist;
+
+        p.x = Math.max(25, Math.min(arena.clientWidth - 25, p.x));
+        p.y = Math.max(45, Math.min(arena.clientHeight - 45, p.y));
+      }
+    }
 
 
     if(p.rapid > 0)
@@ -1743,6 +1802,32 @@ function applyGameState(state){
 
 
 /* =========================
+   VIEW / PERSPECTIVE
+========================= */
+
+function getMyTeam(){
+  return players.find(p => p.id === myId)?.team ?? 0;
+}
+
+function viewPos(x, y){
+  if(getMyTeam() === 1){
+    return {
+      x: arena.clientWidth - x,
+      y: arena.clientHeight - y
+    };
+  }
+  return { x, y };
+}
+
+function removeStaleShips(){
+  const ids = new Set(players.map(p => "ship_" + p.id));
+  arena.querySelectorAll(".playerShip").forEach(el => {
+    if(!ids.has(el.id)) el.remove();
+  });
+}
+
+
+/* =========================
    RENDER SHIPS
 ========================= */
 
@@ -1753,6 +1838,8 @@ function createShip(p){
       "ship_" + p.id
     );
 
+  const myTeam = getMyTeam();
+  const isEnemy = p.team !== myTeam;
 
   if(!el){
 
@@ -1761,15 +1848,6 @@ function createShip(p){
 
     el.id =
       "ship_" + p.id;
-
-    el.className =
-      "playerShip" +
-      (
-        p.team === 1
-          ? " enemyShip"
-          : ""
-      );
-
 
     el.innerHTML = `
 
@@ -1783,29 +1861,30 @@ function createShip(p){
 
     `;
 
-
     arena.appendChild(el);
 
   }
 
+  el.className =
+    "playerShip" +
+    (isEnemy ? " enemyShip" : "");
+
+  const pos = viewPos(p.x, p.y);
 
   el.style.left =
-    p.x + "px";
+    pos.x + "px";
 
   el.style.top =
-    p.y + "px";
-
+    pos.y + "px";
 
   const hp =
     el.querySelector(".hp i");
 
-
   hp.style.width =
     Math.max(
       0,
-      p.hp / p.maxHp * 100
+      p.hp / Math.max(1, p.maxHp || 100) * 100
     ) + "%";
-
 
   el.style.opacity =
     p.hp <= 0
@@ -1814,24 +1893,21 @@ function createShip(p){
 
 }
 
-
 /* =========================
    RENDER
 ========================= */
 
 function render(){
 
-  players.forEach(
-    createShip
-  );
+  removeStaleShips();
 
+  players.forEach(createShip);
 
   document
     .querySelectorAll(".laser")
-    .forEach(
-      e => e.remove()
-    );
+    .forEach(e => e.remove());
 
+  const myTeam = getMyTeam();
 
   lasers.forEach(l => {
 
@@ -1840,22 +1916,20 @@ function render(){
 
     e.className =
       "laser " +
-      (
-        l.team ===
-        players.find(
-          p => p.id === myId
-        )?.team
-          ? "me"
-          : "enemy"
-      );
+      (l.team === myTeam ? "me" : "enemy");
 
+    const pos = viewPos(l.x, l.y);
 
     e.style.left =
-      l.x + "px";
+      pos.x + "px";
 
     e.style.top =
-      l.y + "px";
+      pos.y + "px";
 
+    // 팀 1 시점에서는 화면이 뒤집혀 보이므로 레이저 방향도 반전
+    if(myTeam === 1){
+      e.style.transform = "rotate(180deg)";
+    }
 
     arena.appendChild(e);
 
@@ -1864,10 +1938,7 @@ function render(){
 
   document
     .querySelectorAll(".obstacle")
-    .forEach(
-      e => e.remove()
-    );
-
+    .forEach(e => e.remove());
 
   obstacles.forEach(o => {
 
@@ -1877,18 +1948,19 @@ function render(){
     e.className =
       "obstacle";
 
+    const pos = viewPos(o.x, o.y);
+
     e.style.left =
-      o.x + "px";
+      pos.x + "px";
 
     e.style.top =
-      o.y + "px";
+      pos.y + "px";
 
     e.style.opacity =
       Math.max(
         .3,
         o.hp / o.maxHp
       );
-
 
     arena.appendChild(e);
 
@@ -1897,10 +1969,7 @@ function render(){
 
   document
     .querySelectorAll(".item")
-    .forEach(
-      e => e.remove()
-    );
-
+    .forEach(e => e.remove());
 
   items.forEach(it => {
 
@@ -1913,19 +1982,19 @@ function render(){
     e.textContent =
       it.type;
 
+    const pos = viewPos(it.x, it.y);
+
     e.style.left =
-      it.x + "px";
+      pos.x + "px";
 
     e.style.top =
-      it.y + "px";
-
+      pos.y + "px";
 
     arena.appendChild(e);
 
   });
 
 }
-
 
 /* =========================
    HUD
