@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>🚇 도시철도 V2</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#e9eee9;color:#17251b;font-family:Arial,"Noto Sans KR",sans-serif}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#hud{position:fixed;z-index:10;left:10px;right:10px;top:10px;display:flex;justify-content:space-between;pointer-events:none}
+.cardSmall{background:#fffffff2;border:1px solid #d8dfd8;border-radius:13px;padding:8px 11px;box-shadow:0 5px 20px #0002}
+#score{font-size:18px;font-weight:900}
+.small{font-size:11px;color:#667168;line-height:1.55}
+#stats{text-align:right;font-size:11px;line-height:1.65}
+#toolbar{position:fixed;z-index:20;bottom:10px;left:50%;transform:translateX(-50%);display:flex;gap:6px;padding:7px;background:#17251bf5;border-radius:15px;box-shadow:0 8px 28px #0004}
+.tool{border:0;border-radius:10px;background:#fff;color:#17251b;padding:9px 11px;font-weight:800;cursor:pointer}
+.tool.active{background:#69a83f;color:white}
+#panel{display:none;position:fixed;z-index:30;right:10px;top:80px;width:min(320px,calc(100% - 20px));max-height:calc(100% - 145px);overflow:auto;background:#fffffff7;border:1px solid #d5ddd5;border-radius:16px;padding:13px;box-shadow:0 15px 45px #0003}
+#panel.show{display:block}
+#panel h3{margin:0 0 10px}
+.item{background:#f0f4ef;border-radius:11px;padding:10px;margin:7px 0;font-size:12px}
+.row{display:flex;gap:6px;margin-top:7px}.row button{flex:1;border:1px solid #cfd8cf;background:#fff;border-radius:8px;padding:8px;font-weight:800;cursor:pointer}
+.danger{color:#b33d37}
+#toast{position:fixed;z-index:45;left:50%;top:70px;transform:translate(-50%,-15px);opacity:0;background:#17251b;color:#fff;border-radius:999px;padding:9px 15px;font-size:12px;font-weight:800;transition:.2s;pointer-events:none}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+.overlay{position:fixed;z-index:50;inset:0;display:flex;align-items:center;justify-content:center;padding:15px;background:#e9eee9f5;backdrop-filter:blur(7px)}
+.hidden{display:none!important}
+.bigCard{width:min(560px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:24px;padding:26px;box-shadow:0 20px 70px #0003;text-align:center}
+.bigCard h1{font-size:32px;margin:0 0 8px}.bigCard p{color:#667168;line-height:1.6}
+.mode{display:flex;gap:7px;margin:16px 0}.mode button{flex:1;border:0;border-radius:10px;padding:11px;background:#edf1ec;font-weight:800;cursor:pointer}.mode button.active{background:#17251b;color:white}
+.startBtn{width:100%;border:0;border-radius:12px;background:#17251b;color:white;padding:14px;font-size:16px;font-weight:900;cursor:pointer}
+.help{text-align:left;background:#f0f4ef;border-radius:12px;padding:12px;font-size:12px;line-height:1.75}
+.choice{width:100%;border:2px solid transparent;background:#f0f4ef;text-align:left;border-radius:12px;padding:12px;margin:6px 0;cursor:pointer}
+.choice:hover{border-color:#9dbb91}.choice b{display:block;margin-bottom:3px}
+@media(max-width:650px){#toolbar{left:7px;right:7px;transform:none;justify-content:center}.tool{padding:8px 9px;font-size:11px}#stats{display:none}}
+</style>
+</head>
+<body>
+
+<canvas id="gameCanvas"></canvas>
+
+<div id="hud">
+  <div class="cardSmall">
+    <div id="score">점수 0</div>
+    <div id="week" class="small">1주차 · 💰 60</div>
+    <div id="waiting" class="small">대기 0명</div>
+  </div>
+  <div id="stats" class="cardSmall">
+    노선 <b id="lineCount">0</b> · 열차 <b id="trainCount">0</b><br>
+    객차 <b id="carCount">0</b> · 터널 <b id="tunnelCount">0</b>
+  </div>
+</div>
+
+<div id="toolbar">
+  <button id="drawBtn" class="tool active">✏️ 선로</button>
+  <button id="manageBtn" class="tool">🚉 관리</button>
+  <button id="mapBtn" class="tool">🗺️ 도시</button>
+  <button id="speedBtn" class="tool">▶ 1x</button>
+  <button id="pauseBtn" class="tool">Ⅱ</button>
+</div>
+
+<div id="panel">
+  <h3>🚉 철도 관리</h3>
+  <div id="panelContent"></div>
+</div>
+
+<div id="toast"></div>
+
+<div id="startScreen" class="overlay">
+  <div class="bigCard">
+    <h1>🚇 도시철도 V2</h1>
+    <p>나만의 도시철도를 운영하세요.<br><b>이번 버전은 시작 버튼을 누르면 즉시 기본 열차가 운행됩니다.</b></p>
+    <div class="mode">
+      <button id="infiniteMode" class="active">무한 도시</button>
+      <button id="dailyMode">오늘의 도시</button>
+    </div>
+    <div class="help">
+      <b>게임 방법</b><br>
+      • 역을 다른 역으로 드래그하면 노선이 생깁니다.<br>
+      • 기존 노선의 역에서 다른 역으로 드래그하면 노선이 확장됩니다.<br>
+      • 「관리」에서 객차를 추가하거나 노선을 삭제할 수 있습니다.<br>
+      • 매주 새로운 보너스를 선택합니다.<br>
+      • 승객이 너무 많이 쌓이면 게임 오버입니다.
+    </div>
+    <button id="startBtn" class="startBtn">운행 시작</button>
+  </div>
+</div>
+
+<div id="bonusScreen" class="overlay hidden">
+  <div class="bigCard">
+    <h1>📦 주간 보너스</h1>
+    <p id="bonusDesc"></p>
+    <div id="bonusList"></div>
+  </div>
+</div>
+
+<div id="gameOver" class="overlay hidden">
+  <div class="bigCard">
+    <h1>운행 종료</h1>
+    <p id="overReason"></p>
+    <div id="resultStats" class="help"></div>
+    <button id="restartBtn" class="startBtn" style="margin-top:12px">다시 운행</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+var canvas,ctx;
+var W=0,H=0,DPR=1;
+var running=false,paused=false,daily=false,speed=1;
+var score=0,money=60,week=1,gameTime=0;
+var spawnTimer=0,stationTimer=0,weekTimer=0,eventTimer=0;
+var stations=[],lines=[],trains=[],particles=[],rivers=[];
+var nextColor=0,dragStart=null,dragPos=null,selectedLine=null;
+var tunnelCount=0,totalDelivered=0,peakWaiting=0;
+var toastTimer=0,bonusPending=false;
+var bonus={cap:0,spd:0,spawn:0,tunnel:0,station:0};
+var event={station:null,until:0,type:""};
+var mapIndex=0;
+
+var COLORS=["#e45756","#4b83c5","#5da45c","#d39c32","#8b62b8","#d36c9b"];
+var SHAPES=["circle","triangle","square","diamond","hex"];
+var MAPS=[
+  {name:"초원 도시",river:0},
+  {name:"강의 도시",river:1},
+  {name:"해안 도시",river:2},
+  {name:"산업 도시",river:3}
+];
+
+function $(id){return document.getElementById(id)}
+
+function init(){
+  canvas=$("gameCanvas");
+  ctx=canvas.getContext("2d");
+  resize();
+  window.addEventListener("resize",resize);
+
+  $("startBtn").addEventListener("click",startGame);
+  $("restartBtn").addEventListener("click",restartGame);
+  $("infiniteMode").addEventListener("click",function(){
+    daily=false;
+    $("infiniteMode").classList.add("active");
+    $("dailyMode").classList.remove("active");
+  });
+  $("dailyMode").addEventListener("click",function(){
+    daily=true;
+    $("dailyMode").classList.add("active");
+    $("infiniteMode").classList.remove("active");
+  });
+  $("pauseBtn").addEventListener("click",togglePause);
+  $("speedBtn").addEventListener("click",cycleSpeed);
+  $("mapBtn").addEventListener("click",changeMap);
+  $("manageBtn").addEventListener("click",togglePanel);
+  $("drawBtn").addEventListener("click",function(){toast("역을 다른 역까지 드래그하세요.")});
+
+  canvas.addEventListener("pointerdown",pointerDown);
+  canvas.addEventListener("pointermove",pointerMove);
+  canvas.addEventListener("pointerup",pointerUp);
+  canvas.addEventListener("pointercancel",pointerCancel);
+
+  requestAnimationFrame(loop);
+}
+
+function resize(){
+  W=Math.max(320,window.innerWidth);
+  H=Math.max(480,window.innerHeight);
+  DPR=Math.min(window.devicePixelRatio||1,2);
+  canvas.width=Math.floor(W*DPR);
+  canvas.height=Math.floor(H*DPR);
+  canvas.style.width=W+"px";
+  canvas.style.height=H+"px";
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  if(running)clampStations();
+}
+
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function dist(a,b){return Math.hypot(a.x-b.x,a.y-b.y)}
+
+function startGame(){
+  if(running)return;
+  try{
+    $("startBtn").disabled=true;
+    resetWorld();
+    running=true;
+    paused=false;
+    $("startScreen").classList.add("hidden");
+    $("gameOver").classList.add("hidden");
+    $("bonusScreen").classList.add("hidden");
+    $("pauseBtn").textContent="Ⅱ";
+    toast("🚇 운행 시작! 기본 열차가 출발했습니다.");
+  }catch(err){
+    console.error(err);
+    running=false;
+    $("startBtn").disabled=false;
+    alert("게임을 시작하지 못했습니다.\n"+err.message);
+  }
+}
+
+function restartGame(){
+  $("gameOver").classList.add("hidden");
+  running=false;
+  setTimeout(function(){
+    $("startBtn").disabled=false;
+    startGame();
+  },0);
+}
+
+function resetWorld(){
+  stations=[];lines=[];trains=[];particles=[];rivers=[];
+  score=0;money=60;week=1;gameTime=0;
+  spawnTimer=0;stationTimer=0;weekTimer=0;eventTimer=0;
+  nextColor=0;dragStart=null;dragPos=null;selectedLine=null;
+  tunnelCount=0;totalDelivered=0;peakWaiting=0;
+  bonus={cap:0,spd:0,spawn:0,tunnel:0,station:0};
+  event={station:null,until:0,type:""};
+
+  mapIndex=daily?(new Date().getDate()+new Date().getMonth())%MAPS.length:0;
+  createInitialStations();
+  makeRivers();
+
+  // 시작 즉시 보이는 기본 노선
+  var starter=createLine(stations[0],stations[1]);
+  addStationToLine(starter,stations[2]);
+  addTrain(starter);
+
+  for(var i=0;i<10;i++){
+    spawnPassenger(stations[i%stations.length]);
+  }
+  updateHUD();
+}
+
+function createInitialStations(){
+  var cx=W/2,cy=Math.min(H-190,Math.max(230,H/2+20));
+  var pts=[
+    [-190,-95,"circle"],
+    [-60,-145,"triangle"],
+    [105,-105,"square"],
+    [180,10,"diamond"],
+    [60,125,"circle"],
+    [-105,115,"hex"]
+  ];
+  for(var i=0;i<pts.length;i++){
+    stations.push({
+      id:i,x:cx+pts[i][0],y:cy+pts[i][1],
+      shape:pts[i][2],waiting:[],capacity:7,level:1,overload:0
+    });
+  }
+  if(daily){
+    stations.push({id:6,x:cx,y:cy-5,shape:"hex",waiting:[],capacity:7,level:1,overload:0});
+  }
+  clampStations();
+}
+
+function clampStations(){
+  for(var i=0;i<stations.length;i++){
+    stations[i].x=clamp(stations[i].x,32,W-32);
+    stations[i].y=clamp(stations[i].y,105,H-55);
+  }
+}
+
+function makeRivers(){
+  rivers=[];
+  var n=MAPS[mapIndex].river;
+  for(var i=0;i<n;i++){
+    rivers.push({phase:i*1.7,width:42});
+  }
+}
+
+function riverY(r,x){
+  return H*.45+Math.sin(x/95+r.phase)*65;
+}
+
+function crossesRiver(a,b){
+  if(!rivers.length)return false;
+  var steps=Math.max(4,Math.ceil(dist(a,b)/15));
+  for(var k=0;k<rivers.length;k++){
+    var r=rivers[k];
+    for(var i=0;i<=steps;i++){
+      var t=i/steps;
+      var x=a.x+(b.x-a.x)*t;
+      var y=a.y+(b.y-a.y)*t;
+      if(Math.abs(y-riverY(r,x))<r.width/2)return true;
+    }
+  }
+  return false;
+}
+
+function createLine(a,b){
+  if(!a||!b||a===b)return null;
+  var l={
+    id:lines.length,
+    color:COLORS[nextColor%COLORS.length],
+    stations:[a.id,b.id],
+    cars:1,
+    trains:[],
+    tunnels:0
+  };
+  nextColor++;
+  lines.push(l);
+  recalcTunnels(l);
+  selectedLine=l;
+  return l;
+}
+
+function addStationToLine(l,s){
+  if(!l||!s)return;
+  if(l.stations.indexOf(s.id)<0)l.stations.push(s.id);
+  recalcTunnels(l);
+}
+
+function recalcTunnels(l){
+  var need=0;
+  for(var i=0;i<l.stations.length-1;i++){
+    if(crossesRiver(stations[l.stations[i]],stations[l.stations[i+1]]))need++;
+  }
+  l.tunnels=Math.min(need,1+bonus.tunnel);
+  tunnelCount=0;
+  for(var j=0;j<lines.length;j++)tunnelCount+=lines[j].tunnels;
+}
+
+function addTrain(l){
+  if(!l||l.stations.length<2)return;
+  var t={
+    line:l.id,seg:0,frac:0,dir:1,
+    speed:58,capacity:4+bonus.cap*2,load:[]
+  };
+  l.trains.push(t);
+  trains.push(t);
+}
+
+function addCar(l){
+  if(money<25){toast("코인이 부족합니다.");return}
+  money-=25;
+  l.cars++;
+  if(l.trains.length<l.cars)addTrain(l);
+  for(var i=0;i<l.trains.length;i++)l.trains[i].capacity=4+bonus.cap*2+(l.cars-1);
+  updateHUD();
+  toast("객차를 추가했습니다.");
+}
+
+function deleteLine(l){
+  for(var i=0;i<l.trains.length;i++){
+    var idx=trains.indexOf(l.trains[i]);
+    if(idx>=0)trains.splice(idx,1);
+  }
+  var li=lines.indexOf(l);
+  if(li>=0)lines.splice(li,1);
+  for(var j=0;j<lines.length;j++)lines[j].id=j;
+  selectedLine=null;
+  updateHUD();
+  closePanel();
+  toast("노선을 삭제했습니다.");
+}
+
+function changeColor(l){
+  var i=COLORS.indexOf(l.color);
+  l.color=COLORS[(i+1)%COLORS.length];
+  draw();
+}
+
+function lineForStation(s){
+  var arr=[];
+  for(var i=0;i<lines.length;i++){
+    if(lines[i].stations.indexOf(s.id)>=0)arr.push(lines[i]);
+  }
+  return arr;
+}
+
+function routeExists(from,to){
+  var q=[from],seen={};
+  seen[from]=true;
+  while(q.length){
+    var id=q.shift();
+    if(id===to)return true;
+    for(var i=0;i<lines.length;i++){
+      var l=lines[i];
+      if(l.stations.indexOf(id)<0)continue;
+      for(var j=0;j<l.stations.length;j++){
+        var n=l.stations[j];
+        if(!seen[n]){seen[n]=true;q.push(n)}
+      }
+    }
+  }
+  return false;
+}
+
+function chooseDestination(s){
+  var reachable=[];
+  var all=[];
+  for(var i=0;i<stations.length;i++){
+    if(stations[i]===s)continue;
+    all.push(stations[i]);
+    if(routeExists(s.id,stations[i].id))reachable.push(stations[i]);
+  }
+  var a=reachable.length?reachable:all;
+  return a.length?a[Math.floor(Math.random()*a.length)]:null;
+}
+
+function spawnPassenger(s){
+  if(!s||s.waiting.length>=s.capacity+6)return;
+  var d=chooseDestination(s);
+  if(!d)return;
+  s.waiting.push({dest:d.id,age:0});
+}
+
+function board(t,s){
+  while(t.load.length<t.capacity&&s.waiting.length){
+    var index=-1;
+    for(var i=0;i<s.waiting.length;i++){
+      if(s.waiting[i].dest!==s.id){index=i;break}
+    }
+    if(index<0)break;
+    t.load.push(s.waiting.splice(index,1)[0]);
+  }
+}
+
+function arrive(t,s){
+  var delivered=0,newLoad=[];
+  for(var i=0;i<t.load.length;i++){
+    if(t.load[i].dest===s.id){
+      delivered++;
+      score+=10;
+      money+=2;
+      totalDelivered++;
+    }else newLoad.push(t.load[i]);
+  }
+  t.load=newLoad;
+  if(delivered)burst(s.x,s.y);
+  board(t,s);
+}
+
+function updateTrains(dt){
+  for(var i=0;i<trains.length;i++){
+    var t=trains[i];
+    var l=lines.find(function(x){return x.id===t.line});
+    if(!l||l.stations.length<2)continue;
+
+    // 열차는 현재 선로 구간(seg) 안에서 frac(0~1)로 이동한다.
+    // 종점에서는 frac을 1/0으로 그대로 유지한 채 방향만 바꾼다.
+    // 그래서 종점에서 반대쪽 선로로 자연스럽게 되돌아가며 순간이동하지 않는다.
+    if(t.seg<0)t.seg=0;
+    if(t.seg>l.stations.length-2)t.seg=l.stations.length-2;
+    t.frac=clamp(t.frac,0,1);
+
+    var a=stations[l.stations[t.seg]];
+    var b=stations[l.stations[t.seg+1]];
+    if(!a||!b)continue;
+
+    var step=(t.speed*(1+bonus.spd*.15)*dt/Math.max(45,dist(a,b)));
+
+    if(t.dir>0){
+      t.frac+=step;
+
+      if(t.frac>=1){
+        t.frac=1;
+        arrive(t,b);
+
+        // 마지막 구간의 종점에 도착하면 그 자리에서 방향만 반전
+        // (seg와 frac을 초기화하지 않음)
+        if(t.seg===l.stations.length-2){
+          t.dir=-1;
+        }else{
+          t.seg++;
+          t.frac=0;
+        }
+      }
+    }else{
+      t.frac-=step;
+
+      if(t.frac<=0){
+        t.frac=0;
+        arrive(t,a);
+
+        // 첫 구간의 시작점에 도착하면 그 자리에서 방향만 반전
+        if(t.seg===0){
+          t.dir=1;
+        }else{
+          t.seg--;
+          t.frac=1;
+        }
+      }
+    }
+  }
+}
+
+function update(dt){
+  if(!running||paused)return;
+
+  gameTime+=dt;
+  spawnTimer+=dt*(1-bonus.spawn*.12);
+  stationTimer+=dt;
+  weekTimer+=dt;
+  eventTimer+=dt;
+
+  if(spawnTimer>2.0){
+    spawnTimer=0;
+    if(stations.length){
+      spawnPassenger(stations[Math.floor(Math.random()*stations.length)]);
+    }
+  }
+
+  if(stationTimer>32){
+    stationTimer=0;
+    if(stations.length<18)spawnNewStation();
+  }
+
+  if(weekTimer>55){
+    weekTimer=0;
+    week++;
+    money+=20+bonus.station*5;
+    showBonus();
+  }
+
+  if(eventTimer>40){
+    eventTimer=0;
+    if(Math.random()<.6)randomEvent();
+  }
+
+  for(var i=0;i<stations.length;i++){
+    var s=stations[i];
+    for(var j=0;j<s.waiting.length;j++)s.waiting[j].age+=dt;
+    if(s.waiting.length>s.capacity)s.overload+=dt*.2;
+    else s.overload=Math.max(0,s.overload-dt*.5);
+  }
+
+  updateTrains(dt);
+
+  for(var p=0;p<particles.length;p++){
+    particles[p].x+=particles[p].vx*dt;
+    particles[p].y+=particles[p].vy*dt;
+    particles[p].life-=dt;
+  }
+  particles=particles.filter(function(x){return x.life>0});
+
+  var waiting=0;
+  for(var k=0;k<stations.length;k++)waiting+=stations[k].waiting.length;
+  peakWaiting=Math.max(peakWaiting,waiting);
+
+  for(var q=0;q<stations.length;q++){
+    if(stations[q].overload>18){
+      gameOver("승객이 한 역에 너무 오래 몰렸습니다.");
+      return;
+    }
+  }
+
+  updateHUD();
+}
+
+function spawnNewStation(){
+  var x,y,tries=0;
+  do{
+    x=60+Math.random()*(W-120);
+    y=120+Math.random()*(H-190);
+    tries++;
+  }while(nearestStation(x,y,75)&&tries<50);
+  if(nearestStation(x,y,75))return;
+
+  stations.push({
+    id:stations.length,x:x,y:y,
+    shape:SHAPES[Math.floor(Math.random()*SHAPES.length)],
+    waiting:[],capacity:7,level:1,overload:0
+  });
+  toast("새 역이 개통되었습니다!");
+}
+
+function randomEvent(){
+  if(!stations.length)return;
+  var s=stations[Math.floor(Math.random()*stations.length)];
+  event={station:s,until:gameTime+17,type:"rush"};
+  for(var i=0;i<3;i++)spawnPassenger(s);
+  toast("출근 시간! 승객이 몰립니다.");
+}
+
+function showBonus(){
+  if(bonusPending)return;
+  bonusPending=true;
+  paused=true;
+  $("bonusDesc").textContent=week+"주차 보너스입니다. 하나를 선택하세요.";
+  var list=$("bonusList");
+  list.innerHTML="";
+
+  var choices=[
+    ["cap","🚃 대형 객차","모든 열차의 정원이 2명 증가합니다."],
+    ["spd","⚡ 고속철도","열차가 15% 빨라집니다."],
+    ["spawn","👥 승객 분산","승객 발생량이 감소합니다."],
+    ["tunnel","🌉 터널 기술","강을 건널 수 있는 터널이 증가합니다."],
+    ["station","🏙️ 도시 운영","주간 보너스 코인이 증가합니다."]
+  ];
+
+  for(var i=0;i<choices.length;i++){
+    (function(c){
+      var b=document.createElement("button");
+      b.className="choice";
+      b.innerHTML="<b>"+c[1]+"</b><span>"+c[2]+"</span>";
+      b.addEventListener("click",function(){
+        bonus[c[0]]++;
+        if(c[0]==="cap"){
+          for(var i=0;i<trains.length;i++)trains[i].capacity+=2;
+        }
+        if(c[0]==="tunnel"){
+          for(var j=0;j<lines.length;j++)recalcTunnels(lines[j]);
+        }
+        bonusPending=false;
+        paused=false;
+        $("bonusScreen").classList.add("hidden");
+        updateHUD();
+        toast(c[1]+" 적용!");
+      });
+      list.appendChild(b);
+    })(choices[i]);
+  }
+  $("bonusScreen").classList.remove("hidden");
+}
+
+function updateHUD(){
+  $("score").textContent="점수 "+score;
+  $("week").textContent=week+"주차 · 💰 "+money;
+  var waiting=0;
+  for(var i=0;i<stations.length;i++)waiting+=stations[i].waiting.length;
+  $("waiting").textContent="대기 "+waiting+"명";
+  $("lineCount").textContent=lines.length;
+  $("trainCount").textContent=trains.length;
+  var cars=0;
+  for(var j=0;j<lines.length;j++)cars+=lines[j].cars;
+  $("carCount").textContent=cars;
+  $("tunnelCount").textContent=tunnelCount;
+}
+
+function toast(msg){
+  var e=$("toast");
+  e.textContent=msg;
+  e.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){e.classList.remove("show")},1800);
+}
+
+function togglePause(){
+  if(!running)return;
+  paused=!paused;
+  $("pauseBtn").textContent=paused?"▶":"Ⅱ";
+}
+
+function cycleSpeed(){
+  speed=speed===1?2:speed===2?4:1;
+  $("speedBtn").textContent="▶ "+speed+"x";
+}
+
+function changeMap(){
+  if(!running)return;
+  mapIndex=(mapIndex+1)%MAPS.length;
+  makeRivers();
+  for(var i=0;i<lines.length;i++)recalcTunnels(lines[i]);
+  toast("🗺️ "+MAPS[mapIndex].name);
+}
+
+function togglePanel(){
+  var p=$("panel");
+  if(p.classList.contains("show")){closePanel();return}
+  renderPanel();
+}
+
+function closePanel(){$("panel").classList.remove("show")}
+
+function renderPanel(){
+  var box=$("panelContent");
+  box.innerHTML="";
+  if(!lines.length){
+    box.innerHTML="<div class='item'>노선이 없습니다.<br>역을 드래그해 연결하세요.</div>";
+  }else{
+    for(var i=0;i<lines.length;i++){
+      (function(l){
+        var item=document.createElement("div");
+        item.className="item";
+        item.innerHTML="<b style='color:"+l.color+"'>● 노선 "+(l.id+1)+"</b><br>역: "+l.stations.map(function(x){return x+1}).join(" → ")+"<br>차량 "+l.cars+" · 터널 "+l.tunnels;
+
+        var row=document.createElement("div");row.className="row";
+        var add=document.createElement("button");add.textContent="객차 +";add.onclick=function(){addCar(l);renderPanel()};
+        var color=document.createElement("button");color.textContent="색 변경";color.onclick=function(){changeColor(l)};
+        var del=document.createElement("button");del.textContent="삭제";del.className="danger";del.onclick=function(){deleteLine(l)};
+        row.append(add,color,del);item.appendChild(row);box.appendChild(item);
+      })(lines[i]);
+    }
+  }
+  $("panel").classList.add("show");
+}
+
+function pointerPos(e){
+  var r=canvas.getBoundingClientRect();
+  return{x:e.clientX-r.left,y:e.clientY-r.top};
+}
+
+function pointerDown(e){
+  if(!running||paused)return;
+  var p=pointerPos(e);
+  var s=nearestStation(p.x,p.y,37);
+  if(!s)return;
+  dragStart=s;
+  dragPos=p;
+  try{canvas.setPointerCapture(e.pointerId)}catch(_){}
+}
+
+function pointerMove(e){
+  if(!dragStart)return;
+  dragPos=pointerPos(e);
+}
+
+function pointerUp(e){
+  if(!dragStart)return;
+  var p=pointerPos(e);
+  var end=nearestStation(p.x,p.y,43);
+  var start=dragStart;
+
+  if(end&&end!==start){
+    var existing=lineForStation(start)[0];
+    if(existing){
+      addStationToLine(existing,end);
+      selectedLine=existing;
+      toast("노선을 확장했습니다.");
+    }else{
+      var l=createLine(start,end);
+      addTrain(l);
+      toast("새 노선을 만들었습니다.");
+    }
+    updateHUD();
+  }else{
+    var l2=lineAt(p.x,p.y);
+    if(l2)renderPanel();
+  }
+
+  dragStart=null;dragPos=null;
+  try{canvas.releasePointerCapture(e.pointerId)}catch(_){}
+}
+
+function pointerCancel(e){
+  dragStart=null;dragPos=null;
+  try{canvas.releasePointerCapture(e.pointerId)}catch(_){}
+}
+
+function nearestStation(x,y,r){
+  var best=null,bd=r;
+  for(var i=0;i<stations.length;i++){
+    var d=Math.hypot(x-stations[i].x,y-stations[i].y);
+    if(d<bd){bd=d;best=stations[i]}
+  }
+  return best;
+}
+
+function lineAt(x,y){
+  for(var i=0;i<lines.length;i++){
+    var l=lines[i];
+    for(var j=0;j<l.stations.length-1;j++){
+      var a=stations[l.stations[j]],b=stations[l.stations[j+1]];
+      var dx=b.x-a.x,dy=b.y-a.y,len=dx*dx+dy*dy;
+      if(!len)continue;
+      var t=clamp(((x-a.x)*dx+(y-a.y)*dy)/len,0,1);
+      var px=a.x+dx*t,py=a.y+dy*t;
+      if(Math.hypot(x-px,y-py)<11)return l;
+    }
+  }
+  return null;
+}
+
+function burst(x,y){
+  for(var i=0;i<10;i++){
+    particles.push({
+      x:x,y:y,vx:(Math.random()-.5)*65,vy:(Math.random()-.5)*65,life:.5
+    });
+  }
+}
+
+function draw(){
+  if(!ctx)return;
+  ctx.clearRect(0,0,W,H);
+
+  ctx.fillStyle="#e9eee9";
+  ctx.fillRect(0,0,W,H);
+
+  ctx.strokeStyle="#dce3dc";
+  ctx.lineWidth=1;
+  for(var x=0;x<W;x+=55){
+    ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();
+  }
+  for(var y=0;y<H;y+=55){
+    ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();
+  }
+
+  for(var r=0;r<rivers.length;r++){
+    var river=rivers[r];
+    ctx.beginPath();
+    for(var ri=0;ri<=50;ri++){
+      var rx=ri/50*W,ry=riverY(river,rx);
+      if(ri===0)ctx.moveTo(rx,ry);else ctx.lineTo(rx,ry);
+    }
+    ctx.lineWidth=river.width;
+    ctx.strokeStyle="#b9d2d8";
+    ctx.stroke();
+  }
+
+  for(var li=0;li<lines.length;li++){
+    var line=lines[li];
+    if(line.stations.length<2)continue;
+    ctx.beginPath();
+    for(var si=0;si<line.stations.length;si++){
+      var st=stations[line.stations[si]];
+      if(si===0)ctx.moveTo(st.x,st.y);else ctx.lineTo(st.x,st.y);
+    }
+    ctx.lineWidth=11;ctx.strokeStyle="#fff";ctx.stroke();
+    ctx.lineWidth=7;ctx.strokeStyle=line.color;ctx.stroke();
+  }
+
+  if(dragStart&&dragPos){
+    ctx.beginPath();
+    ctx.moveTo(dragStart.x,dragStart.y);
+    ctx.lineTo(dragPos.x,dragPos.y);
+    ctx.setLineDash([8,7]);
+    ctx.lineWidth=6;
+    ctx.strokeStyle="#17251b";
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  drawPassengers();
+  drawStations();
+  drawTrains();
+  drawParticles();
+}
+
+function drawPassengers(){
+  for(var i=0;i<stations.length;i++){
+    var s=stations[i];
+    for(var j=0;j<Math.min(7,s.waiting.length);j++){
+      var a=j/7*Math.PI*2;
+      ctx.fillStyle="#42564a";
+      ctx.beginPath();
+      ctx.arc(s.x+Math.cos(a)*23,s.y+Math.sin(a)*23,3,0,Math.PI*2);
+      ctx.fill();
+    }
+  }
+}
+
+function drawStations(){
+  for(var i=0;i<stations.length;i++){
+    var s=stations[i];
+    ctx.save();
+    ctx.translate(s.x,s.y);
+    ctx.fillStyle=(event.station===s&&event.until>gameTime)?"#f1c44e":"#fff";
+    ctx.strokeStyle="#17251b";
+    ctx.lineWidth=3;
+    ctx.beginPath();
+
+    if(s.shape==="circle"){
+      ctx.arc(0,0,15,0,Math.PI*2);
+    }else if(s.shape==="triangle"){
+      ctx.moveTo(0,-17);ctx.lineTo(17,14);ctx.lineTo(-17,14);ctx.closePath();
+    }else if(s.shape==="square"){
+      ctx.rect(-14,-14,28,28);
+    }else if(s.shape==="diamond"){
+      ctx.moveTo(0,-18);ctx.lineTo(18,0);ctx.lineTo(0,18);ctx.lineTo(-18,0);ctx.closePath();
+    }else{
+      for(var h=0;h<6;h++){
+        var aa=-Math.PI/2+h*Math.PI/3;
+        var xx=Math.cos(aa)*17,yy=Math.sin(aa)*17;
+        if(h===0)ctx.moveTo(xx,yy);else ctx.lineTo(xx,yy);
+      }
+      ctx.closePath();
+    }
+    ctx.fill();ctx.stroke();ctx.restore();
+
+    if(s.waiting.length){
+      ctx.fillStyle="#17251b";
+      ctx.font="bold 11px Arial";
+      ctx.textAlign="center";
+      ctx.fillText(s.waiting.length,s.x,s.y-24);
+    }
+  }
+}
+
+function drawTrains(){
+  for(var i=0;i<trains.length;i++){
+    var t=trains[i];
+    var l=lines.find(function(x){return x.id===t.line});
+    if(!l||l.stations.length<2)continue;
+
+    var a=stations[l.stations[t.seg]],b=stations[l.stations[t.seg+1]];
+    if(!a||!b)continue;
+
+    var x=a.x+(b.x-a.x)*t.frac;
+    var y=a.y+(b.y-a.y)*t.frac;
+
+    ctx.save();
+    ctx.translate(x,y);
+    // 열차가 되돌아가는 방향도 시각적으로 표시
+    if(t.dir<0)ctx.rotate(Math.atan2(a.y-b.y,a.x-b.x));
+    else ctx.rotate(Math.atan2(b.y-a.y,b.x-a.x));
+    ctx.fillStyle=l.color;
+    ctx.strokeStyle="#17251b";
+    ctx.lineWidth=2;
+
+    // roundRect 대신 직접 둥근 사각형을 그려 브라우저 호환성 확보
+    var rx=-16,ry=-9,rw=32,rh=18,rr=5;
+    ctx.beginPath();
+    ctx.moveTo(rx+rr,ry);
+    ctx.lineTo(rx+rw-rr,ry);
+    ctx.quadraticCurveTo(rx+rw,ry,rx+rw,ry+rr);
+    ctx.lineTo(rx+rw,ry+rh-rr);
+    ctx.quadraticCurveTo(rx+rw,ry+rh,rx+rw-rr,ry+rh);
+    ctx.lineTo(rx+rr,ry+rh);
+    ctx.quadraticCurveTo(rx,ry+rh,rx,ry+rh-rr);
+    ctx.lineTo(rx,ry+rr);
+    ctx.quadraticCurveTo(rx,ry,rx+rr,ry);
+    ctx.closePath();
+    ctx.fill();ctx.stroke();
+
+    ctx.fillStyle="#fff";
+    ctx.fillRect(-9,-5,5,4);
+    ctx.fillRect(4,-5,5,4);
+    if(t.load.length){
+      ctx.font="bold 8px Arial";
+      ctx.textAlign="center";
+      ctx.fillText(t.load.length,0,4);
+    }
+    ctx.restore();
+  }
+}
+
+function drawParticles(){
+  for(var i=0;i<particles.length;i++){
+    var p=particles[i];
+    ctx.globalAlpha=Math.max(0,p.life*2);
+    ctx.fillStyle="#17251b";
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,3,0,Math.PI*2);
+    ctx.fill();
+  }
+  ctx.globalAlpha=1;
+}
+
+function gameOver(reason){
+  if(!running)return;
+  running=false;paused=true;
+  $("overReason").textContent=reason;
+
+  var old=0;
+  try{old=Number(localStorage.getItem("subwayV2Best")||0)}catch(_){}
+  var best=Math.max(old,score);
+  try{localStorage.setItem("subwayV2Best",best)}catch(_){}
+
+  $("resultStats").innerHTML=
+    "점수 <b>"+score+"</b><br>"+
+    "최고 기록 <b>"+best+"</b><br>"+
+    "운송 승객 <b>"+totalDelivered+"</b><br>"+
+    "최대 대기 승객 <b>"+peakWaiting+"</b><br>"+
+    "도달 주차 <b>"+week+"</b>";
+
+  $("gameOver").classList.remove("hidden");
+}
+
+var last=performance.now();
+function loop(now){
+  var dt=Math.min(.05,(now-last)/1000);
+  last=now;
+  update(dt*speed);
+  draw();
+  requestAnimationFrame(loop);
+}
+
+if(document.readyState==="loading"){
+  document.addEventListener("DOMContentLoaded",init);
+}else{
+  init();
+}
+
+})();
+</script>
+</body>
+</html>
