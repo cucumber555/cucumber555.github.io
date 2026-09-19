@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>공룡 달리기 게임</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#1b1d23;color:#eee;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;display:flex;flex-direction:column;align-items:center;padding:14px;min-height:100vh}
+h1{font-size:18px;margin:2px 0 10px;font-weight:600}
+#hud{display:flex;justify-content:space-between;width:100%;max-width:340px;font-size:14px;margin-bottom:6px;color:#ccc}
+#hud span b{color:#fff}
+#gameWrap{position:relative;width:100%;max-width:340px}
+canvas{display:block;width:100%;max-width:340px;height:auto;background:#262a33;border-radius:10px;border:1px solid #3a3e48;touch-action:none;-webkit-tap-highlight-color:transparent}
+#startScreen,#overScreen{position:absolute;inset:0;background:rgba(27,29,35,.96);border-radius:10px;border:1px solid #3a3e48;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;z-index:20;padding:16px;text-align:center;overflow-y:auto}
+#overScreen{display:none}
+.titleIcon{font-size:38px}
+#startScreen h2,#overScreen h2{font-size:19px;margin:0;color:#fff;font-weight:600}
+#startScreen p,#overScreen p{font-size:13px;color:#999;margin:0;line-height:1.5}
+.bigBtn{margin-top:4px;padding:12px 26px;border-radius:10px;border:none;background:#4f9e6a;color:#fff;font-size:15px;font-weight:600;cursor:pointer}
+.bigBtn:active{background:#3c6e4f}
+#hint{margin-top:10px;font-size:13px;color:#888;text-align:center}
+#nameInput{width:180px;padding:8px 10px;border-radius:8px;border:1px solid #3a3e48;background:#262a33;color:#fff;font-size:14px;text-align:center}
+#leaderboardPreview,#leaderboardList{width:100%;max-width:300px}
+</style>
+</head>
+<body>
+<h1>공룡 달리기</h1>
+<div id="hud">
+<span>점수: <b id="score">0</b></span>
+<span>최고점: <b id="best">0</b></span>
+</div>
+
+<div id="gameWrap">
+<canvas id="game" width="360" height="280"></canvas>
+
+<div id="startScreen">
+<div class="titleIcon">🦖</div>
+<h2>공룡 달리기</h2>
+<p>화면을 탭하면 점프해요.<br>선인물과 날아오는 장애물을 피해보세요!</p>
+<input id="nameInput" type="text" placeholder="이름을 입력하세요" maxlength="10">
+<button class="bigBtn" id="startBtn">시작하기</button>
+<div id="leaderboardPreview"></div>
+</div>
+
+<div id="overScreen">
+<div class="titleIcon">💥</div>
+<h2>게임 오버</h2>
+<p id="overScoreText">점수: 0</p>
+<p id="rankText" style="color:#F0C755;font-size:16px;font-weight:700"></p>
+<div id="leaderboardList"></div>
+<button class="bigBtn" id="retryBtn">다시 하기</button>
+</div>
+</div>
+
+<div id="hint">화면을 탭 / 스페이스바 / ↑ 로 점프</div>
+
+<script>
+(function(){
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+const W=canvas.width,H=canvas.height,GROUND_Y=H-30,GRAVITY=.85,JUMP_V=-14;
+const scoreEl=document.getElementById('score'),bestEl=document.getElementById('best');
+const startScreen=document.getElementById('startScreen'),overScreen=document.getElementById('overScreen');
+const overScoreText=document.getElementById('overScoreText'),startBtn=document.getElementById('startBtn'),retryBtn=document.getElementById('retryBtn');
+const nameInput=document.getElementById('nameInput'),leaderboardPreview=document.getElementById('leaderboardPreview');
+const rankText=document.getElementById('rankText'),leaderboardList=document.getElementById('leaderboardList');
+
+let best=Number(localStorage.getItem('dino-best')||0);
+let playerName=localStorage.getItem('dino-name')||'';
+let dino,obstacles,clouds,speed,score,running,started,frame,lastTime=0;
+
+nameInput.value=playerName;
+bestEl.textContent=best;
+
+function getLeaderboard(){
+try{return JSON.parse(localStorage.getItem('dino-leaderboard')||'[]')}catch(e){return[]}
+}
+function saveScore(entry){
+const list=getLeaderboard();
+list.push(entry);
+list.sort((a,b)=>b.score-a.score);
+const top=list.slice(0,20);
+localStorage.setItem('dino-leaderboard',JSON.stringify(top));
+return top;
+}
+function escapeHtml(s){
+return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function renderList(container,list,highlightTs){
+if(!list.length){container.innerHTML='<div style="color:#666;font-size:14px">아직 기록이 없어요.</div>';return}
+container.innerHTML=list.slice(0,5).map((r,i)=>{
+const me=highlightTs&&r.ts===highlightTs;
+return `<div style="display:flex;justify-content:space-between;padding:5px 2px;font-size:16px;font-weight:${me?'700':'500'};color:${me?'#F0C755':'#eee'};border-bottom:1px solid #30333c">
+<span>${i+1}위 · ${escapeHtml(r.name)}</span><span>${r.score}</span></div>`;
+}).join('');
+}
+function showPreview(){
+const list=getLeaderboard();
+leaderboardPreview.innerHTML='<div style="margin-bottom:6px;color:#999;font-size:14px;font-weight:600">랭킹 TOP 5</div><div id="previewList"></div>';
+renderList(document.getElementById('previewList'),list);
+}
+showPreview();
+
+function reset(){
+dino={x:40,y:GROUND_Y-34,w:30,h:34,vy:0,onGround:true};
+obstacles=[];
+clouds=[{x:80,y:40,w:36},{x:220,y:70,w:44},{x:320,y:30,w:30}];
+speed=4.8;score=0;running=true;frame=0;lastTime=0;
+scoreEl.textContent='0';
+}
+function spawnObstacle(){
+const isBird=score>18&&Math.random()<.2;
+if(isBird){
+obstacles.push({x:W+10,y:GROUND_Y-70-Math.random()*24,w:26,h:20,type:'bird'});
+}else{
+const size=16+Math.random()*14;
+obstacles.push({x:W+10,y:GROUND_Y-size,w:size*.7,h:size,type:'cactus'});
+if(score>35&&Math.random()<.15){
+const size2=16+Math.random()*14;
+obstacles.push({x:W+10+size*.7+18,y:GROUND_Y-size2,w:size2*.7,h:size2,type:'cactus'});
+}}
+}
+function jump(){
+if(running&&dino.onGround){dino.vy=JUMP_V;dino.onGround=false}
+}
+function rectsOverlap(a,b){
+const pad=4;
+return a.x+pad<b.x+b.w&&a.x+a.w-pad>b.x&&a.y+pad<b.y+b.h&&a.y+a.h-pad>b.y;
+}
+function endGame(){
+if(!running)return;
+running=false;
+const finalScore=Math.floor(score);
+overScoreText.textContent='점수: '+finalScore;
+rankText.textContent='기록 저장 중...';
+overScreen.style.display='flex';
+const entry={name:playerName||'익명',score:finalScore,ts:Date.now()};
+const list=saveScore(entry);
+if(finalScore>best){best=finalScore;localStorage.setItem('dino-best',best);bestEl.textContent=best}
+const rank=list.findIndex(r=>r.ts===entry.ts)+1;
+rankText.textContent=rank>0?'전체 '+list.length+'명 중 '+rank+'위!':'';
+renderList(leaderboardList,list,entry.ts);
+showPreview();
+}
+function update(dt){
+if(!started||!running)return;
+const factor=dt/16.667;
+frame++;
+score+=.18*factor;
+scoreEl.textContent=Math.floor(score);
+speed=Math.min(11,speed+.0015*factor);
+dino.vy+=GRAVITY*factor;
+dino.y+=dino.vy*factor;
+if(dino.y>=GROUND_Y-dino.h){dino.y=GROUND_Y-dino.h;dino.vy=0;dino.onGround=true}
+const spawnInterval=Math.max(38,65-Math.floor(score/5));
+if(frame%spawnInterval<1)spawnObstacle();
+for(const o of obstacles)o.x-=speed*factor;
+obstacles=obstacles.filter(o=>o.x+o.w>-10);
+for(const c of clouds){c.x-=speed*.3*factor;if(c.x<-50){c.x=W+Math.random()*40;c.y=20+Math.random()*60}}
+for(const o of obstacles)if(rectsOverlap(dino,o)){endGame();return}
+}
+function drawDino(){
+const{x,y,w,h}=dino;
+ctx.fillStyle='#378ADD';
+ctx.beginPath();ctx.ellipse(x+w*.45,y+h*.55,w*.5,h*.45,0,0,Math.PI*2);ctx.fill();
+ctx.beginPath();ctx.ellipse(x+w*.7,y+h*.28,w*.42,h*.32,0,0,Math.PI*2);ctx.fill();
+ctx.fillStyle='#B5D4F4';ctx.beginPath();ctx.ellipse(x+w*.4,y+h*.68,w*.28,h*.28,0,0,Math.PI*2);ctx.fill();
+ctx.fillStyle='#185FA5';
+for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(x+w*(.15+i*.15),y+h*.15);ctx.lineTo(x+w*(.22+i*.15),y-h*.05);ctx.lineTo(x+w*(.29+i*.15),y+h*.15);ctx.closePath();ctx.fill()}
+ctx.fillStyle='#042C53';ctx.beginPath();ctx.arc(x+w*.82,y+h*.24,w*.07,0,Math.PI*2);ctx.fill();
+ctx.fillStyle='#185FA5';ctx.fillRect(x+w*.18,y+h*.88,w*.16,h*.16);ctx.fillRect(x+w*.55,y+h*.88,w*.16,h*.16);
+}
+function draw(){
+ctx.clearRect(0,0,W,H);
+ctx.fillStyle='#33363f';for(const c of clouds)ctx.fillRect(c.x,c.y,c.w,8);
+ctx.fillStyle='#3a3e48';ctx.fillRect(0,GROUND_Y,W,2);
+for(let i=0;i<W;i+=24){const off=(frame*speed)%24;ctx.fillRect(i-off,GROUND_Y+6,10,2)}
+for(const o of obstacles){
+if(o.type==='cactus'){
+ctx.fillStyle='#639922';ctx.fillRect(o.x,o.y,o.w,o.h);
+ctx.fillRect(o.x-o.w*.35,o.y+o.h*.38,o.w*.35,o.w*.28);
+ctx.fillRect(o.x+o.w,o.y+o.h*.55,o.w*.35,o.w*.28);
+}else{
+ctx.fillStyle='#D85A30';ctx.beginPath();ctx.moveTo(o.x,o.y+o.h/2);ctx.lineTo(o.x+o.w/2,o.y);ctx.lineTo(o.x+o.w,o.y+o.h/2);ctx.lineTo(o.x+o.w/2,o.y+o.h);ctx.closePath();ctx.fill();
+}}
+drawDino();
+}
+function loop(t){
+if(!lastTime)lastTime=t;
+const dt=Math.min(40,t-lastTime);lastTime=t;
+update(dt);draw();requestAnimationFrame(loop);
+}
+function startGame(){
+const n=nameInput.value.trim();
+if(n){playerName=n;localStorage.setItem('dino-name',n)}
+reset();started=true;startScreen.style.display='none';overScreen.style.display='none';
+}
+function handleTap(e){if(e)e.preventDefault();if(started&&running)jump()}
+startBtn.addEventListener('click',startGame);
+retryBtn.addEventListener('click',startGame);
+canvas.addEventListener('pointerdown',handleTap);
+window.addEventListener('keydown',e=>{
+if(e.key===' '||e.key==='ArrowUp'){e.preventDefault();handleTap()}
+});
+started=false;running=false;
+dino={x:40,y:GROUND_Y-34,w:30,h:34,vy:0,onGround:true};
+obstacles=[];clouds=[{x:80,y:40,w:36},{x:220,y:70,w:44},{x:320,y:30,w:30}];
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
