@@ -1,1 +1,5275 @@
-준비 중...
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" type="image/png" href="../54/54img/favicon.png">
+<title>☄️ 운석수학서바이버</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  min-height:100vh;
+  background:#02030a;
+  color:white;
+  font-family:Arial,sans-serif;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+#wrap{
+  position:relative;
+  width:min(94vw,480px);
+}
+
+canvas{
+  width:100%;
+  height:auto;
+  display:block;
+  border:2px solid #6572ff;
+  border-radius:16px;
+  background:#070a18;
+  box-shadow:0 0 40px #3040ff77;
+}
+
+#menu{
+  position:absolute;
+  inset:0;
+  border-radius:16px;
+  background:#02030ae8;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  padding:20px;
+  z-index:10;
+  overflow:auto;
+}
+
+h1{
+  color:#55f5ff;
+  text-shadow:0 0 20px #55f5ff;
+}
+
+button{
+  border:0;
+  border-radius:10px;
+  padding:12px 24px;
+  margin:6px;
+  background:#5969ff;
+  color:white;
+  font-size:16px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+button:hover{
+  background:#7885ff;
+}
+
+#shop{
+  display:none;
+  width:100%;
+}
+
+.item{
+  background:#12172f;
+  border:1px solid #3f4c9d;
+  border-radius:10px;
+  padding:8px;
+  margin:5px;
+}
+
+#touch{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:48px;
+  display:flex;
+  justify-content:space-between;
+  padding:0 12px;
+  pointer-events:none;
+  z-index:5;
+}
+
+.touch{
+  pointer-events:auto;
+  width:65px;
+  height:52px;
+  opacity:.65;
+  padding:0;
+  font-size:24px;
+}
+
+.shootTouch{
+  background:#ff4b24;
+  box-shadow:
+    0 0 15px #ff4b24,
+    0 0 30px #ff4b2477;
+  font-size:24px;
+}
+
+.shootTouch:active{
+  background:#ffb300;
+  transform:scale(.9);
+}
+
+.shieldTouch{
+  background:#168cff;
+  box-shadow:
+    0 0 15px #168cff,
+    0 0 30px #168cff77;
+  font-size:24px;
+}
+
+.shieldTouch:active{
+  background:#55f5ff;
+  transform:scale(.9);
+}
+
+.game2-btn{
+  margin-top:10px;
+  padding:11px 30px;
+  border:1px solid rgba(255,255,255,.25);
+  border-radius:8px;
+  background:#164a8a;
+  color:white;
+  font-size:16px;
+  font-weight:bold;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.game2-btn:hover{
+  background:#1d5eaa;
+  transform:translateY(-2px);
+}
+
+.game2-btn:active{
+  transform:translateY(0);
+}
+
+#skinShop{
+  display:none;
+  width:100%;
+  max-width:390px;
+  margin-top:8px;
+}
+
+#skinList{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:8px;
+}
+
+.skin-card{
+  padding:10px 6px;
+  border:1px solid rgba(255,255,255,.25);
+  border-radius:8px;
+  color:white;
+  cursor:pointer;
+}
+
+#inventoryModal,
+#rankingModal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.78);
+  z-index:100;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+}
+
+.modal-box{
+  width:min(92vw,430px);
+  max-height:86vh;
+  overflow:auto;
+  background:#0b1024;
+  color:white;
+  border-radius:18px;
+  padding:20px;
+  box-shadow:0 0 35px #3040ff99;
+}
+
+.inventory-box{
+  border:2px solid #55f5ff;
+}
+
+.ranking-box{
+  border:2px solid #6572ff;
+}
+
+
+/* =========================
+   🧮 수학 문제 시스템
+========================= */
+#mathSetupModal,
+#mathQuizModal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.86);
+  z-index:300;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+}
+
+.math-box{
+  width:min(92vw,430px);
+  max-height:90vh;
+  overflow:auto;
+  background:#0b1024;
+  color:white;
+  border:2px solid #55f5ff;
+  border-radius:18px;
+  padding:22px;
+  text-align:center;
+  box-shadow:0 0 40px #55f5ff55;
+}
+
+.math-box h2{
+  margin:0 0 16px;
+  color:#55f5ff;
+}
+
+.math-select{
+  width:100%;
+  padding:12px;
+  margin:7px 0;
+  border-radius:10px;
+  border:1px solid #4454a0;
+  background:#12172f;
+  color:white;
+  font-size:16px;
+}
+
+#mathQuestion{
+  font-size:25px;
+  font-weight:bold;
+  line-height:1.5;
+  margin:18px 0;
+}
+
+.math-choice{
+  display:block;
+  width:100%;
+  margin:9px 0;
+  padding:13px;
+  background:#18234a;
+  border:1px solid #4d62bd;
+}
+
+.math-choice:hover{
+  background:#26366d;
+}
+
+#mathResult{
+  min-height:24px;
+  margin-top:10px;
+  font-weight:bold;
+}
+
+@media(max-height:750px){
+  #menu{
+    justify-content:flex-start;
+    padding-top:12px;
+  }
+
+  #menu h1{
+    margin:8px 0;
+    font-size:25px;
+  }
+
+  #menu p{
+    margin:6px 0;
+  }
+
+  button{
+    padding:9px 20px;
+    margin:4px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div id="wrap">
+
+<canvas id="game" width="480" height="720"></canvas>
+
+<div id="touch">
+
+<button
+  class="touch"
+  ontouchstart="shooting=false;touchLeft=true"
+  ontouchend="touchLeft=false"
+  ontouchcancel="touchLeft=false">
+  ◀
+</button>
+
+<button
+  id="shieldTouch"
+  class="touch shieldTouch"
+  ontouchstart="mobileShield(event)"
+  ontouchend="event.preventDefault()"
+  ontouchcancel="event.preventDefault()">
+  🛡️
+</button>
+
+<button
+  class="touch"
+  ontouchstart="shooting=false;touchRight=true"
+  ontouchend="touchRight=false"
+  ontouchcancel="touchRight=false">
+  ▶
+</button>
+
+</div>
+
+
+<!-- =========================
+     메인 메뉴
+========================= -->
+
+<div id="menu">
+
+  <h1>☄️ 운석수학서바이버</h1>
+
+  <p id="info">
+    수학 문제를 풀며 30개의 스테이지를 돌파하라!<br>
+    시작 · 환생 · 보스전에서 수학 문제가 등장합니다.<br>
+    🔥 레이저는 무료! 게임 화면을 클릭/탭해서 발사<br>
+    *멀티플레이 없음
+  </p>
+
+  <button id="startBtn" onclick="openMathSetup()">
+    게임 시작
+  </button>
+
+  <button id="rankingBtn" onclick="openRanking()">
+    🏆 순위
+  </button>
+
+  <button id="inventoryBtn" onclick="openInventory()">
+    🎒 인벤토리
+  </button>
+<!-- =========================
+       스킨 상점
+       메뉴 안에 넣음
+  ========================= -->
+
+  <button
+    id="skinShopBtn"
+    class="game2-btn"
+    onclick="openSkinShop()">
+    🚀 스킨 상점
+  </button>
+
+  <div id="skinShop">
+
+    <h3>🚀 우주선 스킨</h3>
+    
+    <div id="coinDisplay"></div>
+    <div id="skinList"></div>    
+
+  </div>
+
+
+  <!-- =========================
+       기존 아이템 상점
+  ========================= -->
+
+  <div id="shop">
+
+    <h3>🛒 상점</h3>
+
+    <div class="item">
+      🛡️ 방어막 — 15 코인
+      <br>
+      <button onclick="buyShield()">구매</button>
+    </div>
+
+    <div class="item">
+      ⚡ 시간정지 — 25 코인
+      <br>
+      <button onclick="buyFreeze()">구매</button>
+    </div>
+
+    <div class="item">
+      🔥 레이저 — 기본 제공
+      <br>
+      게임 화면의 배경을 클릭/탭하면 바로 발사됩니다.
+    </div>
+
+  </div>
+
+</div>
+
+
+<!-- =========================
+     인벤토리
+========================= -->
+
+<div id="inventoryModal">
+
+  <div class="modal-box inventory-box">
+
+    <h2 style="text-align:center;margin:0 0 15px;color:#55f5ff;">
+      🎒 인벤토리
+    </h2>
+
+    <div id="inventoryList"></div>
+
+    <button
+      onclick="closeInventory()"
+      style="display:block;margin:16px auto 0;">
+      닫기
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- =========================
+     순위
+========================= -->
+
+<div id="rankingModal">
+
+  <div class="modal-box ranking-box">
+
+    <h2 style="text-align:center;margin:0 0 15px;color:#55f5ff;">
+      🏆 운석수학서바이버 TOP 20
+    </h2>
+
+    <div id="rankingList"></div>
+
+    <button
+      onclick="closeRanking()"
+      style="display:block;margin:16px auto 0;">
+      닫기
+    </button>
+
+  </div>
+
+</div>
+
+
+
+<!-- =========================
+     🧮 수학 범위 설정
+========================= -->
+<div id="mathSetupModal">
+  <div class="math-box">
+    <h2>🧮 수학 범위 설정</h2>
+    <p>게임에서 출제할 학년을 선택하세요.</p>
+
+    <select id="mathGrade" class="math-select" onchange="updateSemesterSelect()">
+      <option value="1">1학년</option>
+      <option value="2">2학년</option>
+      <option value="3">3학년</option>
+      <option value="4">4학년</option>
+      <option value="5">5학년</option>
+    </select>
+
+    <select id="mathSemester" class="math-select">
+      <option value="all">전체</option>
+    </select>
+
+    <button onclick="confirmMathSetup()">설정하고 시작</button>
+    <button onclick="closeMathSetup()" style="background:#333a58;">취소</button>
+  </div>
+</div>
+
+<!-- =========================
+     🧮 수학 문제
+========================= -->
+<div id="mathQuizModal">
+  <div class="math-box">
+    <h2 id="mathQuizTitle">🧮 수학 문제</h2>
+    <div id="mathQuestion"></div>
+    <div id="mathChoices"></div>
+    <div id="mathResult"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+/* =========================================================
+   기본 설정
+========================================================= */
+
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+
+const menu=document.getElementById("menu");
+const info=document.getElementById("info");
+const shop=document.getElementById("shop");
+const startBtn=document.getElementById("startBtn");
+
+
+/* =========================================================
+   ☁️ 온라인 순위
+========================================================= */
+
+const SUPABASE_URL =
+  "https://mujmwouyopgxwtezhlzv.supabase.co";
+
+const SUPABASE_PUBLISHABLE_KEY =
+  "sb_publishable_uiChi46cHC53f6QAm8TALQ_MGknEOQ9";
+
+const supabaseClient =
+  supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+  );
+
+let playerName =
+  localStorage.getItem("meteorSurvivorPlayerName") || "";
+
+
+/* =========================================================
+   🚀 스킨 시스템
+========================================================= */
+
+const skinData={
+
+  triangle:{
+    name:"기본 우주선",
+    price:0
+  },
+
+  comet:{
+    name:"혜성 우주선",
+    price:50
+  },
+
+  diamond:{
+    name:"다이아 우주선",
+    price:100
+  },
+
+  fire:{
+    name:"불꽃 우주선",
+    price:150
+  },
+
+  nebula:{
+    name:"네뷸라 우주선",
+    price:50000
+  },
+
+  emperor:{
+    name:"갤럭시 엠퍼러",
+    price:90000
+  }
+
+};
+
+let playerSkin =
+  localStorage.getItem("meteorSkin") || "triangle";
+
+let ownedSkins;
+
+try{
+
+  ownedSkins=
+    JSON.parse(
+      localStorage.getItem("meteorOwnedSkins")
+      || '["triangle"]'
+    );
+
+}catch(e){
+
+  ownedSkins=["triangle"];
+
+}
+
+if(!Array.isArray(ownedSkins)){
+  ownedSkins=["triangle"];
+}
+
+if(!ownedSkins.includes("triangle")){
+  ownedSkins.unshift("triangle");
+}
+
+if(!skinData[playerSkin]){
+  playerSkin="triangle";
+}
+
+
+/* =========================================================
+   🎵 사운드
+========================================================= */
+
+const sounds={
+
+  bgm:new Audio("audio/space.mp3"),
+
+  bgm2:new Audio("audio/space2.mp3"),
+
+  boss:new Audio("audio/boss.mp3"),
+
+  finalboss:new Audio("audio/finalboss.mp3"),
+
+  clear:new Audio("audio/clear.wav"),
+
+  gameover:new Audio("audio/gameover.mp3")
+
+};
+
+Object.values(sounds).forEach(sound=>{
+  sound.preload="auto";
+});
+
+sounds.bgm.loop=true;
+sounds.bgm2.loop=true;
+sounds.boss.loop=true;
+sounds.finalboss.loop=true;
+
+sounds.bgm.volume=.35;
+sounds.bgm2.volume=.35;
+sounds.boss.volume=.40;
+sounds.finalboss.volume=.45;
+sounds.clear.volume=.70;
+sounds.gameover.volume=.55;
+
+
+function playGameOverSound(){
+
+  try{
+
+    sounds.gameover.pause();
+    sounds.gameover.currentTime=0;
+
+    const p=sounds.gameover.play();
+
+    if(p){
+      p.catch(()=>{});
+    }
+
+  }catch(e){}
+
+}
+
+
+/* =========================================================
+   BGM 정지
+========================================================= */
+
+function stopMusic(){
+
+  sounds.bgm.pause();
+  sounds.bgm2.pause();
+  sounds.boss.pause();
+  sounds.finalboss.pause();
+
+  sounds.bgm.currentTime=0;
+  sounds.bgm2.currentTime=0;
+  sounds.boss.currentTime=0;
+  sounds.finalboss.currentTime=0;
+
+}
+
+
+/* =========================================================
+   스테이지별 BGM
+========================================================= */
+
+function playStageMusic(){
+
+  stopMusic();
+
+  let music;
+
+  if(stage===30){
+
+    music=sounds.finalboss;
+
+  }else if(stage%5===0){
+
+    music=sounds.boss;
+
+  }else if(stage%2===1){
+
+    music=sounds.bgm;
+
+  }else{
+
+    music=sounds.bgm2;
+
+  }
+
+  music.currentTime=0;
+
+  const p=music.play();
+
+  if(p){
+    p.catch(()=>{});
+  }
+
+}
+
+
+/* =========================================================
+   변수
+========================================================= */
+
+let keys={};
+
+let running=false;
+let transitioning=false;
+
+let stage=1;
+let score=0;
+
+let coins=
+  Number(localStorage.getItem("coins")||0);
+
+let high=
+  Number(localStorage.getItem("high")||0);
+
+let shield=false;
+let freeze=false;
+let laser=true;
+
+let rocks=[];
+let bullets=[];
+let particles=[];
+
+let boss=null;
+
+let stageTime=0;
+let spawnTime=0;
+let lastTime=0;
+
+let touchLeft=false;
+let touchRight=false;
+
+
+let shooting=false;
+let shootCooldown=0;
+
+/* =========================================================
+   🧮 수학 서바이버 시스템
+========================================================= */
+let mathGrade=1;
+let mathSemester="all";
+let mathCorrect=0;
+let mathQuestions=0;
+let mathRevives=0;
+let mathQuizMode="";
+let currentMathQuestion=null;
+let mathQuizLocked=false;
+
+
+
+/* =========================================================
+   플레이어
+========================================================= */
+
+const player={
+
+  x:220,
+  y:625,
+
+  w:40,
+  h:40,
+
+  speed:340
+
+};
+
+
+/* =========================================================
+   스테이지
+========================================================= */
+
+const stages=[
+
+  {name:"푸른 우주",duration:13,speed:175,spawn:.58,color:"#07152d"},
+
+  {name:"붉은 행성",duration:14,speed:195,spawn:.54,color:"#32100e"},
+
+  {name:"소행성 지대",duration:15,speed:215,spawn:.50,color:"#21112f"},
+
+  {name:"얼어붙은 우주",duration:16,speed:235,spawn:.46,color:"#082d3a"},
+
+  {name:"☠️ 제1 중간보스 — 운석왕",duration:20,speed:255,spawn:.42,boss:true,color:"#30051c"},
+
+  {name:"암흑 성운",duration:17,speed:275,spawn:.40,color:"#12051f"},
+
+  {name:"번개 지대",duration:18,speed:295,spawn:.38,color:"#17112d"},
+
+  {name:"혼돈의 공간",duration:19,speed:315,spawn:.35,color:"#260b0b"},
+
+  {name:"붕괴 지대",duration:20,speed:335,spawn:.33,color:"#16051d"},
+
+  {name:"☠️ 제2 중간보스 — 블랙홀",duration:22,speed:350,spawn:.30,boss:true,color:"#16001f"},
+
+  {name:"유성 폭풍",duration:20,speed:365,spawn:.29,color:"#1d1028"},
+
+  {name:"불타는 성운",duration:20,speed:380,spawn:.28,color:"#321008"},
+
+  {name:"중력 이상",duration:21,speed:395,spawn:.27,color:"#071d2b"},
+
+  {name:"죽음의 궤도",duration:21,speed:410,spawn:.26,color:"#28000f"},
+
+  {name:"☠️ 제3 중간보스 — 파괴자",duration:23,speed:425,spawn:.24,boss:true,color:"#30000d"},
+
+  {name:"적색 초신성",duration:21,speed:440,spawn:.23,color:"#30050b"},
+
+  {name:"얼음 폭풍",duration:21,speed:455,spawn:.22,color:"#052535"},
+
+  {name:"무한 소행성",duration:22,speed:470,spawn:.21,color:"#17172d"},
+
+  {name:"시공간 균열",duration:22,speed:485,spawn:.20,color:"#24051f"},
+
+  {name:"☠️ 제4 중간보스 — 시공의 군주",duration:24,speed:500,spawn:.19,boss:true,color:"#1f002b"},
+
+  {name:"극한 성운",duration:22,speed:515,spawn:.19,color:"#18001e"},
+
+  {name:"운석 지옥",duration:22,speed:530,spawn:.18,color:"#300000"},
+
+  {name:"중력 폭풍",duration:23,speed:545,spawn:.17,color:"#071a2a"},
+
+  {name:"붕괴하는 우주",duration:23,speed:560,spawn:.16,color:"#22000a"},
+
+  {name:"☠️ 제5 중간보스 — 종말의 파괴신",duration:25,speed:575,spawn:.15,boss:true,color:"#350000"},
+
+  {name:"최후의 성운",duration:23,speed:590,spawn:.15,color:"#1b001c"},
+
+  {name:"죽음의 폭풍",duration:23,speed:610,spawn:.14,color:"#290008"},
+
+  {name:"우주 붕괴",duration:24,speed:630,spawn:.13,color:"#13000c"},
+
+  {name:"최후의 관문",duration:25,speed:650,spawn:.12,color:"#250000"},
+
+  {name:"👑 FINAL BOSS — 운석 황제",duration:30,speed:680,spawn:.10,boss:true,color:"#350000"}
+
+];
+
+
+/* =========================================================
+   키보드
+========================================================= */
+
+document.addEventListener("keydown",e=>{
+
+  const code=e.code;
+
+  if(
+    code==="ArrowLeft" ||
+    code==="ArrowRight" ||
+    code==="KeyA" ||
+    code==="KeyD"
+  ){
+
+    shooting=false;
+
+  }
+
+  if(code==="ArrowLeft"){
+    keys.arrowleft=true;
+  }
+
+  if(code==="ArrowRight"){
+    keys.arrowright=true;
+  }
+
+  if(code==="KeyA"){
+    keys.a=true;
+  }
+
+  if(code==="KeyD"){
+    keys.d=true;
+  }
+
+  if([
+    "ArrowLeft",
+    "ArrowRight",
+    "Space",
+    "KeyA",
+    "KeyD",
+    "KeyQ",
+    "KeyE"
+  ].includes(code)){
+
+    e.preventDefault();
+
+  }
+
+  if(code==="Space"){
+    shooting=true;
+  }
+
+  if(running && !e.repeat){
+
+    if(code==="Space"){
+      shoot();
+    }
+
+    else if(code==="KeyQ"){
+      activateShield();
+    }
+
+    else if(code==="KeyE"){
+      activateFreeze();
+    }
+
+  }
+
+});
+
+
+document.addEventListener("keyup",e=>{
+
+  if(e.code==="Space"){
+    shooting=false;
+  }
+
+  if(e.code==="ArrowLeft"){
+    keys.arrowleft=false;
+  }
+
+  if(e.code==="ArrowRight"){
+    keys.arrowright=false;
+  }
+
+  if(e.code==="KeyA"){
+    keys.a=false;
+  }
+
+  if(e.code==="KeyD"){
+    keys.d=false;
+  }
+
+});
+
+
+/* =========================================================
+   새 게임
+========================================================= */
+
+
+/* =========================================================
+   🧮 수학 범위 설정
+========================================================= */
+
+function openMathSetup(){
+  const modal=document.getElementById("mathSetupModal");
+  if(modal){
+    modal.style.display="flex";
+    updateSemesterSelect();
+  }
+}
+
+function closeMathSetup(){
+  const modal=document.getElementById("mathSetupModal");
+  if(modal) modal.style.display="none";
+}
+
+function confirmMathSetup(){
+  const gradeEl=document.getElementById("mathGrade");
+  const semesterEl=document.getElementById("mathSemester");
+  if(!gradeEl || !semesterEl){ alert("수학 범위 설정을 불러오지 못했습니다."); return; }
+  mathGrade=Number(gradeEl.value)||1;
+  mathSemester=semesterEl.value||"all";
+  closeMathSetup();
+  startNewGame();
+}
+
+function updateSemesterSelect(){
+  const grade=document.getElementById("mathGrade").value;
+  const semester=document.getElementById("mathSemester");
+
+  if(grade==="5"){
+    semester.innerHTML=
+      '<option value="1">5학년 1학기</option>'+
+      '<option value="2">5학년 2학기</option>'+
+      '<option value="all">5학년 전체</option>';
+    semester.disabled=false;
+  }else{
+    semester.innerHTML='<option value="all">전 범위</option>';
+    semester.disabled=true;
+  }
+}
+
+/* =========================================================
+   🧮 문제 생성
+   학년별 대표적인 초등 수학 유형
+========================================================= */
+
+function randInt(a,b){
+  return Math.floor(Math.random()*(b-a+1))+a;
+}
+
+function makeQuestion(grade, semester){
+  let text="", answer=0;
+
+  if(grade===1){
+    if(Math.random()<.5){
+      const a=randInt(3,18), b=randInt(1,20-a);
+      text=`${a} + ${b} = ?`;
+      answer=a+b;
+    }else{
+      const a=randInt(5,20), b=randInt(1,a);
+      text=`${a} - ${b} = ?`;
+      answer=a-b;
+    }
+  }
+
+  else if(grade===2){
+    const type=randInt(0,2);
+    if(type===0){
+      const a=randInt(20,80), b=randInt(10,90);
+      text=`${a} + ${b} = ?`;
+      answer=a+b;
+    }else if(type===1){
+      const a=randInt(40,99), b=randInt(10,a);
+      text=`${a} - ${b} = ?`;
+      answer=a-b;
+    }else{
+      const a=randInt(2,9), b=randInt(2,9);
+      text=`${a} × ${b} = ?`;
+      answer=a*b;
+    }
+  }
+
+  else if(grade===3){
+    const type=randInt(0,3);
+    if(type===0){
+      const a=randInt(10,99), b=randInt(10,99);
+      text=`${a} + ${b} = ?`;
+      answer=a+b;
+    }else if(type===1){
+      const a=randInt(50,999), b=randInt(10,a);
+      text=`${a} - ${b} = ?`;
+      answer=a-b;
+    }else if(type===2){
+      const a=randInt(2,9), b=randInt(2,9);
+      text=`${a} × ${b} = ?`;
+      answer=a*b;
+    }else{
+      const b=randInt(2,9), q=randInt(2,12);
+      text=`${b*q} ÷ ${b} = ?`;
+      answer=q;
+    }
+  }
+
+  else if(grade===4){
+    const type=randInt(0,4);
+    if(type===0){
+      const a=randInt(100,999), b=randInt(100,999);
+      text=`${a} + ${b} = ?`;
+      answer=a+b;
+    }else if(type===1){
+      const a=randInt(300,999), b=randInt(100,a);
+      text=`${a} - ${b} = ?`;
+      answer=a-b;
+    }else if(type===2){
+      const a=randInt(10,99), b=randInt(2,9);
+      text=`${a} × ${b} = ?`;
+      answer=a*b;
+    }else if(type===3){
+      const b=randInt(2,9), q=randInt(10,50);
+      text=`${b*q} ÷ ${b} = ?`;
+      answer=q;
+    }else{
+      const a=randInt(2,9), b=randInt(2,9);
+      text=`${a}/${b}와 같은 값은?`;
+      answer=a/b;
+      return {text:`${a}/${b} = ?`, answer, decimal:true};
+    }
+  }
+
+  else{
+    /* 5학년: 1학기/2학기 선택에 따라 유형을 조금 다르게 */
+    const second = semester==="2";
+    const type=randInt(0,4);
+
+    if(!second && type===0){
+      const a=randInt(2,9), b=randInt(2,9);
+      text=`${a}/${b} + ${b}/${b} = ?`;
+      answer=(a+b)/b;
+    }else if(!second && type===1){
+      const a=randInt(12,99), b=randInt(2,9);
+      text=`${a} × ${b} = ?`;
+      answer=a*b;
+    }else if(type===2){
+      const a=randInt(10,99), b=randInt(2,9);
+      text=`${a} ÷ ${b}의 몫은?`;
+      answer=Math.floor(a/b);
+    }else if(second && type===3){
+      const a=randInt(10,99), b=randInt(10,99);
+      text=`평균: ${a}, ${b}의 평균은?`;
+      answer=(a+b)/2;
+    }else{
+      const a=randInt(10,99), b=randInt(1,9);
+      text=`${a/10} + ${b/10} = ?`;
+      answer=(a+b)/10;
+      return {text,answer,decimal:true};
+    }
+  }
+
+  return {text,answer};
+}
+
+function makeChoices(answer){
+  const choices=new Set([String(answer)]);
+  const n=Number(answer);
+  const deltas=[1,-1,2,-2,5,-5,10,-10,0.1,-0.1];
+
+  for(const d of deltas){
+    if(choices.size>=4) break;
+    let v=n+d;
+    if(Math.abs(v-Math.round(v))<1e-9) v=Math.round(v);
+    choices.add(String(v));
+  }
+
+  const arr=[...choices].slice(0,4);
+  while(arr.length<4){
+    arr.push(String(n+arr.length+3));
+  }
+
+  for(let i=arr.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+
+function showMathQuestion(mode){
+  mathQuizMode=mode;
+
+  /* 문제를 푸는 동안 메인 메뉴는 닫음 */
+  const menuEl=document.getElementById("menu");
+  if(menuEl) menuEl.style.display="none";
+  mathQuizLocked=false;
+
+  currentMathQuestion=makeQuestion(mathGrade,mathSemester);
+  const choices=makeChoices(currentMathQuestion.answer);
+
+  const modal=document.getElementById("mathQuizModal");
+  const title=document.getElementById("mathQuizTitle");
+  const question=document.getElementById("mathQuestion");
+  const choicesEl=document.getElementById("mathChoices");
+  const result=document.getElementById("mathResult");
+
+  if(mode==="start"){
+    title.textContent="🧮 게임 시작 문제";
+  }else if(mode==="revive"){
+    title.textContent="✨ 환생 문제";
+  }else if(mode==="boss"){
+    title.textContent=`👹 보스 공격 문제 ${bossQuizIndex+1}/3`;
+  }
+
+  question.textContent=currentMathQuestion.text;
+  result.textContent="";
+  choicesEl.innerHTML="";
+
+  choices.forEach(choice=>{
+    const b=document.createElement("button");
+    b.className="math-choice";
+    b.textContent=choice;
+    b.onclick=()=>answerMathQuestion(choice);
+    choicesEl.appendChild(b);
+  });
+
+  modal.style.display="flex";
+}
+
+function answerMathQuestion(choice){
+  if(mathQuizLocked || !currentMathQuestion) return;
+  mathQuizLocked=true;
+
+  const user=Number(choice);
+  const correct=Math.abs(user-Number(currentMathQuestion.answer))<0.000001;
+  const result=document.getElementById("mathResult");
+
+  mathQuestions++;
+
+  if(correct){
+    mathCorrect++;
+    result.textContent="⭕ 정답!";
+    result.style.color="#6dff9b";
+
+    setTimeout(()=>{
+      finishMathQuestion(true);
+    },450);
+  }else{
+    result.textContent=`❌ 오답! 정답: ${currentMathQuestion.answer}`;
+    result.style.color="#ff7185";
+
+    setTimeout(()=>{
+      finishMathQuestion(false);
+    },800);
+  }
+}
+
+function finishMathQuestion(correct){
+  const modal=document.getElementById("mathQuizModal");
+  modal.style.display="none";
+  currentMathQuestion=null;
+  mathQuizLocked=false;
+
+  if(mathQuizMode==="start"){
+    if(correct){
+      startStage();
+    }else{
+      finalMathGameOver("시작 문제를 맞히지 못했습니다.");
+    }
+    return;
+  }
+
+  if(mathQuizMode==="revive"){
+    if(correct){
+      mathRevives++;
+      shield=false;
+      rocks=[];
+      bullets=[];
+      player.x=220;
+      player.y=625;
+      transitioning=false;
+      running=true;
+      lastTime=performance.now();
+      info.innerHTML="✨ 환생 성공! 다시 운석을 피하세요!";
+      requestAnimationFrame(gameLoop);
+    }else{
+      finalMathGameOver("환생 문제를 맞히지 못했습니다.");
+    }
+    return;
+  }
+
+  if(mathQuizMode==="boss"){
+    if(correct){
+      bossQuizIndex++;
+      if(bossQuizIndex>=3){
+        bossQuizActive=false;
+        bossQuizIndex=0;
+        running=true;
+        lastTime=performance.now();
+        info.innerHTML=`🔥 보스 공격 준비 완료!`;
+        requestAnimationFrame(gameLoop);
+      }else{
+        showMathQuestion("boss");
+      }
+    }else{
+      /* 보스 문제를 틀리면 공격 잠금 유지: 3문제를 처음부터 다시 풀어야 함 */
+      bossQuizActive=true;
+      bossQuizIndex=0;
+      running=false;
+      info.innerHTML="⚠️ 오답! 보스를 공격하려면 3문제를 다시 풀어야 합니다.";
+      setTimeout(()=>showMathQuestion("boss"),500);
+    }
+  }
+}
+
+function finalMathGameOver(reason){
+  mathQuizMode="";
+  running=false;
+  transitioning=true;
+  stopMusic();
+
+  rocks=[];
+  bullets=[];
+  boss=null;
+
+  addMathRanking();
+
+  if(score>high) high=score;
+  coins+=Math.floor(score/8);
+  save();
+
+  const modal=document.getElementById("mathQuizModal");
+  if(modal) modal.style.display="none";
+
+  menu.style.display="flex";
+  shop.style.display="block";
+
+  const skinShopEl=document.getElementById("skinShop");
+  if(skinShopEl){
+    skinShopEl.style.display="block";
+    renderSkins();
+  }
+
+  startBtn.style.display="block";
+  startBtn.textContent="다시 하기";
+
+  info.innerHTML=`
+    💥 <b>GAME OVER</b><br><br>
+    ${reason}<br><br>
+    스테이지 ${stage}<br>
+    점수 ${score}<br>
+    🧮 수학 정답 ${mathCorrect}개<br>
+    ✨ 환생 ${mathRevives}회<br>
+    💰 코인 ${coins}
+  `;
+}
+
+/* =========================================================
+   🧮 보스 문제 상태
+========================================================= */
+let bossQuizActive=false;
+let bossQuizIndex=0;
+
+
+function startNewGame(){
+
+  if(!playerName){
+
+    const name=prompt(
+      "게임에 사용할 닉네임을 입력하세요."
+    );
+
+    if(!name || !name.trim()){
+
+      alert(
+        "닉네임을 입력해야 게임을 시작할 수 있습니다."
+      );
+
+      return;
+
+    }
+
+    playerName=
+      name.trim().slice(0,12);
+
+    localStorage.setItem(
+      "meteorSurvivorPlayerName",
+      playerName
+    );
+
+  }
+
+  stage=1;
+  score=0;
+
+  shield=false;
+  freeze=false;
+  laser=true;
+
+  mathCorrect=0;
+  mathQuestions=0;
+  mathRevives=0;
+  bossQuizActive=false;
+  bossQuizIndex=0;
+
+  /* 시작 전에 수학 문제를 먼저 출제 */
+  showMathQuestion("start");
+
+}
+
+
+/* =========================================================
+   스테이지 시작
+========================================================= */
+
+function startStage(){
+
+  if(stage>30){
+
+    gameClear();
+    return;
+
+  }
+
+  running=true;
+  transitioning=false;
+
+  rocks=[];
+  bullets=[];
+  particles=[];
+
+  boss=null;
+
+  stageTime=0;
+  spawnTime=0;
+
+  shooting=false;
+  shootCooldown=0;
+
+  player.x=220;
+
+  menu.style.display="none";
+
+  startBtn.style.display="none";
+
+  shop.style.display="none";
+
+
+  /* 게임 중에는 스킨 상점 숨김 */
+
+  const skinShopEl=
+    document.getElementById("skinShop");
+
+  if(skinShopEl){
+    skinShopEl.style.display="none";
+  }
+
+
+  playStageMusic();
+
+  lastTime=performance.now();
+
+  requestAnimationFrame(gameLoop);
+
+}
+
+
+/* =========================================================
+   다음 스테이지
+========================================================= */
+
+function nextStage(){
+
+  if(transitioning){
+    return;
+  }
+
+  transitioning=true;
+  running=false;
+
+  stage++;
+
+  rocks=[];
+  bullets=[];
+  boss=null;
+
+  stageTime=0;
+  spawnTime=0;
+
+  if(stage>30){
+
+    gameClear();
+    return;
+
+  }
+
+  menu.style.display="flex";
+
+  shop.style.display="none";
+
+  const skinShopEl=
+    document.getElementById("skinShop");
+
+  if(skinShopEl){
+    skinShopEl.style.display="none";
+  }
+
+  startBtn.style.display="none";
+
+  info.innerHTML=
+    `
+      🌟 <b>STAGE ${stage}</b><br><br>
+      ${stages[stage-1].name}
+    `;
+
+  setTimeout(()=>{
+
+    if(stage<=30){
+
+      startBtn.style.display="block";
+
+      startStage();
+
+    }
+
+  },1500);
+
+}
+
+
+/* =========================================================
+   보스 생성
+========================================================= */
+
+function spawnBoss(){
+
+  boss={
+
+    x:110,
+    y:-120,
+
+    w:260,
+    h:95,
+
+    hp:500+stage*120,
+    maxHp:500+stage*120,
+
+    speed:80+stage*10,
+
+    dir:1,
+
+    shot:0
+
+  };
+
+}
+
+
+/* =========================================================
+   운석 생성
+========================================================= */
+
+/* =========================================================
+   운석 생성
+   1~10 스테이지 특수 운석 등장 순서
+
+   1 : 일반
+   2 : 빠른 추가
+   3 : 3회 피격 추가
+   4 : 보너스 추가
+   5 : 변화 없음 + 보스
+   6 : 폭발 추가
+   7 : 변화 없음
+   8 : 분열 추가
+   9 : 변화 없음
+   10: 변화 없음 + 보스
+
+   11부터:
+   기존 특수 운석 시스템 사용
+========================================================= */
+
+function spawnRock(){
+
+  const s=stages[stage-1];
+
+  const roll=Math.random();
+
+  let type=0;
+
+
+  /* =========================================
+     1~10 스테이지
+  ========================================= */
+
+  if(stage===1){
+
+    /* 일반만 */
+    type=0;
+
+  }
+
+  else if(stage===2){
+
+    /* 일반 + 빠른 */
+    if(roll<0.25){
+      type=1;
+    }else{
+      type=0;
+    }
+
+  }
+
+  else if(stage===3){
+
+    /* 일반 + 빠른 + 3회 피격 */
+    if(roll<0.20){
+      type=2;
+    }else if(roll<0.45){
+      type=1;
+    }else{
+      type=0;
+    }
+
+  }
+
+  else if(stage===4 || stage===5){
+
+    /* 일반 + 빠른 + 3회 피격 + 보너스 */
+    if(roll<0.15){
+      type=3;
+    }else if(roll<0.35){
+      type=2;
+    }else if(roll<0.60){
+      type=1;
+    }else{
+      type=0;
+    }
+
+  }
+
+  else if(stage===6 || stage===7){
+
+    /* 일반 + 빠른 + 3회 피격 + 보너스 + 폭발 */
+    if(roll<0.15){
+      type=4;
+    }else if(roll<0.28){
+      type=3;
+    }else if(roll<0.45){
+      type=2;
+    }else if(roll<0.65){
+      type=1;
+    }else{
+      type=0;
+    }
+
+  }
+
+  else if(stage>=8 && stage<=10){
+
+    /*
+      일반
+      + 빠른
+      + 3회 피격
+      + 보너스
+      + 폭발
+      + 분열
+    */
+
+    if(roll<0.14){
+      type=5;
+    }else if(roll<0.27){
+      type=4;
+    }else if(roll<0.40){
+      type=3;
+    }else if(roll<0.57){
+      type=2;
+    }else if(roll<0.75){
+      type=1;
+    }else{
+      type=0;
+    }
+
+  }
+
+
+  /* =========================================
+     11스테이지 이후
+     기존 시스템 그대로
+  ========================================= */
+
+  else{
+
+    if(roll<0.10){
+
+      type=9;
+
+    }else if(roll<0.20){
+
+      type=8;
+
+    }else if(roll<0.32){
+
+      type=7;
+
+    }else if(roll<0.45){
+
+      type=6;
+
+    }else if(roll<0.58){
+
+      type=5;
+
+    }else if(roll<0.72){
+
+      type=4;
+
+    }else if(roll<0.80){
+
+      type=3;
+
+    }else if(roll<0.90){
+
+      type=2;
+
+    }else if(roll<0.97){
+
+      type=1;
+
+    }else{
+
+      type=0;
+
+    }
+
+  }
+
+
+  /* =========================================
+     운석 크기 / 속도 / HP
+  ========================================= */
+
+  let size=20+Math.random()*35;
+
+  let speed=
+    s.speed+
+    Math.random()*120+
+    stage*8;
+
+  let hp=1;
+
+
+  /* 빠른 운석 */
+
+  if(type===1){
+
+    size=16+Math.random()*15;
+
+    speed*=1.8;
+
+  }
+
+
+  /* 3회 피격 운석 */
+
+  if(type===2){
+
+    size=35+Math.random()*15;
+
+    speed*=.75;
+
+    hp=3;
+
+  }
+
+
+  /* 보너스 운석 */
+
+  if(type===3){
+
+    size=25+Math.random()*20;
+
+    speed*=.9;
+
+  }
+
+
+  /* 폭발 운석 */
+
+  if(type===4){
+
+    size=28+Math.random()*18;
+
+    speed*=.85;
+
+  }
+
+
+  /* 분열 운석 */
+
+  if(type===5){
+
+    size=30+Math.random()*18;
+
+    speed*=.8;
+
+  }
+
+
+  /* 추적 운석 */
+
+  if(type===6){
+
+    size=22+Math.random()*16;
+
+    speed*=1.18;
+
+  }
+
+
+  /* 지그재그 운석 */
+
+  if(type===7){
+
+    size=22+Math.random()*16;
+
+    speed*=1.08;
+
+  }
+
+
+  /* 강화 중장 */
+
+  if(type===8){
+
+    size=38+Math.random()*18;
+
+    speed*=.88;
+
+    hp=6;
+
+  }
+
+
+  /* 초분열 */
+
+  if(type===9){
+
+    size=34+Math.random()*18;
+
+    speed*=.95;
+
+    hp=2;
+
+  }
+
+
+  rocks.push({
+
+    x:
+      Math.random()*
+      (canvas.width-size),
+
+    y:-size,
+
+    w:size,
+
+    h:size,
+
+    speed:speed,
+
+    rot:Math.random()*6,
+
+    type:type,
+
+    hp:hp
+
+  });
+
+}
+
+
+/* =========================================================
+   발사
+========================================================= */
+
+function shoot(){
+
+  if(!running){
+    return;
+  }
+
+  bullets.push({
+
+    x:player.x+17,
+    y:player.y-10,
+
+    w:6,
+    h:18,
+
+    speed:700,
+
+    damage:laser?40:10
+
+  });
+
+}
+
+
+function mobileShield(event){
+
+  event.preventDefault();
+
+  if(!running){
+    return;
+  }
+
+  activateShield();
+
+}
+
+
+/* =========================================================
+   충돌
+========================================================= */
+
+function hit(a,b){
+
+  return(
+
+    a.x<b.x+b.w &&
+    a.x+a.w>b.x &&
+    a.y<b.y+b.h &&
+    a.y+a.h>b.y
+
+  );
+
+}
+
+/* =========================================================
+   🖱️/📱 게임 배경 클릭으로 레이저 발사
+   레이저를 구매한 상태에서 게임 화면의 배경을 클릭/탭하면 발사
+========================================================= */
+
+canvas.addEventListener("pointerdown",event=>{
+
+  if(!running || !laser){
+    return;
+  }
+
+  shoot();
+
+});
+
+
+/* =========================================================
+   방어막
+========================================================= */
+
+function activateShield(){
+
+  if(!running || shield){
+    return;
+  }
+
+  shield=true;
+
+  save();
+
+  info.innerHTML=
+    "🛡️ 방어막 활성화!";
+
+}
+
+
+/* =========================================================
+   시간정지
+========================================================= */
+
+function activateFreeze(){
+
+  if(!running || freeze){
+    return;
+  }
+
+  freeze=true;
+
+  save();
+
+  info.innerHTML=
+    "⚡ 시간정지 발동!";
+
+  setTimeout(()=>{
+
+    freeze=false;
+
+  },5000);
+
+}
+
+
+/* =========================================================
+   상점
+========================================================= */
+
+function buyShield(){
+
+  if(coins<15){
+    return;
+  }
+
+  coins-=15;
+
+  shield=true;
+
+  save();
+
+  info.innerHTML=
+    "🛡️ 방어막 장착 완료!";
+
+}
+
+
+function buyFreeze(){
+
+  if(coins<25){
+    return;
+  }
+
+  coins-=25;
+
+  freeze=true;
+
+  save();
+
+  setTimeout(()=>{
+
+    freeze=false;
+
+  },5000);
+
+  info.innerHTML=
+    "⚡ 시간정지 발동!";
+
+}
+
+
+function buyLaser(){
+
+  /* 레이저는 이제 기본 제공 */
+  laser=true;
+
+  info.innerHTML=
+    "🔥 레이저는 무료로 사용할 수 있습니다!";
+
+}
+
+
+/* =========================================================
+   저장
+========================================================= */
+
+function save(){
+
+  localStorage.setItem(
+    "coins",
+    coins
+  );
+
+  localStorage.setItem(
+    "high",
+    high
+  );
+
+}
+
+
+/* =========================================================
+   스킨 저장
+========================================================= */
+
+function saveSkinData(){
+
+  localStorage.setItem(
+    "meteorSkin",
+    playerSkin
+  );
+
+  localStorage.setItem(
+    "meteorOwnedSkins",
+    JSON.stringify(ownedSkins)
+  );
+
+}
+
+
+/* =========================================================
+   스킨 아이콘
+========================================================= */
+
+function getSkinIcon(id){
+
+  if(id==="triangle"){
+    return "▲";
+  }
+
+  if(id==="comet"){
+    return "☄️";
+  }
+
+  if(id==="diamond"){
+    return "◆";
+  }
+
+  if(id==="fire"){
+    return "🔥";
+  }
+
+  if(id==="nebula"){
+    return "✦";
+  }
+
+  if(id==="emperor"){
+    return "👑";
+  }
+
+  return "▲";
+
+}
+
+
+/* =========================================================
+   🚀 스킨 상점 렌더링
+========================================================= */
+
+function renderSkins(){ 
+
+  document.getElementById("coinDisplay").textContent = 
+    `💰 보유 코인: ${coins.toLocaleString()}`; 
+
+  const list = document.getElementById("skinList"); 
+
+  if(!list){ 
+    return; 
+  } 
+
+  list.innerHTML = "";
+
+
+  Object.entries(skinData).forEach(
+    ([id,s])=>{
+
+      const owned=
+        ownedSkins.includes(id);
+
+      const equipped=
+        playerSkin===id;
+
+
+      const b=
+        document.createElement("button");
+
+      b.className="skin-card";
+
+      b.style.background=
+        equipped
+        ? "#164a8a"
+        : "rgba(255,255,255,.08)";
+
+
+      b.innerHTML=
+
+  `
+    <div style="
+      font-size:32px;
+      margin-bottom:5px;
+      ${
+        id==="nebula"
+        ? "color:#b77cff;text-shadow:0 0 15px #8d5cff;"
+        :id==="emperor"
+        ? "color:#ffd84a;text-shadow:0 0 18px #ffd84a;"
+        : ""
+      }
+    ">
+      ${getSkinIcon(id)}
+    </div>
+
+    <b>${s.name}</b>
+
+    <br>
+
+    <span style="
+      font-size:13px;
+      opacity:.85;
+    ">
+      ${
+        s.price===0
+        ? "무료"
+        : "🪙 "+s.price.toLocaleString()+" 코인"
+      }
+    </span>
+
+    <br>
+
+    <span style="
+      display:inline-block;
+      margin-top:5px;
+      font-size:12px;
+      color:${
+        equipped
+        ? "#55f5ff"
+        :owned
+        ? "#8cff9a"
+        :"#ddd"
+      };
+    ">
+      ${
+        equipped
+        ? "★ 장착 중"
+        :owned
+        ? "장착하기"
+        : "구매하기"
+      }
+    </span>
+  `;
+
+
+      b.onclick=()=>{
+
+        /* 이미 보유한 스킨 */
+
+        if(owned){
+
+          playerSkin=id;
+
+          saveSkinData();
+
+          renderSkins();
+
+          return;
+
+        }
+
+
+        /* 구매 */
+
+        if(coins<s.price){
+
+          alert("코인이 부족해!");
+
+          return;
+
+        }
+
+        coins-=s.price;
+
+        ownedSkins.push(id);
+
+        playerSkin=id;
+
+        save();
+
+        saveSkinData();
+
+        renderSkins();
+
+      };
+
+
+      list.appendChild(b);
+
+    }
+
+  );
+
+}
+
+
+/* =========================================================
+   🚀 스킨 상점 열기
+========================================================= */
+
+function openSkinShop(){
+
+  const el=
+    document.getElementById("skinShop");
+
+  if(!el){
+    return;
+  }
+
+  if(el.style.display==="block"){
+
+    el.style.display="none";
+
+  }else{
+
+    el.style.display="block";
+
+    renderSkins();
+
+  }
+
+}
+
+
+/* =========================================================
+   🏆 순위 저장
+========================================================= */
+
+async function addMathRanking(){
+
+  if(!playerName){
+    playerName="PLAYER";
+  }
+
+  const {error}=await supabaseClient
+    .from("math_ranking")
+    .insert({
+      name:playerName,
+      grade:Number(mathGrade)||1,
+      semester:String(mathSemester||"all"),
+      stage:Math.min(Number(stage)||1,30),
+      math_correct:Number(mathCorrect)||0,
+      math_questions:Number(mathQuestions)||0,
+      revives:Number(mathRevives)||0,
+      score:Number(score)||0,
+      time:Number(stageTime)||0
+    });
+
+  if(error){
+    console.error("수학 순위 저장 실패:",error);
+  }
+}
+
+/* =========================================================
+   🏆 수학 순위
+   정렬: 수학 정답 수 → 도달 스테이지 → 점수 → 시간
+========================================================= */
+
+async function addRanking(rankStage=stage){
+
+  if(!playerName){
+    playerName="PLAYER";
+  }
+
+  const {error}=
+    await supabaseClient
+
+      .from("ranking")
+
+      .insert({
+
+        name:playerName,
+
+        stage:
+          Math.min(
+            Number(rankStage)||1,
+            30
+          ),
+
+        score:
+          Number(score)||0,
+
+        time:
+          Number(stageTime)||0
+
+      });
+
+
+  if(error){
+
+    console.error(
+      "순위 저장 실패:",
+      error
+    );
+
+    alert(
+      "순위 저장 실패!\n"+
+      error.message
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   🏆 TOP 20
+========================================================= */
+
+async function openRanking(){
+
+  const modal=document.getElementById("rankingModal");
+  const list=document.getElementById("rankingList");
+
+  modal.style.display="flex";
+  list.innerHTML='<p style="text-align:center;">수학 순위를 불러오는 중...</p>';
+
+  const {data,error}=await supabaseClient
+    .from("math_ranking")
+    .select("name,grade,semester,stage,math_correct,math_questions,revives,score,time")
+    .order("math_correct",{ascending:false})
+    .order("stage",{ascending:false})
+    .order("score",{ascending:false})
+    .order("time",{ascending:false})
+    .limit(100);
+
+  if(error){
+    console.error("수학 순위 불러오기 실패:",error);
+    list.innerHTML=`
+      <p style="text-align:center;color:#ff6677;">
+        수학 순위를 불러오지 못했습니다.<br><br>
+        Supabase에 <b>math_ranking</b> 테이블이 있는지 확인하세요.
+      </p>`;
+    return;
+  }
+
+  if(!data || data.length===0){
+    list.innerHTML='<p style="text-align:center;opacity:.75;">아직 등록된 수학 기록이 없습니다.</p>';
+    return;
+  }
+
+  /* 같은 닉네임은 수학 정답 수가 가장 높은 기록 하나만 */
+  const bestByName={};
+
+  data.forEach(r=>{
+    if(!bestByName[r.name]){
+      bestByName[r.name]=r;
+      return;
+    }
+
+    const b=bestByName[r.name];
+    if(
+      r.math_correct>b.math_correct ||
+      (r.math_correct===b.math_correct && r.stage>b.stage) ||
+      (r.math_correct===b.math_correct && r.stage===b.stage && r.score>b.score) ||
+      (r.math_correct===b.math_correct && r.stage===b.stage && r.score===b.score && r.time>b.time)
+    ){
+      bestByName[r.name]=r;
+    }
+  });
+
+  const bestData=Object.values(bestByName)
+    .sort((a,b)=>
+      b.math_correct-a.math_correct ||
+      b.stage-a.stage ||
+      b.score-a.score ||
+      b.time-a.time
+    )
+    .slice(0,20);
+
+  list.innerHTML=bestData.map((r,i)=>{
+
+    const medal=
+      i===0?"🥇":
+      i===1?"🥈":
+      i===2?"🥉":
+      (i+1)+"위";
+
+    const safeName=String(r.name||"PLAYER").replace(/[&<>]/g,"");
+    const sem=r.grade===5
+      ? (r.semester==="1"?"5-1":r.semester==="2"?"5-2":"5학년 전체")
+      : `${r.grade}학년`;
+
+    return `
+      <div style="
+        padding:10px 5px;
+        border-bottom:1px solid #27305b;
+      ">
+        <div style="display:flex;gap:8px;align-items:center;">
+          <b style="width:40px;text-align:center;">${medal}</b>
+          <b style="flex:1;overflow:hidden;text-overflow:ellipsis;">${safeName}</b>
+          <span>🧮 ${r.math_correct}개</span>
+        </div>
+        <div style="font-size:12px;opacity:.75;margin-top:5px;text-align:right;">
+          ${sem} · STAGE ${r.stage} · 점수 ${r.score} · 환생 ${r.revives}회
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+function closeRanking(){
+
+  document.getElementById(
+    "rankingModal"
+  ).style.display="none";
+
+}
+
+
+/* =========================================================
+   💥 게임오버
+========================================================= */
+
+function gameOver(){
+
+  if(!running || bossQuizActive){
+    return;
+  }
+
+  running=false;
+  stopMusic();
+
+  /* 죽으면 수학 문제를 맞혀 환생 */
+  info.innerHTML="✨ 환생을 위해 수학 문제를 풀어주세요!";
+  showMathQuestion("revive");
+}
+
+/* =========================================================
+   👑 올 클리어
+========================================================= */
+
+async function gameClear(){
+
+  running=false;
+  transitioning=true;
+
+
+  await addMathRanking();
+
+
+  stopMusic();
+
+
+  rocks=[];
+  bullets=[];
+  boss=null;
+
+
+  /* 보상: 30스테이지 올클리어 = 30,000 코인 */
+
+  const clearReward=30000;
+
+  coins+=clearReward;
+
+
+  if(score>high){
+    high=score;
+  }
+
+  save();
+
+
+  /* 클리어 화면 */
+
+  menu.style.display="flex";
+
+  shop.style.display="none";
+
+  startBtn.style.display="block";
+
+  startBtn.textContent=
+    "처음부터 다시";
+
+
+  info.innerHTML=
+    `
+      👑 <b>ALL CLEAR!</b>
+      <br><br>
+
+      🎉 30개 스테이지 정복 성공!
+      <br><br>
+
+      🪙 올클리어 보상: +30,000 코인
+      <br>
+
+      최종 점수: ${score}
+      <br>
+
+      💰 코인: ${coins}
+      <br><br>
+
+      <button
+        class="game2-btn"
+        onclick="location.href='game2.html'">
+
+        GAME 2
+
+      </button>
+    `;
+
+
+  /*
+    ⭐ 중요
+    클리어 화면에서도 스킨 상점 표시
+  */
+
+  const clearSkinShop=
+    document.getElementById(
+      "skinShop"
+    );
+
+  if(clearSkinShop){
+
+    clearSkinShop.style.display="block";
+
+    renderSkins();
+
+  }
+
+
+  stage=1;
+
+
+  /* 클리어 음악 */
+
+  const clearMusic=
+    sounds.clear;
+
+  clearMusic.pause();
+
+  clearMusic.currentTime=0;
+
+  clearMusic.volume=.70;
+
+
+  clearMusic.play()
+
+    .then(()=>{
+
+      console.log(
+        "🎵 CLEAR 음악 재생 성공"
+      );
+
+    })
+
+    .catch(err=>{
+
+      console.log(
+        "❌ CLEAR 음악 재생 실패:",
+        err
+      );
+
+    });
+
+}
+
+
+/* =========================================================
+   업데이트
+========================================================= */
+
+function update(dt){
+
+  if(!running || bossQuizActive){
+    return;
+  }
+
+
+  /* 자동 연사 */
+
+  shootCooldown-=dt;
+
+
+  if(
+    shooting &&
+    shootCooldown<=0
+  ){
+
+    shoot();
+
+    shootCooldown=.12;
+
+  }
+
+
+  const s=
+    stages[stage-1];
+
+
+  /* 플레이어 */
+
+  if(
+    keys["arrowleft"] ||
+    keys["a"] ||
+    touchLeft
+  ){
+
+    player.x-=
+      player.speed*dt;
+
+  }
+
+
+  if(
+    keys["arrowright"] ||
+    keys["d"] ||
+    touchRight
+  ){
+
+    player.x+=
+      player.speed*dt;
+
+  }
+
+
+  player.x=
+    Math.max(
+      0,
+      Math.min(
+        canvas.width-player.w,
+        player.x
+      )
+    );
+
+
+  /* 시간 */
+
+  stageTime+=dt;
+
+
+  /* 운석 생성 */
+
+  spawnTime+=dt;
+
+
+  if(
+    spawnTime>=s.spawn &&
+    !boss
+  ){
+
+    spawnTime=0;
+
+    spawnRock();
+
+
+    if(
+      stage>=11
+        ? Math.random()<.48
+        : stage>=3 &&
+          Math.random()<.3
+    ){
+
+      spawnRock();
+
+    }
+
+  }
+
+
+  /* 보스 등장 */
+
+  if(
+    s.boss &&
+    stageTime>=5 &&
+    !boss
+  ){
+
+    spawnBoss();
+
+
+    info.innerHTML=
+      `
+        ⚠️ <b>STAGE ${stage} BOSS 등장!</b>
+        <br><br>
+        보스를 공격하려면 수학 문제 3개를 풀어야 합니다.
+      `;
+
+    bossQuizActive=true;
+    bossQuizIndex=0;
+    running=false;
+    showMathQuestion("boss");
+
+  }
+
+
+  const slow=
+    freeze ? .3 : 1;
+
+
+  /* =====================================================
+     운석
+  ===================================================== */
+
+  for(
+    let i=rocks.length-1;
+    i>=0;
+    i--
+  ){
+
+    const r=rocks[i];
+
+
+    r.y+=
+      r.speed*dt*slow;
+
+    r.rot+=
+      dt*2;
+
+
+    /* 일반 운석 좌우 흔들림 */
+
+    if(
+      stage>=6 &&
+      r.type===0
+    ){
+
+      r.x+=
+        Math.sin(r.y*.05)*1.5;
+
+    }
+
+
+    /* 고속 */
+
+    if(r.type===1){
+
+      r.x+=
+        Math.sin(r.y*.05)*1.5;
+
+    }
+
+
+    /* 분열 */
+
+    if(r.type===5){
+
+      r.x+=
+        Math.sin(r.y*.035)*2.5;
+
+    }
+
+
+    /* 추적 */
+
+    if(r.type===6){
+
+      const targetX=
+        player.x+
+        player.w/2;
+
+      const rockX=
+        r.x+
+        r.w/2;
+
+      const steer=
+        targetX>rockX
+        ? 1
+        : -1;
+
+      r.x+=
+        steer*
+        Math.min(
+          95,
+          38+stage*2
+        )*
+        dt;
+
+    }
+
+
+    /* 지그재그 */
+
+    if(r.type===7){
+
+      r.x+=
+        Math.sin(
+          r.y*.055+r.rot
+        )*
+        (3.5+stage*.12);
+
+    }
+
+
+    /* 강화 중장 */
+
+    if(r.type===8){
+
+      r.x+=
+        Math.sin(r.y*.025)*1.2;
+
+    }
+
+
+    /* 초분열 */
+
+    if(r.type===9){
+
+      r.x+=
+        Math.sin(
+          r.y*.04+r.rot*2
+        )*2.2;
+
+    }
+
+
+    /* 플레이어 충돌 */
+
+    if(hit(player,r)){
+
+      if(shield){
+
+        shield=false;
+
+        explode(
+          r.x+r.w/2,
+          r.y+r.h/2,
+          "#55f5ff",
+          25
+        );
+
+        rocks.splice(i,1);
+
+        continue;
+
+      }
+
+
+      gameOver();
+
+      return;
+
+    }
+
+
+    /* 화면 밖 */
+
+    if(
+      r.y>
+      canvas.height+50
+    ){
+
+      rocks.splice(i,1);
+
+      score++;
+
+      coins++;
+
+    }
+
+  }
+
+
+  /* =====================================================
+     총알
+  ===================================================== */
+
+  for(
+    let i=bullets.length-1;
+    i>=0;
+    i--
+  ){
+
+    const b=bullets[i];
+
+    b.y-=
+      b.speed*dt;
+
+    let destroyed=false;
+
+
+    /* 보스 공격 */
+
+    if(
+      boss &&
+      hit(b,boss)
+    ){
+
+      boss.hp-=
+        b.damage;
+
+      explode(
+        b.x,
+        b.y,
+        "#ffe45c",
+        8
+      );
+
+      destroyed=true;
+
+
+      /* 보스 처치 */
+
+      if(boss.hp<=0){
+
+        score+=150;
+
+        coins+=80;
+
+
+        const explosionX=
+          boss.x+
+          boss.w/2;
+
+        const explosionY=
+          boss.y+
+          boss.h/2;
+
+
+        explode(
+          explosionX,
+          explosionY,
+          "#ff3180",
+          100
+        );
+
+        explode(
+          explosionX,
+          explosionY,
+          "#55f5ff",
+          60
+        );
+
+        explode(
+          explosionX,
+          explosionY,
+          "#ffe45c",
+          40
+        );
+
+
+        boss=null;
+
+
+        /* 최종 보스 */
+
+        if(stage===30){
+
+          stopMusic();
+
+
+          setTimeout(()=>{
+
+            gameClear();
+
+          },1200);
+
+
+        }
+
+
+        /* 일반 보스 */
+
+        else{
+
+          setTimeout(()=>{
+
+            if(
+              running &&
+              !boss
+            ){
+
+              nextStage();
+
+            }
+
+          },700);
+
+        }
+
+      }
+
+    }
+
+
+    /* =================================================
+       운석 공격
+    ================================================= */
+
+    for(
+      let j=rocks.length-1;
+      j>=0 &&
+      !destroyed;
+      j--
+    ){
+
+      if(hit(b,rocks[j])){
+
+        const r=rocks[j];
+
+
+        r.hp--;
+
+
+        if(r.hp>0){
+
+          explode(
+            r.x+r.w/2,
+            r.y+r.h/2,
+            "#ffffff",
+            5
+          );
+
+          destroyed=true;
+
+          continue;
+
+        }
+
+
+        /* 보너스 */
+
+        if(r.type===3){
+
+          score+=8;
+          coins+=3;
+
+          explode(
+            r.x+r.w/2,
+            r.y+r.h/2,
+            "#55f5ff",
+            20
+          );
+
+        }
+
+
+        /* 폭발 */
+
+        else if(r.type===4){
+
+          score+=4;
+          coins+=2;
+
+
+          const cx=
+            r.x+r.w/2;
+
+          const cy=
+            r.y+r.h/2;
+
+
+          explode(
+            cx,
+            cy,
+            "#ff7b00",
+            30
+          );
+
+
+          for(
+            let k=rocks.length-1;
+            k>=0;
+            k--
+          ){
+
+            if(k===j){
+              continue;
+            }
+
+
+            const other=
+              rocks[k];
+
+
+            const dx=
+              other.x+
+              other.w/2-
+              cx;
+
+            const dy=
+              other.y+
+              other.h/2-
+              cy;
+
+
+            const distance=
+              Math.sqrt(
+                dx*dx+
+                dy*dy
+              );
+
+
+            if(distance<90){
+
+              rocks.splice(k,1);
+
+              score+=2;
+
+              coins++;
+
+            }
+
+          }
+
+        }
+
+
+        /* 분열 */
+
+        else if(r.type===5){
+
+          score+=5;
+          coins+=2;
+
+
+          const cx=
+            r.x+r.w/2;
+
+          const cy=
+            r.y+r.h/2;
+
+
+          explode(
+            cx,
+            cy,
+            "#b84cff",
+            25
+          );
+
+
+          for(
+            let k=0;
+            k<3;
+            k++
+          ){
+
+            rocks.push({
+
+              x:
+                cx-10+
+                Math.random()*20,
+
+              y:cy,
+
+              w:14,
+              h:14,
+
+              speed:
+                300+
+                Math.random()*100,
+
+              rot:
+                Math.random()*6,
+
+              type:0,
+
+              hp:1
+
+            });
+
+          }
+
+        }
+
+
+        /* 강화 중장 */
+
+        else if(r.type===8){
+
+          score+=8;
+          coins+=4;
+
+
+          explode(
+            r.x+r.w/2,
+            r.y+r.h/2,
+            "#9fa8ff",
+            20
+          );
+
+        }
+
+
+        /* 초분열 */
+
+        else if(r.type===9){
+
+          score+=10;
+          coins+=5;
+
+
+          const cx=
+            r.x+r.w/2;
+
+          const cy=
+            r.y+r.h/2;
+
+
+          explode(
+            cx,
+            cy,
+            "#ff66cc",
+            28
+          );
+
+
+          for(
+            let k=0;
+            k<5;
+            k++
+          ){
+
+            rocks.push({
+
+              x:
+                cx-8+
+                Math.random()*16,
+
+              y:cy,
+
+              w:12,
+              h:12,
+
+              speed:
+                360+
+                stage*8+
+                Math.random()*120,
+
+              rot:
+                Math.random()*6,
+
+              type:1,
+
+              hp:1
+
+            });
+
+          }
+
+        }
+
+
+        /* 일반 */
+
+        else{
+
+          score+=2;
+
+          coins++;
+
+
+          explode(
+
+            r.x+r.w/2,
+
+            r.y+r.h/2,
+
+            r.type===1
+              ? "#ffe45c"
+
+              :r.type===6
+              ? "#ff55ff"
+
+              :r.type===7
+              ? "#66e6ff"
+
+              :"#ff465d",
+
+            12
+
+          );
+
+        }
+
+
+        rocks.splice(j,1);
+
+        destroyed=true;
+
+      }
+
+    }
+
+
+    if(
+      destroyed ||
+      b.y<-40
+    ){
+
+      bullets.splice(i,1);
+
+    }
+
+  }
+
+
+  /* =====================================================
+     보스
+  ===================================================== */
+
+  if(boss){
+
+    boss.x+=
+      boss.dir*
+      boss.speed*
+      dt;
+
+
+    if(
+      boss.x<0 ||
+      boss.x+boss.w>
+      canvas.width
+    ){
+
+      boss.dir*=-1;
+
+    }
+
+
+    boss.shot+=dt;
+
+
+    if(boss.shot>=.9){
+
+      boss.shot=0;
+
+
+      for(
+        let i=0;
+        i<2;
+        i++
+      ){
+
+        rocks.push({
+
+          x:
+            boss.x+
+            Math.random()*boss.w,
+
+          y:
+            boss.y+
+            boss.h,
+
+          w:25,
+          h:25,
+
+          speed:
+            250+
+            stage*15,
+
+          rot:0,
+
+          type:0,
+
+          hp:1
+
+        });
+
+      }
+
+    }
+
+
+    if(boss.y<65){
+
+      boss.y+=
+        55*dt;
+
+    }
+
+  }
+
+
+  /* =====================================================
+     스테이지 클리어
+  ===================================================== */
+
+  if(
+    stageTime>=s.duration &&
+    !boss &&
+    !transitioning
+  ){
+
+    nextStage();
+
+    return;
+
+  }
+
+
+  /* =====================================================
+     파티클
+  ===================================================== */
+
+  for(
+    let i=particles.length-1;
+    i>=0;
+    i--
+  ){
+
+    const p=
+      particles[i];
+
+
+    p.x+=
+      p.vx*dt;
+
+    p.y+=
+      p.vy*dt;
+
+    p.vy+=
+      80*dt;
+
+    p.life-=dt;
+
+
+    if(p.life<=0){
+
+      particles.splice(i,1);
+
+    }
+
+  }
+
+}
+
+
+/* =========================================================
+   폭발
+========================================================= */
+
+function explode(
+  x,
+  y,
+  color,
+  count=12
+){
+
+  for(
+    let i=0;
+    i<count;
+    i++
+  ){
+
+    const angle=
+      Math.random()*
+      Math.PI*2;
+
+    const speed=
+      60+
+      Math.random()*220;
+
+
+    particles.push({
+
+      x:x,
+      y:y,
+
+      vx:
+        Math.cos(angle)*
+        speed,
+
+      vy:
+        Math.sin(angle)*
+        speed,
+
+      life:
+        .4+
+        Math.random()*.8,
+
+      color:color
+
+    });
+
+  }
+
+}
+
+
+/* =========================================================
+   화면
+========================================================= */
+
+function draw(){
+
+  const s=
+    stages[stage-1] ||
+    stages[0];
+
+
+  /* 배경 */
+
+  ctx.fillStyle=
+    s.color;
+
+  ctx.fillRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+
+  /* 별 */
+
+  for(
+    let i=0;
+    i<100;
+    i++
+  ){
+
+    const x=
+      (i*71)%
+      canvas.width;
+
+    const y=
+      (
+        i*127+
+        stageTime*40
+      )%
+      canvas.height;
+
+
+    ctx.fillStyle=
+      i%7===0
+      ? "#7f8cff"
+      : "#ffffff";
+
+    ctx.globalAlpha=.45;
+
+
+    ctx.fillRect(
+      x,
+      y,
+      2,
+      2
+    );
+
+  }
+
+  ctx.globalAlpha=1;
+
+
+  /* =====================================================
+     HUD
+  ===================================================== */
+
+  ctx.fillStyle="#fff";
+
+  ctx.font=
+    "bold 16px Arial";
+
+
+  ctx.fillText(
+    `STAGE ${stage}/30`,
+    15,
+    27
+  );
+
+
+  ctx.fillText(
+    `점수 ${score}`,
+    145,
+    27
+  );
+
+
+  ctx.fillText(
+    `💰 ${coins}`,
+    280,
+    27
+  );
+
+
+  ctx.fillText(
+    `최고 ${high}`,
+    380,
+    27
+  );
+
+
+  /* 진행바 */
+
+  const progress=
+    Math.min(
+      stageTime/
+      s.duration,
+      1
+    );
+
+
+  ctx.fillStyle="#222";
+
+  ctx.fillRect(
+    15,
+    42,
+    450,
+    7
+  );
+
+
+  ctx.fillStyle="#55f5ff";
+
+  ctx.fillRect(
+    15,
+    42,
+    450*progress,
+    7
+  );
+
+
+  /* =====================================================
+     🚀 플레이어
+     스킨별 그림
+  ===================================================== */
+
+  ctx.save();
+
+
+  ctx.translate(
+    player.x+20,
+    player.y+20
+  );
+
+
+  ctx.shadowBlur=20;
+
+
+  /* 기본 색 */
+
+  ctx.fillStyle="#55f5ff";
+
+  ctx.shadowColor="#55f5ff";
+
+
+  /* =========================
+     기본 우주선
+  ========================= */
+
+  if(playerSkin==="triangle"){
+
+    ctx.beginPath();
+
+    ctx.moveTo(0,-23);
+
+    ctx.lineTo(22,19);
+
+    ctx.lineTo(0,10);
+
+    ctx.lineTo(-22,19);
+
+    ctx.closePath();
+
+    ctx.fill();
+
+  }
+
+
+  /* =========================
+     혜성 우주선
+  ========================= */
+
+  else if(playerSkin==="comet"){
+
+    ctx.beginPath();
+
+    ctx.moveTo(20,-4);
+
+    ctx.quadraticCurveTo(
+      2,-20,
+      -16,-10
+    );
+
+    ctx.quadraticCurveTo(
+      -2,0,
+      -20,13
+    );
+
+    ctx.quadraticCurveTo(
+      4,14,
+      20,4
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    ctx.fillStyle="#fff";
+
+    ctx.beginPath();
+
+    ctx.arc(
+      8,
+      0,
+      7,
+      0,
+      Math.PI*2
+    );
+
+    ctx.fill();
+
+  }
+
+
+  /* =========================
+     다이아 우주선
+  ========================= */
+
+  else if(playerSkin==="diamond"){
+
+    ctx.beginPath();
+
+    ctx.moveTo(0,-25);
+
+    ctx.lineTo(20,0);
+
+    ctx.lineTo(0,25);
+
+    ctx.lineTo(-20,0);
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    ctx.fillStyle="#fff";
+
+    ctx.beginPath();
+
+    ctx.moveTo(0,-14);
+
+    ctx.lineTo(10,0);
+
+    ctx.lineTo(0,4);
+
+    ctx.lineTo(-10,0);
+
+    ctx.closePath();
+
+    ctx.fill();
+
+  }
+
+
+  /* =========================
+     불꽃 우주선
+  ========================= */
+
+  else if(playerSkin==="fire"){
+
+    ctx.beginPath();
+
+    ctx.moveTo(0,-24);
+
+    ctx.lineTo(19,10);
+
+    ctx.lineTo(8,8);
+
+    ctx.lineTo(12,22);
+
+    ctx.lineTo(0,13);
+
+    ctx.lineTo(-12,22);
+
+    ctx.lineTo(-8,8);
+
+    ctx.lineTo(-19,10);
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    ctx.fillStyle="#ffe45c";
+
+    ctx.beginPath();
+
+    ctx.moveTo(0,5);
+
+    ctx.lineTo(6,20);
+
+    ctx.lineTo(0,15);
+
+    ctx.lineTo(-6,20);
+
+    ctx.closePath();
+
+    ctx.fill();
+
+  }
+
+  /* =========================
+     네뷸라 우주선
+     50,000 코인
+  ========================= */
+
+  else if(playerSkin==="nebula"){
+
+    /* 외부 네온 */
+
+    ctx.shadowBlur=30;
+
+    ctx.shadowColor="#9b5cff";
+
+
+    /* 보라색 → 청록색 몸체 */
+
+    const nebulaGradient=
+      ctx.createLinearGradient(
+        0,-26,
+        0,25
+      );
+
+    nebulaGradient.addColorStop(
+      0,
+      "#d98cff"
+    );
+
+    nebulaGradient.addColorStop(
+      .45,
+      "#7b4dff"
+    );
+
+    nebulaGradient.addColorStop(
+      1,
+      "#19e6ff"
+    );
+
+    ctx.fillStyle=nebulaGradient;
+
+
+    /* 메인 선체 */
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      0,
+      -28
+    );
+
+    ctx.lineTo(
+      13,
+      -7
+    );
+
+    ctx.lineTo(
+      27,
+      15
+    );
+
+    ctx.lineTo(
+      10,
+      11
+    );
+
+    ctx.lineTo(
+      0,
+      22
+    );
+
+    ctx.lineTo(
+      -10,
+      11
+    );
+
+    ctx.lineTo(
+      -27,
+      15
+    );
+
+    ctx.lineTo(
+      -13,
+      -7
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    /* 날개 내부 */
+
+    ctx.shadowBlur=12;
+
+    ctx.fillStyle="#b77cff";
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      -11,
+      -5
+    );
+
+    ctx.lineTo(
+      -25,
+      14
+    );
+
+    ctx.lineTo(
+      -7,
+      9
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    ctx.fillStyle="#38eaff";
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      11,
+      -5
+    );
+
+    ctx.lineTo(
+      25,
+      14
+    );
+
+    ctx.lineTo(
+      7,
+      9
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    /* 중앙 우주 코어 */
+
+    ctx.shadowBlur=25;
+
+    ctx.shadowColor="#ffffff";
+
+    const core=
+      ctx.createRadialGradient(
+        0,
+        -2,
+        1,
+        0,
+        -2,
+        10
+      );
+
+    core.addColorStop(
+      0,
+      "#ffffff"
+    );
+
+    core.addColorStop(
+      .35,
+      "#bdfcff"
+    );
+
+    core.addColorStop(
+      1,
+      "#687cff"
+    );
+
+    ctx.fillStyle=core;
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+      0,
+      -2,
+      9,
+      0,
+      Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /* 엔진 불꽃 */
+
+    ctx.shadowBlur=20;
+
+    ctx.shadowColor="#8d5cff";
+
+    ctx.fillStyle="#8d5cff";
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      -9,
+      14
+    );
+
+    ctx.lineTo(
+      -4,
+      29
+    );
+
+    ctx.lineTo(
+      0,
+      17
+    );
+
+    ctx.lineTo(
+      4,
+      29
+    );
+
+    ctx.lineTo(
+      9,
+      14
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    /* 작은 별빛 */
+
+    ctx.shadowBlur=10;
+
+    ctx.shadowColor="#ffffff";
+
+    ctx.fillStyle="#ffffff";
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+      -17,
+      -2,
+      2,
+      0,
+      Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+      18,
+      -8,
+      2,
+      0,
+      Math.PI*2
+    );
+
+    ctx.fill();
+
+  }
+
+
+  /* =========================
+     갤럭시 엠퍼러
+     90,000 코인
+     최고급 스킨
+  ========================= */
+
+  else if(playerSkin==="emperor"){
+
+    /* 황금빛 외부 광원 */
+
+    ctx.shadowBlur=35;
+
+    ctx.shadowColor="#ffd84a";
+
+
+    /* 검정 → 금색 메인 선체 */
+
+    const emperorGradient=
+      ctx.createLinearGradient(
+        0,-30,
+        0,28
+      );
+
+    emperorGradient.addColorStop(
+      0,
+      "#fff2a3"
+    );
+
+    emperorGradient.addColorStop(
+      .18,
+      "#ffd84a"
+    );
+
+    emperorGradient.addColorStop(
+      .5,
+      "#c99718"
+    );
+
+    emperorGradient.addColorStop(
+      .78,
+      "#17120a"
+    );
+
+    emperorGradient.addColorStop(
+      1,
+      "#050505"
+    );
+
+    ctx.fillStyle=emperorGradient;
+
+
+    /* 왕실형 메인 선체 */
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      0,
+      -31
+    );
+
+    ctx.lineTo(
+      9,
+      -17
+    );
+
+    ctx.lineTo(
+      18,
+      -10
+    );
+
+    ctx.lineTo(
+      30,
+      14
+    );
+
+    ctx.lineTo(
+      12,
+      11
+    );
+
+    ctx.lineTo(
+      6,
+      24
+    );
+
+    ctx.lineTo(
+      0,
+      17
+    );
+
+    ctx.lineTo(
+      -6,
+      24
+    );
+
+    ctx.lineTo(
+      -12,
+      11
+    );
+
+    ctx.lineTo(
+      -30,
+      14
+    );
+
+    ctx.lineTo(
+      -18,
+      -10
+    );
+
+    ctx.lineTo(
+      -9,
+      -17
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    /* 검은 중앙 장갑 */
+
+    ctx.shadowBlur=10;
+
+    ctx.shadowColor="#000";
+
+    ctx.fillStyle="#080808";
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      0,
+      -20
+    );
+
+    ctx.lineTo(
+      11,
+      -4
+    );
+
+    ctx.lineTo(
+      8,
+      13
+    );
+
+    ctx.lineTo(
+      0,
+      18
+    );
+
+    ctx.lineTo(
+      -8,
+      13
+    );
+
+    ctx.lineTo(
+      -11,
+      -4
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    /* 황금 테두리 */
+
+    ctx.shadowBlur=15;
+
+    ctx.shadowColor="#ffd84a";
+
+    ctx.strokeStyle="#ffe98a";
+
+    ctx.lineWidth=2;
+
+    ctx.stroke();
+
+
+    /* 황금 코어 */
+
+    ctx.shadowBlur=30;
+
+    ctx.shadowColor="#fff1a0";
+
+
+    const emperorCore=
+      ctx.createRadialGradient(
+        0,
+        0,
+        1,
+        0,
+        0,
+        11
+      );
+
+    emperorCore.addColorStop(
+      0,
+      "#ffffff"
+    );
+
+    emperorCore.addColorStop(
+      .25,
+      "#fff8c7"
+    );
+
+    emperorCore.addColorStop(
+      .6,
+      "#ffd21c"
+    );
+
+    emperorCore.addColorStop(
+      1,
+      "#9a6800"
+    );
+
+    ctx.fillStyle=emperorCore;
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+      0,
+      0,
+      10,
+      0,
+      Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /* 왕관 */
+
+    ctx.shadowBlur=25;
+
+    ctx.shadowColor="#ffd84a";
+
+    ctx.fillStyle="#ffd84a";
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      -12,
+      -24
+    );
+
+    ctx.lineTo(
+      -7,
+      -34
+    );
+
+    ctx.lineTo(
+      0,
+      -25
+    );
+
+    ctx.lineTo(
+      7,
+      -34
+    );
+
+    ctx.lineTo(
+      12,
+      -24
+    );
+
+    ctx.lineTo(
+      8,
+      -19
+    );
+
+    ctx.lineTo(
+      -8,
+      -19
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    /* 왕관 보석 */
+
+    ctx.shadowBlur=18;
+
+    ctx.shadowColor="#ffffff";
+
+    ctx.fillStyle="#ffffff";
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+      0,
+      -25,
+      2.5,
+      0,
+      Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /* 양쪽 황금 장식 */
+
+    ctx.strokeStyle="#fff0a0";
+
+    ctx.lineWidth=3;
+
+    ctx.shadowBlur=15;
+
+    ctx.shadowColor="#ffd84a";
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      -16,
+      -7
+    );
+
+    ctx.lineTo(
+      -27,
+      10
+    );
+
+    ctx.moveTo(
+      16,
+      -7
+    );
+
+    ctx.lineTo(
+      27,
+      10
+    );
+
+    ctx.stroke();
+
+
+    /* 황금 엔진 */
+
+    ctx.fillStyle="#ffb300";
+
+    ctx.shadowBlur=30;
+
+    ctx.shadowColor="#ff9d00";
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+      -8,
+      13
+    );
+
+    ctx.lineTo(
+      -4,
+      32
+    );
+
+    ctx.lineTo(
+      0,
+      18
+    );
+
+    ctx.lineTo(
+      4,
+      32
+    );
+
+    ctx.lineTo(
+      8,
+      13
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    /* 엔진 중심 */
+
+    ctx.fillStyle="#fff7b0";
+
+    ctx.shadowBlur=20;
+
+    ctx.shadowColor="#ffffff";
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+      0,
+      17,
+      4,
+      0,
+      Math.PI*2
+    );
+
+    ctx.fill();
+
+  }
+
+  ctx.restore();
+
+
+  /* =====================================================
+     방어막
+  ===================================================== */
+
+  if(shield){
+
+    ctx.strokeStyle=
+      "#55f5ff";
+
+    ctx.lineWidth=3;
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+      player.x+20,
+      player.y+20,
+      32,
+      0,
+      Math.PI*2
+    );
+
+    ctx.stroke();
+
+  }
+
+
+  /* =====================================================
+     운석
+  ===================================================== */
+
+  for(const r of rocks){
+
+    ctx.save();
+
+
+    ctx.translate(
+      r.x+r.w/2,
+      r.y+r.h/2
+    );
+
+
+    ctx.rotate(r.rot);
+
+
+    ctx.shadowBlur=12;
+
+
+    /* 일반 */
+
+    if(r.type===0){
+
+      ctx.fillStyle="#ff405d";
+
+      ctx.shadowColor="#ff1744";
+
+
+      ctx.beginPath();
+
+      ctx.arc(
+        0,
+        0,
+        r.w/2,
+        0,
+        Math.PI*2
+      );
+
+      ctx.fill();
+
+    }
+
+
+    /* 고속 */
+
+    else if(r.type===1){
+
+      ctx.fillStyle="#ffe45c";
+
+      ctx.shadowColor="#ffe45c";
+
+
+      ctx.beginPath();
+
+      ctx.moveTo(
+        0,
+        -r.h/2
+      );
+
+      ctx.lineTo(
+        r.w/2,
+        r.h/2
+      );
+
+      ctx.lineTo(
+        0,
+        r.h/3
+      );
+
+      ctx.lineTo(
+        -r.w/2,
+        r.h/2
+      );
+
+      ctx.closePath();
+
+      ctx.fill();
+
+    }
+
+
+    /* 중장 */
+
+    else if(r.type===2){
+
+      ctx.fillStyle="#8f9cff";
+
+      ctx.shadowColor="#6977ff";
+
+
+      ctx.beginPath();
+
+      for(
+        let i=0;
+        i<6;
+        i++
+      ){
+
+        const a=
+          Math.PI/3*i;
+
+        const x=
+          Math.cos(a)*r.w/2;
+
+        const y=
+          Math.sin(a)*r.h/2;
+
+
+        if(i===0){
+          ctx.moveTo(x,y);
+        }else{
+          ctx.lineTo(x,y);
+        }
+
+      }
+
+      ctx.closePath();
+
+      ctx.fill();
+
+
+      ctx.fillStyle="#fff";
+
+      ctx.font=
+        "bold 12px Arial";
+
+      ctx.textAlign="center";
+
+      ctx.fillText(
+        r.hp,
+        0,
+        4
+      );
+
+    }
+
+
+    /* 보너스 */
+
+    else if(r.type===3){
+
+      ctx.fillStyle="#55f5ff";
+
+      ctx.shadowColor="#55f5ff";
+
+
+      ctx.beginPath();
+
+      ctx.moveTo(
+        0,
+        -r.h/2
+      );
+
+      ctx.lineTo(
+        r.w/2,
+        0
+      );
+
+      ctx.lineTo(
+        0,
+        r.h/2
+      );
+
+      ctx.lineTo(
+        -r.w/2,
+        0
+      );
+
+      ctx.closePath();
+
+      ctx.fill();
+
+    }
+
+
+    /* 폭발 */
+
+    else if(r.type===4){
+
+      ctx.fillStyle="#ff7b00";
+
+      ctx.shadowColor="#ff4d00";
+
+
+      ctx.beginPath();
+
+      for(
+        let i=0;
+        i<10;
+        i++
+      ){
+
+        const a=
+          Math.PI*2*i/10;
+
+        const radius=
+          i%2===0
+          ? r.w/2
+          : r.w/3;
+
+
+        const x=
+          Math.cos(a)*radius;
+
+        const y=
+          Math.sin(a)*radius;
+
+
+        if(i===0){
+          ctx.moveTo(x,y);
+        }else{
+          ctx.lineTo(x,y);
+        }
+
+      }
+
+      ctx.closePath();
+
+      ctx.fill();
+
+    }
+
+
+    /* 분열 */
+
+    else if(r.type===5){
+
+      ctx.fillStyle="#b84cff";
+
+      ctx.shadowColor="#b84cff";
+
+
+      ctx.beginPath();
+
+      for(
+        let i=0;
+        i<8;
+        i++
+      ){
+
+        const a=
+          Math.PI*2*i/8;
+
+        const radius=
+          i%2===0
+          ? r.w/2
+          : r.w/3;
+
+
+        const x=
+          Math.cos(a)*radius;
+
+        const y=
+          Math.sin(a)*radius;
+
+
+        if(i===0){
+          ctx.moveTo(x,y);
+        }else{
+          ctx.lineTo(x,y);
+        }
+
+      }
+
+      ctx.closePath();
+
+      ctx.fill();
+
+    }
+
+
+    /* 추적 */
+
+    else if(r.type===6){
+
+      ctx.fillStyle="#ff55ff";
+
+      ctx.shadowColor="#ff55ff";
+
+
+      ctx.beginPath();
+
+      ctx.arc(
+        0,
+        0,
+        r.w/2,
+        0,
+        Math.PI*2
+      );
+
+      ctx.fill();
+
+
+      ctx.strokeStyle="#fff";
+
+      ctx.lineWidth=3;
+
+
+      ctx.beginPath();
+
+      ctx.arc(
+        0,
+        0,
+        r.w/2-5,
+        0,
+        Math.PI*2
+      );
+
+      ctx.stroke();
+
+
+      ctx.beginPath();
+
+      ctx.moveTo(
+        -r.w/2-4,
+        0
+      );
+
+      ctx.lineTo(
+        -r.w/2+7,
+        0
+      );
+
+
+      ctx.moveTo(
+        r.w/2+4,
+        0
+      );
+
+      ctx.lineTo(
+        r.w/2-7,
+        0
+      );
+
+
+      ctx.moveTo(
+        0,
+        -r.h/2-4
+      );
+
+      ctx.lineTo(
+        0,
+        -r.h/2+7
+      );
+
+
+      ctx.moveTo(
+        0,
+        r.h/2+4
+      );
+
+      ctx.lineTo(
+        0,
+        r.h/2-7
+      );
+
+
+      ctx.stroke();
+
+    }
+
+
+    /* 지그재그 */
+
+    else if(r.type===7){
+
+      ctx.fillStyle="#66e6ff";
+
+      ctx.shadowColor="#66e6ff";
+
+
+      ctx.beginPath();
+
+      for(
+        let i=0;
+        i<8;
+        i++
+      ){
+
+        const a=
+          Math.PI*2*i/8;
+
+        const radius=
+          i%2===0
+          ? r.w/2
+          : r.w/4;
+
+
+        const x=
+          Math.cos(a)*radius;
+
+        const y=
+          Math.sin(a)*radius;
+
+
+        if(i===0){
+          ctx.moveTo(x,y);
+        }else{
+          ctx.lineTo(x,y);
+        }
+
+      }
+
+      ctx.closePath();
+
+      ctx.fill();
+
+    }
+
+
+    /* 강화 중장 */
+
+    else if(r.type===8){
+
+      ctx.fillStyle="#9fa8ff";
+
+      ctx.shadowColor="#6977ff";
+
+
+      ctx.beginPath();
+
+      for(
+        let i=0;
+        i<8;
+        i++
+      ){
+
+        const a=
+          Math.PI*2*i/8;
+
+        const x=
+          Math.cos(a)*r.w/2;
+
+        const y=
+          Math.sin(a)*r.h/2;
+
+
+        if(i===0){
+          ctx.moveTo(x,y);
+        }else{
+          ctx.lineTo(x,y);
+        }
+
+      }
+
+      ctx.closePath();
+
+      ctx.fill();
+
+
+      ctx.strokeStyle="#fff";
+
+      ctx.lineWidth=2;
+
+      ctx.stroke();
+
+
+      ctx.fillStyle="#111";
+
+      ctx.font=
+        "bold 13px Arial";
+
+      ctx.textAlign="center";
+
+      ctx.fillText(
+        r.hp,
+        0,
+        4
+      );
+
+    }
+
+
+    /* 초분열 */
+
+    else if(r.type===9){
+
+      ctx.fillStyle="#ff66cc";
+
+      ctx.shadowColor="#ff66cc";
+
+
+      ctx.beginPath();
+
+      for(
+        let i=0;
+        i<12;
+        i++
+      ){
+
+        const a=
+          Math.PI*2*i/12;
+
+        const radius=
+          i%2===0
+          ? r.w/2
+          : r.w/3.5;
+
+
+        const x=
+          Math.cos(a)*radius;
+
+        const y=
+          Math.sin(a)*radius;
+
+
+        if(i===0){
+          ctx.moveTo(x,y);
+        }else{
+          ctx.lineTo(x,y);
+        }
+
+      }
+
+      ctx.closePath();
+
+      ctx.fill();
+
+
+      ctx.fillStyle="#fff";
+
+
+      ctx.beginPath();
+
+      ctx.arc(
+        0,
+        0,
+        4,
+        0,
+        Math.PI*2
+      );
+
+      ctx.fill();
+
+    }
+
+
+    ctx.restore();
+
+  }
+
+
+  /* =====================================================
+     총알
+  ===================================================== */
+
+  ctx.fillStyle=
+    laser
+    ? "#ffd000"
+    : "#55f5ff";
+
+
+  for(const b of bullets){
+
+    ctx.fillRect(
+      b.x,
+      b.y,
+      b.w,
+      b.h
+    );
+
+  }
+
+
+  /* =====================================================
+     보스
+  ===================================================== */
+
+  if(boss){
+
+    ctx.fillStyle=
+      stage===30
+      ? "#ff003c"
+      : "#d822ff";
+
+
+    ctx.shadowBlur=25;
+
+    ctx.shadowColor=
+      ctx.fillStyle;
+
+
+    ctx.beginPath();
+
+    ctx.roundRect(
+      boss.x,
+      boss.y,
+      boss.w,
+      boss.h,
+      20
+    );
+
+    ctx.fill();
+
+
+    ctx.shadowBlur=0;
+
+    ctx.fillStyle="#fff";
+
+    ctx.font=
+      "bold 22px Arial";
+
+
+    ctx.fillText(
+
+      stage===30
+      ? "👑 FINAL BOSS"
+      : "☠️ BOSS",
+
+      boss.x+65,
+      boss.y+58
+
+    );
+
+
+    /* HP */
+
+    ctx.fillStyle="#300";
+
+    ctx.fillRect(
+      70,
+      62,
+      340,
+      12
+    );
+
+
+    ctx.fillStyle="#52ff72";
+
+    ctx.fillRect(
+
+      70,
+      62,
+
+      340*
+      Math.max(
+        0,
+        boss.hp/
+        boss.maxHp
+      ),
+
+      12
+
+    );
+
+  }
+
+
+  /* =====================================================
+     파티클
+  ===================================================== */
+
+  for(const p of particles){
+
+    ctx.globalAlpha=
+      Math.max(
+        0,
+        p.life
+      );
+
+
+    ctx.fillStyle=
+      p.color;
+
+
+    ctx.fillRect(
+      p.x,
+      p.y,
+      5,
+      5
+    );
+
+  }
+
+  ctx.globalAlpha=1;
+
+
+  /* =====================================================
+     조작
+  ===================================================== */
+
+  ctx.fillStyle="#aeb5d8";
+
+  ctx.font=
+    "13px Arial";
+
+
+  ctx.fillText(
+    "← → 이동 | SPACE 공격 | Q 방어막 | E 시간정지",
+    65,
+    700
+  );
+
+}
+
+
+/* =========================================================
+   게임 루프
+========================================================= */
+
+function gameLoop(now){
+
+  if(!running){
+    return;
+  }
+
+
+  const dt=
+    Math.min(
+      (now-lastTime)/1000,
+      .033
+    );
+
+
+  lastTime=now;
+
+
+  update(dt);
+
+  draw();
+
+
+  if(running){
+
+    requestAnimationFrame(
+      gameLoop
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   초기 화면
+========================================================= */
+
+draw();
+
+</script>
+
+</body>
+</html>
