@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="icon" type="image/png" href="../54/54img/cucu.png">
+<title>FHPT | CUCU</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+*{
+    box-sizing:border-box;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    margin:0;
+    background:#08070d;
+    color:#f5f3ff;
+    font-family:Inter,Arial,sans-serif;
+}
+
+a{
+    color:inherit;
+    text-decoration:none;
+}
+
+.container{
+    width:min(1100px,calc(100% - 40px));
+    margin:auto;
+}
+
+/* HEADER */
+
+header{
+    height:72px;
+    border-bottom:1px solid #211e28;
+    display:flex;
+    align-items:center;
+}
+
+.header-inner{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.logo{
+    font-family:"JetBrains Mono",monospace;
+    font-weight:600;
+    font-size:19px;
+}
+
+.logo .purple{
+    color:#a78bfa;
+}
+
+.logo .yellow{
+    color:#facc15;
+}
+
+.header-right{
+    color:#625d6b;
+    font-family:"JetBrains Mono",monospace;
+    font-size:12px;
+}
+
+/* HERO */
+
+.hero{
+    padding:110px 0 75px;
+    position:relative;
+}
+
+.hero::before{
+    content:"";
+    position:absolute;
+    width:500px;
+    height:500px;
+    background:#7c3aed;
+    opacity:.09;
+    filter:blur(130px);
+    border-radius:50%;
+    top:-100px;
+    left:-150px;
+    pointer-events:none;
+}
+
+.label{
+    font-family:"JetBrains Mono",monospace;
+    color:#facc15;
+    font-size:12px;
+    margin-bottom:18px;
+}
+
+.label::before{
+    content:"// ";
+    color:#514b59;
+}
+
+h1{
+    margin:0;
+    font-size:clamp(64px,9vw,105px);
+    line-height:.9;
+    letter-spacing:-6px;
+}
+
+h1 span{
+    color:#a78bfa;
+}
+
+.description{
+    margin-top:28px;
+    max-width:600px;
+    color:#898291;
+    line-height:1.8;
+    font-size:15px;
+}
+
+/* STATS */
+
+.stats{
+    display:flex;
+    gap:12px;
+    margin-top:40px;
+}
+
+.stat{
+    border:1px solid #292530;
+    background:#0d0b13;
+    border-radius:8px;
+    padding:13px 18px;
+}
+
+.stat-number{
+    font-family:"JetBrains Mono",monospace;
+    color:#f5f3ff;
+    font-size:17px;
+}
+
+.stat-name{
+    margin-top:4px;
+    color:#625d6b;
+    font-size:10px;
+}
+
+/* SECTION */
+
+.section{
+    padding:35px 0 100px;
+}
+
+.section-header{
+    display:flex;
+    align-items:end;
+    justify-content:space-between;
+    margin-bottom:22px;
+}
+
+.section-title{
+    font-size:24px;
+    margin:0;
+    letter-spacing:-1px;
+}
+
+.section-count{
+    font-family:"JetBrains Mono",monospace;
+    color:#625d6b;
+    font-size:11px;
+}
+
+/* SITE LIST */
+
+.sites{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:14px;
+}
+
+.site{
+    position:relative;
+    padding:27px;
+    background:#0d0b13;
+    border:1px solid #292530;
+    border-radius:12px;
+    transition:.2s;
+    overflow:hidden;
+}
+
+.site::after{
+    content:"";
+    position:absolute;
+    width:180px;
+    height:180px;
+    right:-100px;
+    bottom:-110px;
+    border-radius:50%;
+    background:#7c3aed;
+    opacity:.07;
+    transition:.2s;
+}
+
+.site:hover{
+    transform:translateY(-4px);
+    border-color:#62458e;
+}
+
+.site:hover::after{
+    opacity:.13;
+}
+
+.site-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.site-number{
+    font-family:"JetBrains Mono",monospace;
+    font-size:10px;
+    color:#facc15;
+}
+
+.arrow{
+    color:#625d6b;
+    font-size:18px;
+    transition:.2s;
+}
+
+.site:hover .arrow{
+    color:#a78bfa;
+    transform:translateX(4px);
+}
+
+.site h2{
+    font-size:21px;
+    margin:22px 0 9px;
+}
+
+.site p{
+    margin:0;
+    color:#777180;
+    font-size:13px;
+    line-height:1.7;
+}
+
+.url{
+    margin-top:20px;
+    color:#514b59;
+    font-family:"JetBrains Mono",monospace;
+    font-size:10px;
+}
+
+/* SPECIAL CARD */
+
+.special{
+    border-color:#3a2c4e;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(124,58,237,.08),
+            rgba(250,204,21,.02)
+        ),
+        #0d0b13;
+}
+
+.special .site-number{
+    color:#a78bfa;
+}
+
+/* FOOTER */
+
+footer{
+    border-top:1px solid #211e28;
+    padding:28px 0;
+    color:#514b59;
+    font-family:"JetBrains Mono",monospace;
+    font-size:10px;
+}
+
+.footer-inner{
+    display:flex;
+    justify-content:space-between;
+}
+
+/* MOBILE */
+
+@media(max-width:700px){
+
+    .header-right{
+        display:none;
+    }
+
+    .hero{
+        padding-top:80px;
+    }
+
+    h1{
+        font-size:68px;
+    }
+
+    .stats{
+        flex-wrap:wrap;
+    }
+
+    .sites{
+        grid-template-columns:1fr;
+    }
+
+    .footer-inner{
+        flex-direction:column;
+        gap:8px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="container header-inner">
+
+        <a href="#" class="logo">
+            <span class="purple">FH</span><span class="yellow">PT</span>
+        </a>
+
+        <div class="header-right">
+            powered by cucu
+        </div>
+
+    </div>
+</header>
+
+
+<main>
+
+    <!-- HERO -->
+
+    <section class="hero">
+        <div class="container">
+
+            <div class="label">
+                cucu's web directory
+            </div>
+
+            <h1>
+                F<span>HPT</span>
+            </h1>
+
+            <p class="description">
+                cucu가 직접 만들고 운영하는 홈페이지와 프로젝트를
+                한곳에서 확인할 수 있는 웹 포털입니다.
+            </p>
+
+            <div class="stats">
+
+                <div class="stat">
+                    <div class="stat-number">08</div>
+                    <div class="stat-name">WEBSITES</div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-number">2026</div>
+                    <div class="stat-name">STARTED</div>
+                </div>
+
+                <div class="stat">
+                    <div class="stat-number">cucu</div>
+                    <div class="stat-name">CREATOR</div>
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+
+    <!-- WEBSITE LIST -->
+
+    <section class="section">
+
+        <div class="container">
+
+            <div class="section-header">
+
+                <h2 class="section-title">
+                    Websites
+                </h2>
+
+                <div class="section-count">
+                    08 PROJECTS
+                </div>
+
+            </div>
+
+
+            <div class="sites">
+
+
+                <!-- CLASS HOMEPAGE -->
+
+                <a
+                    class="site"
+                    href="https://cucumber555.github.io/54/index.html"
+                    target="_blank"
+                >
+
+                    <div class="site-top">
+
+                        <div class="site-number">
+                            SITE_01
+                        </div>
+
+                        <div class="arrow">
+                            →
+                        </div>
+
+                    </div>
+
+                    <h2>
+                        김밥반 홈페이지
+                    </h2>
+
+                    <p>
+                        학급 일정과 여러 활동을 확인할 수 있는
+                        개인 제작 학급 홈페이지입니다.
+                    </p>
+
+                    <div class="url">
+                        cucumber555.github.io/54/index.html
+                    </div>
+
+                </a>
+
+
+                <!-- METEOR SURVIVOR -->
+
+                <a
+                    class="site special"
+                    href="https://cucumber555.github.io/54/game.html"
+                    target="_blank"
+                >
+
+                    <div class="site-top">
+
+                        <div class="site-number">
+                            SITE_02
+                        </div>
+
+                        <div class="arrow">
+                            →
+                        </div>
+
+                    </div>
+
+                    <h2>
+                        운석 서바이버
+                    </h2>
+
+                    <p>
+                        운석을 피하며 스테이지를 클리어하는
+                        브라우저 기반 서바이벌 게임입니다.
+                    </p>
+
+                    <div class="url">
+                        cucumber555.github.io/54/game.html
+                    </div>
+
+                </a>
+
+
+                <!-- 48 -->
+
+                <a
+                    class="site"
+                    href="https://cucumber555.github.io/48/index.html"
+                    target="_blank"
+                >
+
+                    <div class="site-top">
+
+                        <div class="site-number">
+                            SITE_03
+                        </div>
+
+                        <div class="arrow">
+                            →
+                        </div>
+
+                    </div>
+
+                    <h2>
+                        행운반 홈페이지
+                    </h2>
+
+                    <p>
+                        행운반의 개인 제작 학급 홈페이지입니다.
+                    </p>
+
+                    <div class="url">
+                        cucumber555.github.io/48/index.html
+                    </div>
+
+                </a>
+
+
+                <!-- CUCU -->
+
+                <a
+                    class="site special"
+                    href="index.html"
+                    target="_blank"
+                >
+
+                    <div class="site-top">
+
+                        <div class="site-number">
+                            SITE_04
+                        </div>
+
+                        <div class="arrow">
+                            →
+                        </div>
+
+                    </div>
+
+                    <h2>
+                        cucu
+                    </h2>
+
+                    <p>
+                        cucu의 개인 홈페이지.
+                        프로젝트와 개발 활동을 소개합니다.
+                    </p>
+
+                    <div class="url">
+                        personal homepage
+                    </div>
+
+                </a>
+
+                <!-- game portal -->
+
+                <a
+                    class="site special"
+                    href="https://cucumber555.github.io/game/index.html"
+                >
+
+                    <div class="site-top">
+
+                        <div class="site-number">
+                            SITE_05
+                        </div>
+
+                        <div class="arrow">
+                            →
+                        </div>
+
+                    </div>
+
+                    <h2>
+                        GAME PORTAL
+                    </h2>
+
+                    <p>
+                        CUCU의 게임 저장소.
+                    </p>
+
+                    <div class="url">
+                        https://cucumber555.github.io/game/index.html
+                    </div>
+
+                </a>
+
+                <!-- fordifive -->
+
+                <a
+                    class="site special"
+                    href="https://cucumber555.github.io/fordifive/index.html"
+                >
+
+                    <div class="site-top">
+
+                        <div class="site-number">
+                            SITE_06
+                        </div>
+
+                        <div class="arrow">
+                            →
+                        </div>
+
+                    </div>
+
+                    <h2>
+                        ©FORDIFIVE
+                    </h2>
+
+                    <p>
+                        포디파이브의 공식 홈페이지
+                    </p>
+
+                    <div class="url">
+                        https://cucumber555.github.io/fordifive/index.html
+                    </div>
+
+                </a>
+
+                <!-- inpo -->
+
+                <a
+                    class="site special"
+                    href="https://cucumber555.github.io/inpo/index.html"
+                >
+
+                    <div class="site-top">
+
+                        <div class="site-number">
+                            SITE_07
+                        </div>
+
+                        <div class="arrow">
+                            →
+                        </div>
+
+                    </div>
+
+                    <h2>
+                        인포학당
+                    </h2>
+
+                    <p>
+                        인포학당의 공식 홈페이지
+                    </p>
+
+                    <div class="url">
+                        https://cucumber555.github.io/inpo/index.html
+                    </div>
+
+                </a>
+
+                <!-- school portal -->
+
+                <a
+                    class="site special"
+                    href="https://cucumber555.github.io"
+                >
+
+                    <div class="site-top">
+
+                        <div class="site-number">
+                            SITE_08
+                        </div>
+
+                        <div class="arrow">
+                            →
+                        </div>
+
+                    </div>
+
+                    <h2>
+                        학교 포털
+                    </h2>
+
+                    <p>
+                        학교 포털
+                    </p>
+
+                    <div class="url">
+                        https://cucumber555.github.io
+                    </div>
+
+                </a>
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<footer>
+    <div class="container footer-inner">
+
+        <div>
+            &lt;FHPT /&gt;
+        </div>
+
+        <div>
+            created by cucu
+        </div>
+
+    </div>
+</footer>
+
+</body>
+</html>

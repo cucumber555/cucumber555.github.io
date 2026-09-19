@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="icon" type="image/png" href="../54/54img/cucu.png">
+<title>CUCU — Developer</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+*{
+    box-sizing:border-box;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    margin:0;
+    background:#08070d;
+    color:#f5f3ff;
+    font-family:Inter,Arial,sans-serif;
+    overflow-x:hidden;
+}
+
+/* --------------------
+   GLOBAL
+-------------------- */
+
+a{
+    color:inherit;
+    text-decoration:none;
+}
+
+.container{
+    width:min(1120px,calc(100% - 40px));
+    margin:auto;
+}
+
+.mono{
+    font-family:"JetBrains Mono",monospace;
+}
+
+::selection{
+    background:#7c3aed;
+    color:white;
+}
+
+/* --------------------
+   HEADER
+-------------------- */
+
+header{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    z-index:100;
+    background:rgba(8,7,13,.78);
+    backdrop-filter:blur(16px);
+    border-bottom:1px solid rgba(255,255,255,.06);
+}
+
+.nav{
+    height:72px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+}
+
+.logo{
+    font-family:"JetBrains Mono",monospace;
+    font-size:21px;
+    font-weight:600;
+    letter-spacing:-1px;
+}
+
+.logo span{
+    color:#a78bfa;
+}
+
+.nav-links{
+    display:flex;
+    gap:32px;
+    color:#aaa5b8;
+    font-size:14px;
+}
+
+.nav-links a{
+    transition:.2s;
+}
+
+.nav-links a:hover{
+    color:#fff;
+}
+
+/* --------------------
+   HERO
+-------------------- */
+
+.hero{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    position:relative;
+    padding-top:72px;
+}
+
+.hero::before{
+    content:"";
+    position:absolute;
+    width:600px;
+    height:600px;
+    background:#7c3aed;
+    opacity:.10;
+    filter:blur(140px);
+    border-radius:50%;
+    top:5%;
+    left:5%;
+    pointer-events:none;
+}
+
+.hero-grid{
+    display:grid;
+    grid-template-columns:1.15fr .85fr;
+    gap:80px;
+    align-items:center;
+}
+
+.small-label{
+    color:#facc15;
+    font-family:"JetBrains Mono",monospace;
+    font-size:13px;
+    margin-bottom:22px;
+}
+
+.small-label::before{
+    content:"// ";
+    color:#6b6478;
+}
+
+h1{
+    margin:0;
+    font-size:clamp(64px,9vw,112px);
+    line-height:.9;
+    letter-spacing:-7px;
+    font-weight:800;
+}
+
+h1 .purple{
+    color:#a78bfa;
+}
+
+.hero-description{
+    margin-top:30px;
+    max-width:560px;
+    color:#aaa5b8;
+    font-size:17px;
+    line-height:1.8;
+}
+
+.hero-buttons{
+    display:flex;
+    gap:12px;
+    margin-top:34px;
+}
+
+.button{
+    padding:13px 20px;
+    border-radius:8px;
+    font-size:14px;
+    font-weight:600;
+    transition:.2s;
+}
+
+.button-primary{
+    background:#7c3aed;
+    color:white;
+}
+
+.button-primary:hover{
+    background:#8b5cf6;
+    transform:translateY(-2px);
+}
+
+.button-secondary{
+    border:1px solid #302b3b;
+    color:#c7c2d2;
+}
+
+.button-secondary:hover{
+    border-color:#7c3aed;
+    color:white;
+}
+
+/* --------------------
+   CODE CARD
+-------------------- */
+
+.code-card{
+    background:#0d0b13;
+    border:1px solid #292431;
+    border-radius:14px;
+    overflow:hidden;
+    box-shadow:
+        0 30px 80px rgba(0,0,0,.45),
+        0 0 70px rgba(124,58,237,.08);
+    transform:rotate(1deg);
+}
+
+.code-header{
+    height:42px;
+    display:flex;
+    align-items:center;
+    padding:0 15px;
+    border-bottom:1px solid #25212c;
+    background:#100e17;
+}
+
+.dot{
+    width:9px;
+    height:9px;
+    border-radius:50%;
+    background:#35303d;
+    margin-right:7px;
+}
+
+.file-name{
+    margin-left:12px;
+    color:#777180;
+    font-family:"JetBrains Mono",monospace;
+    font-size:11px;
+}
+
+.code{
+    padding:25px;
+    font-family:"JetBrains Mono",monospace;
+    font-size:13px;
+    line-height:2;
+    color:#aaa5b8;
+}
+
+.code .purple{
+    color:#a78bfa;
+}
+
+.code .yellow{
+    color:#facc15;
+}
+
+.code .green{
+    color:#86efac;
+}
+
+.code .gray{
+    color:#625d6b;
+}
+
+.code .white{
+    color:#f5f3ff;
+}
+
+/* --------------------
+   SECTION
+-------------------- */
+
+section{
+    padding:120px 0;
+}
+
+.section-label{
+    color:#facc15;
+    font-family:"JetBrains Mono",monospace;
+    font-size:12px;
+    margin-bottom:14px;
+}
+
+.section-title{
+    font-size:42px;
+    letter-spacing:-2px;
+    margin:0 0 50px;
+}
+
+/* --------------------
+   ABOUT
+-------------------- */
+
+.about-grid{
+    display:grid;
+    grid-template-columns:.8fr 1.2fr;
+    gap:70px;
+}
+
+.profile-box{
+    border:1px solid #292431;
+    background:#0d0b13;
+    border-radius:14px;
+    padding:35px;
+    min-height:260px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+}
+
+.profile-symbol{
+    width:72px;
+    height:72px;
+    border-radius:16px;
+    background:#171220;
+    border:1px solid #3b2a55;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family:"JetBrains Mono",monospace;
+    font-size:28px;
+    color:#facc15;
+}
+
+.profile-name{
+    font-size:25px;
+    font-weight:700;
+}
+
+.profile-role{
+    color:#81798c;
+    font-family:"JetBrains Mono",monospace;
+    font-size:12px;
+}
+
+.about-text{
+    color:#aaa5b8;
+    line-height:1.9;
+    font-size:16px;
+}
+
+.about-text strong{
+    color:#f5f3ff;
+}
+
+/* --------------------
+   SKILLS
+-------------------- */
+
+.skills{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+}
+
+.skill{
+    padding:10px 15px;
+    border:1px solid #292431;
+    border-radius:7px;
+    background:#0d0b13;
+    color:#aaa5b8;
+    font-family:"JetBrains Mono",monospace;
+    font-size:12px;
+    transition:.2s;
+}
+
+.skill:hover{
+    border-color:#7c3aed;
+    color:#fff;
+}
+
+/* --------------------
+   PROJECTS
+-------------------- */
+
+.projects{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:18px;
+}
+
+.project{
+    padding:30px;
+    border:1px solid #292431;
+    border-radius:14px;
+    background:#0d0b13;
+    transition:.25s;
+    position:relative;
+    overflow:hidden;
+}
+
+.project::after{
+    content:"";
+    position:absolute;
+    width:120px;
+    height:120px;
+    background:#7c3aed;
+    opacity:.05;
+    border-radius:50%;
+    right:-40px;
+    bottom:-40px;
+}
+
+.project:hover{
+    transform:translateY(-5px);
+    border-color:#513879;
+}
+
+.project-number{
+    color:#facc15;
+    font-family:"JetBrains Mono",monospace;
+    font-size:11px;
+}
+
+.project h3{
+    margin:18px 0 12px;
+    font-size:22px;
+}
+
+.project p{
+    color:#81798c;
+    line-height:1.7;
+    font-size:14px;
+}
+
+.project-tech{
+    display:flex;
+    gap:7px;
+    flex-wrap:wrap;
+    margin-top:22px;
+}
+
+.project-tech span{
+    font-family:"JetBrains Mono",monospace;
+    font-size:10px;
+    color:#a78bfa;
+    background:#171220;
+    padding:6px 8px;
+    border-radius:5px;
+}
+
+/* --------------------
+   CONTACT
+-------------------- */
+
+.contact-box{
+    border:1px solid #30253e;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(124,58,237,.10),
+            rgba(250,204,21,.025)
+        );
+    border-radius:16px;
+    padding:55px;
+    text-align:center;
+}
+
+.contact-box h2{
+    font-size:38px;
+    letter-spacing:-2px;
+    margin:0 0 15px;
+}
+
+.contact-box p{
+    color:#8d8798;
+    margin-bottom:30px;
+}
+
+/* --------------------
+   FOOTER
+-------------------- */
+
+footer{
+    border-top:1px solid #1e1b24;
+    padding:30px 0;
+    color:#5f5967;
+    font-family:"JetBrains Mono",monospace;
+    font-size:11px;
+}
+
+.footer-inner{
+    display:flex;
+    justify-content:space-between;
+}
+
+/* --------------------
+   RESPONSIVE
+-------------------- */
+
+@media(max-width:800px){
+
+    .nav-links{
+        display:none;
+    }
+
+    .hero{
+        padding-top:110px;
+    }
+
+    .hero-grid{
+        grid-template-columns:1fr;
+        gap:55px;
+    }
+
+    h1{
+        font-size:70px;
+    }
+
+    .code-card{
+        transform:none;
+    }
+
+    .about-grid{
+        grid-template-columns:1fr;
+    }
+
+    .projects{
+        grid-template-columns:1fr;
+    }
+
+    .contact-box{
+        padding:35px 20px;
+    }
+
+    .contact-box h2{
+        font-size:30px;
+    }
+
+    .footer-inner{
+        flex-direction:column;
+        gap:10px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="container nav">
+        <a href="#" class="logo">
+            <span>&lt;</span>cucu<span>/&gt;</span>
+        </a>
+
+        <nav class="nav-links">
+            <a href="#about">ABOUT</a>
+            <a href="#projects">PROJECTS</a>
+            <a href="#skills">SKILLS</a>
+            <a href="#contact">CONTACT</a>
+        </nav>
+    </div>
+</header>
+
+
+<main>
+
+<!-- HERO -->
+<section class="hero">
+    <div class="container hero-grid">
+
+        <div>
+            <div class="small-label">developer & creator</div>
+
+            <h1>
+                I'm<br>
+                <span class="purple">cucu</span>.
+            </h1>
+
+            <p class="hero-description">
+                코드를 만들고, 게임을 만들고,
+                새로운 아이디어를 직접 구현하는 개발자입니다.
+                작은 아이디어도 실제로 작동하는 프로젝트로 만들어갑니다.
+            </p>
+
+            <div class="hero-buttons">
+                <a href="#projects" class="button button-primary">
+                    프로젝트 보기
+                </a>
+
+                <a href="#about" class="button button-secondary">
+                    더 알아보기
+                </a>
+            </div>
+        </div>
+
+
+        <div class="code-card">
+
+            <div class="code-header">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+
+                <div class="file-name">
+                    cucu.js
+                </div>
+            </div>
+
+            <div class="code">
+
+                <span class="purple">const</span>
+                <span class="white"> cucu</span>
+                = {
+
+                <br>
+
+                &nbsp;&nbsp;
+                <span class="yellow">name</span>:
+                <span class="green">"cucu"</span>,
+
+                <br>
+
+                &nbsp;&nbsp;
+                <span class="yellow">type</span>:
+                <span class="green">"developer"</span>,
+
+                <br>
+
+                &nbsp;&nbsp;
+                <span class="yellow">color</span>: [
+                <span class="green">"purple"</span>,
+                <span class="green">"yellow"</span>
+                ],
+
+                <br>
+
+                &nbsp;&nbsp;
+                <span class="yellow">focus</span>: [
+                <span class="green">"code"</span>,
+                <span class="green">"games"</span>
+                ],
+
+                <br>
+
+                &nbsp;&nbsp;
+                <span class="yellow">status</span>:
+                <span class="green">"building"</span>
+
+                <br>
+
+                };
+
+                <br><br>
+
+                <span class="gray">
+                // always building something new
+                </span>
+
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+
+<!-- ABOUT -->
+<section id="about">
+    <div class="container">
+
+        <div class="section-label">
+            01 / ABOUT
+        </div>
+
+        <h2 class="section-title">
+            About cucu
+        </h2>
+
+        <div class="about-grid">
+
+            <div class="profile-box">
+
+                <div class="profile-symbol">
+                    &lt;/&gt;
+                </div>
+
+                <div>
+                    <div class="profile-name">
+                        cucu
+                    </div>
+
+                    <div class="profile-role">
+                        developer / creator
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="about-text">
+
+                <p>
+                    <strong>cucu</strong>는 코딩과 새로운 것을 만드는 것을
+                    좋아하는 개발자입니다.
+                </p>
+
+                <p>
+                    웹사이트부터 게임까지 직접 만들면서
+                    아이디어를 실제 프로젝트로 구현하고 있습니다.
+                </p>
+
+                <p>
+                    완성된 결과만 만드는 것보다
+                    새로운 기능을 시도하고 직접 문제를 해결하는
+                    과정을 중요하게 생각합니다.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+</section>
+
+
+<!-- PROJECTS -->
+<section id="projects">
+    <div class="container">
+
+        <div class="section-label">
+            02 / PROJECTS
+        </div>
+
+        <h2 class="section-title">
+            Things I've built
+        </h2>
+
+        <div class="projects">
+
+            <a href="../game/index.html" class="project">
+
+                <div class="project-number">
+                    PROJECT_01
+                </div>
+
+                <h3>
+                    GAMES
+                </h3>
+
+                <p>
+                    THE GAMES THAT CUCU MADE
+                </p>
+
+                <div class="project-tech">
+                    <span>HTML</span>
+                    <span>CSS</span>
+                    <span>JavaScript</span>
+                </div>
+
+            </a>
+
+
+            <a href="../index.html" class="project">
+
+                <div class="project-number">
+                    PROJECT_02
+                </div>
+
+                <h3>
+                    Class Homepage
+                </h3>
+
+                <p>
+                    직접 제작한 학급 홈페이지.
+                    일정, 게임, 여러 페이지를 하나의 사이트로 구성.
+                </p>
+
+                <div class="project-tech">
+                    <span>HTML</span>
+                    <span>CSS</span>
+                    <span>JavaScript</span>
+                </div>
+
+            </a>
+
+
+            <a href="../54/multiplayer.html" class="project">
+
+                <div class="project-number">
+                    PROJECT_03
+                </div>
+
+                <h3>
+                    Multiplayer
+                </h3>
+
+                <p>
+                    실시간 통신을 활용한
+                    브라우저 멀티플레이 게임 프로젝트.
+                </p>
+
+                <div class="project-tech">
+                    <span>JavaScript</span>
+                    <span>Supabase</span>
+                    <span>Realtime</span>
+                </div>
+
+            </a>
+
+
+            <a href="list.html" class="project">
+
+                <div class="project-number">
+                    PROJECT_04
+                </div>
+
+                <h3>
+                    More coming soon
+                </h3>
+
+                <p>
+                    새로운 아이디어를 구현하는 중입니다.
+                    다음 프로젝트가 이곳에 추가됩니다.
+                </p>
+
+                <div class="project-tech">
+                    <span>BUILDING</span>
+                </div>
+
+            </a>
+
+        </div>
+
+    </div>
+</section>
+
+
+<!-- SKILLS -->
+<section id="skills">
+    <div class="container">
+
+        <div class="section-label">
+            03 / SKILLS
+        </div>
+
+        <h2 class="section-title">
+            Tech stack
+        </h2>
+
+        <div class="skills">
+
+            <div class="skill">HTML</div>
+            <div class="skill">CSS</div>
+            <div class="skill">JavaScript</div>
+            <div class="skill">Python</div>
+            <div class="skill">C</div>
+            <div class="skill">Supabase</div>
+            <div class="skill">GitHub</div>
+            <div class="skill">GitHub Pages</div>
+
+        </div>
+
+    </div>
+</section>
+
+
+<!-- CONTACT -->
+<section id="contact">
+    <div class="container">
+
+        <div class="contact-box">
+
+            <h2>
+                Let's build something.
+            </h2>
+
+            <p>
+                새로운 프로젝트와 아이디어를 만들어가는 중입니다.
+            </p>
+
+            <a href="mailto: mr.cucumber5794@gmail.com" class="button button-primary">
+                Contact cucu
+            </a>
+
+        </div>
+
+    </div>
+</section>
+
+</main>
+
+
+<footer>
+    <div class="container footer-inner">
+
+        <div>
+            &lt;cucu /&gt;
+        </div>
+
+        <div>
+            © 2026 cucu. All rights reserved.
+        </div>
+
+    </div>
+</footer>
+
+</body>
+</html>
