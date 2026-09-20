@@ -282,8 +282,27 @@ line-height:1.5
 
 .comment-form{
 margin-top:18px;
-display:flex;
-gap:8px
+display:grid;
+grid-template-columns:180px minmax(0,1fr) auto;
+gap:8px;
+align-items:stretch;
+width:100%
+}
+
+.comment-form input{min-width:0}
+
+.comment-form textarea{
+min-width:0;
+width:100%;
+min-height:75px;
+height:75px;
+resize:vertical;
+display:block
+}
+
+.comment-form button{
+height:75px;
+white-space:nowrap
 }
 
 .comment-form textarea{
@@ -343,7 +362,16 @@ margin:10px auto
 }
 
 .comment-form{
-flex-direction:column
+grid-template-columns:1fr
+}
+
+.comment-form textarea{
+height:110px;
+min-height:110px
+}
+
+.comment-form button{
+height:auto
 }
 
 .search-area{
@@ -624,12 +652,14 @@ onclick="deletePost()">
 
 <h3>댓글</h3>
 
+<div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button type="button" class="secondary" style="padding:7px 10px;font-size:12px" onclick="loadComments(currentPostId)">댓글 새로고침</button></div>
 <div id="commentList">
 <div class="loading">
 댓글을 불러오는 중...
 </div>
 </div>
 
+<div style="font-size:13px;color:#62748a;margin-bottom:8px;font-weight:700">댓글 작성</div>
 <div class="comment-form">
 
 <input
@@ -758,6 +788,48 @@ onkeydown="if(event.key==='Enter')adminLogin()">
 </div>
 </div>
 
+
+<!-- 관리자 -->
+<div class="modal-bg" id="adminModal">
+<div class="modal">
+<div class="modal-header">
+<h2>관리자</h2>
+<button class="close" onclick="closeModal('adminModal')">×</button>
+</div>
+<div class="modal-body" id="adminBody">
+<div class="form-group">
+<label>관리자 비밀번호</label>
+<input id="adminPassword" type="password" maxlength="100" placeholder="관리자 비밀번호">
+</div>
+<div class="form-actions">
+<button class="secondary" onclick="closeModal('adminModal')">취소</button>
+<button class="primary" onclick="adminLogin()">로그인</button>
+</div>
+</div>
+</div>
+</div>
+
+<div class="modal-bg" id="adminManageModal">
+<div class="modal">
+<div class="modal-header">
+<h2>관리자 관리</h2>
+<button class="close" onclick="closeModal('adminManageModal')">×</button>
+</div>
+<div class="modal-body">
+<p style="color:#718096;font-size:14px;margin-top:0">
+관리자 모드에서는 게시글과 댓글을 강제로 삭제할 수 있습니다.
+</p>
+<div id="adminPostList">
+<div class="loading">불러오는 중...</div>
+</div>
+<div class="form-actions">
+<button class="secondary" onclick="adminLogout()">로그아웃</button>
+<button class="secondary" onclick="closeModal('adminManageModal')">닫기</button>
+</div>
+</div>
+</div>
+</div>
+
 <div class="status" id="status"></div>
 
 
@@ -777,6 +849,7 @@ SUPABASE_KEY
 
 let currentPostId=null;
 let currentPost=null;
+let isAdmin=false;
 let adminPassword=null;
 
 
@@ -1224,110 +1297,93 @@ loadPosts();
 async function loadComments(postId){
 
 const box=document.getElementById("commentList");
+if(!box)return false;
 
-const {data,error}=await db
+box.innerHTML='<div class="loading">댓글을 불러오는 중...</div>';
+
+const result=await db
 .from("nugu_comments")
-.select("*")
+.select("id,post_id,author,content,created_at")
 .eq("post_id",postId)
 .order("created_at",{ascending:true});
 
-if(error){
-
-box.innerHTML=
-`<div class="empty">
-댓글을 불러오지 못했습니다.
-</div>`;
-
-return;
-
+if(result.error){
+console.error("댓글 조회 오류:",result.error);
+box.innerHTML='<div class="empty">댓글을 불러오지 못했습니다.<br><small>'+
+escapeHTML(result.error.message)+'</small></div>';
+return false;
 }
 
-if(!data.length){
+const comments=result.data||[];
 
-box.innerHTML=
-`<div style="color:#8997a8;padding:15px 0">
-아직 댓글이 없습니다.
-</div>`;
-
-return;
-
+if(comments.length===0){
+box.innerHTML='<div class="empty">아직 댓글이 없습니다.</div>';
+return true;
 }
 
-box.innerHTML=data.map(comment=>`
-
+box.innerHTML=comments.map(c=>`
 <div class="comment">
-
-<div class="comment-meta">
-${escapeHTML(comment.author)}
-·
-${formatDate(comment.created_at)}
+  <div class="comment-meta">
+    ${escapeHTML(c.author||"익명")} · ${formatDate(c.created_at)}
+    ${isAdmin ? `<button type="button" class="danger" style="padding:4px 8px;font-size:11px;margin-left:6px" onclick="adminDeleteComment(${c.id})">삭제</button>` : ""}
+  </div>
+  <div class="comment-content">${escapeHTML(c.content||"")}</div>
 </div>
-
-<div class="comment-content">
-${escapeHTML(comment.content)}
-</div>
-
-</div>
-
 `).join("");
 
+return true;
 }
-
 
 async function createComment(){
 
-if(!currentPostId)return;
+if(!currentPostId){
+alert("게시글을 먼저 선택해주세요.");
+return;
+}
 
-const author=
-document.getElementById("commentAuthor").value.trim();
+const authorEl=document.getElementById("commentAuthor");
+const contentEl=document.getElementById("commentContent");
 
-const content=
-document.getElementById("commentContent").value.trim();
+const author=(authorEl?.value||"").trim();
+const content=(contentEl?.value||"").trim();
 
 if(!author){
-
 alert("작성자를 입력해주세요.");
+authorEl?.focus();
 return;
-
 }
 
 if(!content){
-
-alert("댓글을 입력해주세요.");
+alert("댓글 내용을 입력해주세요.");
+contentEl?.focus();
 return;
-
 }
 
+const payload={
+post_id:Number(currentPostId),
+author:author,
+content:content
+};
+
+console.log("댓글 등록 요청:",payload);
 
 const {error}=await db
 .from("nugu_comments")
-.insert({
-post_id:currentPostId,
-author,
-content
-});
+.insert(payload);
 
 if(error){
-
-alert(
-"댓글 등록에 실패했습니다.\n\n"+
-error.message
-);
-
+console.error("댓글 등록 오류:",error);
+alert("댓글 등록에 실패했습니다.\n\n"+error.message);
 return;
-
 }
 
-
-document.getElementById("commentAuthor").value="";
-document.getElementById("commentContent").value="";
+authorEl.value="";
+contentEl.value="";
 
 showStatus("댓글이 등록되었습니다.");
-
-loadComments(currentPostId);
+await loadComments(currentPostId);
 
 }
-
 
 async function searchPosts(){
 
