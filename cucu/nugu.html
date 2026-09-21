@@ -493,7 +493,7 @@ align-items:flex-start;
 
 <header>
 <div class="header-inner">
-<a class="logo" href="nugu.html" aria-label="홈으로 이동">
+<a class="logo" href="index.html" aria-label="홈으로 이동">
 <span>NUGU</span> 자유게시판
 </a>
 
@@ -788,47 +788,6 @@ onkeydown="if(event.key==='Enter')adminLogin()">
 </div>
 </div>
 
-
-<!-- 관리자 -->
-<div class="modal-bg" id="adminModal">
-<div class="modal">
-<div class="modal-header">
-<h2>관리자</h2>
-<button class="close" onclick="closeModal('adminModal')">×</button>
-</div>
-<div class="modal-body" id="adminBody">
-<div class="form-group">
-<label>관리자 비밀번호</label>
-<input id="adminPassword" type="password" maxlength="100" placeholder="관리자 비밀번호">
-</div>
-<div class="form-actions">
-<button class="secondary" onclick="closeModal('adminModal')">취소</button>
-<button class="primary" onclick="adminLogin()">로그인</button>
-</div>
-</div>
-</div>
-</div>
-
-<div class="modal-bg" id="adminManageModal">
-<div class="modal">
-<div class="modal-header">
-<h2>관리자 관리</h2>
-<button class="close" onclick="closeModal('adminManageModal')">×</button>
-</div>
-<div class="modal-body">
-<p style="color:#718096;font-size:14px;margin-top:0">
-관리자 모드에서는 게시글과 댓글을 강제로 삭제할 수 있습니다.
-</p>
-<div id="adminPostList">
-<div class="loading">불러오는 중...</div>
-</div>
-<div class="form-actions">
-<button class="secondary" onclick="adminLogout()">로그아웃</button>
-<button class="secondary" onclick="closeModal('adminManageModal')">닫기</button>
-</div>
-</div>
-</div>
-</div>
 
 <div class="status" id="status"></div>
 
@@ -1359,21 +1318,20 @@ contentEl?.focus();
 return;
 }
 
-const payload={
-post_id:Number(currentPostId),
-author:author,
-content:content
-};
-
-console.log("댓글 등록 요청:",payload);
-
-const {error}=await db
-.from("nugu_comments")
-.insert(payload);
+const {data,error}=await db.rpc("nugu_create_comment",{
+p_post_id:Number(currentPostId),
+p_author:author,
+p_content:content
+});
 
 if(error){
-console.error("댓글 등록 오류:",error);
+console.error("댓글 등록 RPC 오류:",error);
 alert("댓글 등록에 실패했습니다.\n\n"+error.message);
+return;
+}
+
+if(!data){
+alert("댓글 등록에 실패했습니다.");
 return;
 }
 
