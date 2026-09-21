@@ -9,159 +9,148 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-
 *{
     box-sizing:border-box;
 }
 
-body{
+html,body{
     margin:0;
+    padding:0;
     font-family:Arial,"Noto Sans KR",sans-serif;
-    background:#f5f9ff;
-    color:#17233b;
+    background:#f4f7fc;
+    color:#17233d;
 }
 
-header{
-    height:70px;
-    background:#ffd600;
+button,
+input,
+textarea{
+    font-family:inherit;
+}
+
+button{
+    cursor:pointer;
+}
+
+.header{
+    height:68px;
+    background:#123d8d;
+    color:white;
     display:flex;
     align-items:center;
     justify-content:space-between;
-    padding:0 30px;
-    box-shadow:0 2px 10px rgba(0,0,0,.08);
+    padding:0 24px;
     position:sticky;
     top:0;
     z-index:100;
+    box-shadow:0 2px 10px rgba(0,0,0,.12);
 }
 
 .logo{
-    font-size:28px;
-    font-weight:900;
-    color:#123d8d;
+    font-size:25px;
+    font-weight:800;
+    color:#ffd600;
     cursor:pointer;
+    user-select:none;
 }
 
 .header-right{
     display:flex;
-    gap:10px;
     align-items:center;
+    gap:10px;
 }
 
-button{
+.user-name{
+    font-size:14px;
+    font-weight:600;
+}
+
+.btn{
     border:0;
-    border-radius:10px;
-    padding:11px 17px;
+    border-radius:9px;
+    padding:9px 14px;
     font-size:14px;
     font-weight:700;
-    cursor:pointer;
+    background:white;
+    color:#123d8d;
 }
 
-button:disabled{
-    opacity:.5;
-    cursor:not-allowed;
+.btn:hover{
+    opacity:.9;
 }
 
-.primary{
-    background:#123d8d;
-    color:white;
-}
-
-.yellow{
+.btn-yellow{
     background:#ffd600;
     color:#123d8d;
 }
 
-.white{
-    background:white;
-    color:#123d8d;
-    border:1px solid #dce4ef;
-}
-
-.danger{
-    background:#d9363e;
+.btn-blue{
+    background:#123d8d;
     color:white;
 }
 
-.success{
-    background:#16803c;
+.btn-danger{
+    background:#e53935;
     color:white;
 }
 
 .container{
-    width:min(1150px,94%);
-    margin:35px auto 70px;
+    width:min(1100px,calc(100% - 30px));
+    margin:25px auto 60px;
 }
 
 .hero{
-    background:#123d8d;
-    color:white;
-    border-radius:22px;
-    padding:45px;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:30px;
+    background:white;
+    border-radius:18px;
+    padding:28px;
+    box-shadow:0 4px 18px rgba(0,0,0,.07);
+    margin-bottom:20px;
 }
 
 .hero h1{
-    margin:0 0 12px;
-    font-size:42px;
+    margin:0 0 8px;
+    font-size:30px;
 }
 
 .hero p{
     margin:0;
-    opacity:.9;
-    line-height:1.7;
+    color:#64748b;
 }
 
-.hero-buttons{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
+.grid{
+    display:grid;
+    grid-template-columns:280px 1fr;
+    gap:20px;
 }
 
 .card{
     background:white;
-    border-radius:18px;
-    padding:25px;
-    box-shadow:0 5px 20px rgba(20,50,100,.08);
+    border-radius:16px;
+    box-shadow:0 4px 18px rgba(0,0,0,.06);
+    padding:20px;
+    margin-bottom:20px;
 }
 
 .card h2{
-    margin-top:0;
-    color:#123d8d;
-}
-
-.card p{
-    color:#65748a;
-    line-height:1.6;
-}
-
-#loginArea{
-    text-align:center;
-    margin-top:35px;
-}
-
-#userArea{
-    display:none;
+    margin:0 0 15px;
+    font-size:19px;
 }
 
 .profile{
-    display:flex;
-    align-items:center;
-    gap:15px;
+    text-align:center;
 }
 
 .avatar{
-    width:55px;
-    height:55px;
+    width:76px;
+    height:76px;
     border-radius:50%;
     background:#ffd600;
     display:flex;
-    justify-content:center;
     align-items:center;
-    font-weight:900;
+    justify-content:center;
+    margin:0 auto 12px;
     color:#123d8d;
+    font-size:28px;
+    font-weight:800;
     overflow:hidden;
 }
 
@@ -171,82 +160,102 @@ button:disabled{
     object-fit:cover;
 }
 
-.section{
-    margin-top:30px;
+.profile-name{
+    font-weight:800;
+    font-size:18px;
 }
 
-.grid{
-    margin-top:25px;
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:20px;
+.profile-id{
+    margin-top:5px;
+    color:#64748b;
+    font-size:13px;
 }
 
-.search-box{
+.admin-badge{
+    display:inline-block;
+    background:#ffd600;
+    color:#123d8d;
+    padding:3px 8px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:800;
+    margin-left:6px;
+}
+
+.menu{
     display:flex;
+    flex-direction:column;
     gap:8px;
 }
 
-input,
-textarea,
-select{
+.menu button{
     width:100%;
-    padding:13px;
-    border:1px solid #dce4ef;
-    border-radius:10px;
-    font-size:15px;
-    outline:none;
+    padding:12px;
+    border:0;
+    border-radius:9px;
+    background:#f1f5f9;
+    color:#17233d;
+    text-align:left;
+    font-weight:700;
+}
+
+.menu button:hover{
+    background:#e7edf6;
+}
+
+.login-box{
+    text-align:center;
+}
+
+.login-box p{
+    color:#64748b;
+    line-height:1.6;
+}
+
+.google-btn{
+    width:100%;
+    border:1px solid #d8dee8;
     background:white;
+    padding:12px;
+    border-radius:10px;
+    font-weight:700;
+    color:#17233d;
 }
 
-textarea{
-    min-height:110px;
+.post-form textarea{
+    width:100%;
+    min-height:100px;
     resize:vertical;
+    border:1px solid #d8dee8;
+    border-radius:11px;
+    padding:13px;
+    outline:none;
+    font-size:15px;
 }
 
-input:focus,
-textarea:focus,
-select:focus{
+.post-form textarea:focus{
     border-color:#123d8d;
 }
 
-.result{
-    margin-top:15px;
-}
-
-.user-result{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    padding:15px 0;
-    border-bottom:1px solid #edf0f5;
-}
-
-.user-actions{
-    display:flex;
-    gap:6px;
-    flex-wrap:wrap;
-}
-
-.request-item{
-    padding:15px 0;
-    border-bottom:1px solid #edf0f5;
-}
-
-.request-actions{
-    display:flex;
-    gap:7px;
+.file-row{
     margin-top:10px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+}
+
+.file-input{
+    font-size:13px;
+    max-width:100%;
 }
 
 .post{
-    border-top:1px solid #edf0f5;
-    padding:20px 0;
-}
-
-.post:first-child{
-    border-top:0;
+    border:1px solid #e3e8f0;
+    border-radius:14px;
+    padding:17px;
+    margin-bottom:14px;
+    background:white;
 }
 
 .post-header{
@@ -254,483 +263,461 @@ select:focus{
     align-items:center;
     justify-content:space-between;
     gap:10px;
+    margin-bottom:12px;
 }
 
 .post-user{
-    font-weight:700;
+    display:flex;
+    align-items:center;
+    gap:10px;
 }
 
-.post-username{
-    color:#718096;
-    font-size:13px;
+.small-avatar{
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    overflow:hidden;
+    background:#ffd600;
+    color:#123d8d;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-weight:800;
+}
+
+.small-avatar img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.post-meta{
+    font-size:12px;
+    color:#8490a3;
     margin-top:3px;
 }
 
-.post-visibility{
-    display:inline-block;
-    margin-top:8px;
-    padding:5px 9px;
+.post-actions{
+    display:flex;
+    gap:6px;
+}
+
+.delete-btn{
+    border:0;
     border-radius:7px;
-    background:#eef3f9;
-    color:#123d8d;
+    padding:7px 10px;
+    background:#fee2e2;
+    color:#c62828;
     font-size:12px;
-    font-weight:bold;
+    font-weight:700;
+}
+
+.delete-btn:hover{
+    background:#fecaca;
 }
 
 .post-content{
     white-space:pre-wrap;
-    line-height:1.7;
-    margin:14px 0;
+    line-height:1.6;
+    font-size:15px;
+    margin-bottom:10px;
 }
 
 .post-media{
-    max-width:100%;
-    max-height:450px;
-    border-radius:12px;
     margin-top:12px;
+}
+
+.post-media img,
+.post-media video{
     display:block;
+    width:100%;
+    max-height:500px;
+    object-fit:contain;
+    border-radius:10px;
+    background:#f1f5f9;
+}
+
+.more-wrap{
+    text-align:center;
+    margin-top:12px;
+}
+
+.more-btn{
+    border:0;
+    background:#123d8d;
+    color:white;
+    border-radius:9px;
+    padding:11px 18px;
+    font-weight:700;
+}
+
+.empty{
+    padding:35px 10px;
+    text-align:center;
+    color:#8994a6;
+}
+
+.friend-row{
+    display:flex;
+    gap:8px;
+    margin-bottom:10px;
+}
+
+.friend-row input{
+    flex:1;
+    min-width:0;
+    border:1px solid #d8dee8;
+    border-radius:9px;
+    padding:10px;
+}
+
+.friend-list{
+    margin-top:12px;
+}
+
+.friend-item{
+    padding:10px;
+    border-radius:9px;
+    background:#f7f9fc;
+    margin-bottom:7px;
 }
 
 .chat-box{
-    height:350px;
+    border:1px solid #dce2eb;
+    border-radius:12px;
+    overflow:hidden;
+}
+
+.chat-messages{
+    height:300px;
     overflow-y:auto;
-    border:1px solid #e0e6ee;
-    border-radius:14px;
-    padding:15px;
-    background:#fafcff;
+    padding:12px;
+    background:#f7f9fc;
 }
 
 .message{
-    padding:10px 14px;
-    margin:7px 0;
-    border-radius:12px;
-    max-width:75%;
-    white-space:pre-wrap;
-    word-break:break-word;
+    margin-bottom:8px;
+    max-width:80%;
 }
 
-.my-message{
+.message.mine{
+    margin-left:auto;
+    text-align:right;
+}
+
+.message-bubble{
+    display:inline-block;
+    padding:9px 12px;
+    border-radius:12px;
+    background:white;
+    border:1px solid #e1e6ee;
+}
+
+.message.mine .message-bubble{
     background:#123d8d;
     color:white;
-    margin-left:auto;
-}
-
-.other-message{
-    background:#eef3f9;
+    border-color:#123d8d;
 }
 
 .chat-input{
     display:flex;
-    gap:8px;
-    margin-top:10px;
+    border-top:1px solid #dce2eb;
 }
 
-.chat-status{
-    color:#718096;
-    font-size:13px;
-    margin:8px 0 12px;
+.chat-input input{
+    flex:1;
+    border:0;
+    padding:12px;
+    outline:none;
 }
 
-.empty{
-    color:#718096;
-    padding:15px 0;
+.chat-input button{
+    border:0;
+    background:#ffd600;
+    color:#123d8d;
+    font-weight:800;
+    padding:0 18px;
 }
 
 .hidden{
-    display:none!important;
+    display:none !important;
 }
 
 .notice{
-    padding:12px 15px;
-    background:#f0f5ff;
-    color:#123d8d;
+    background:#fff8d8;
+    border:1px solid #ffe477;
+    color:#685700;
+    padding:12px;
     border-radius:10px;
-    margin-top:15px;
-}
-
-.modal{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.55);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    z-index:9999;
-    padding:20px;
-}
-
-.modal-box{
-    width:min(430px,100%);
-    background:white;
-    border-radius:20px;
-    padding:30px;
-    box-shadow:0 20px 60px rgba(0,0,0,.25);
-}
-
-.modal-box h2{
-    margin-top:0;
-    color:#123d8d;
-}
-
-.modal-box p{
-    color:#66758a;
-    line-height:1.6;
-}
-
-.username-check{
-    margin-top:8px;
-    min-height:20px;
     font-size:13px;
-}
-
-.loading{
-    color:#718096;
+    line-height:1.5;
+    margin-bottom:15px;
 }
 
 @media(max-width:800px){
-
-    header{
-        padding:0 15px;
-    }
-
-    .header-right{
-        gap:5px;
-    }
-
-    .header-right button{
-        padding:9px 10px;
-        font-size:12px;
-    }
-
     .grid{
         grid-template-columns:1fr;
     }
 
-    .hero{
-        flex-direction:column;
-        align-items:flex-start;
-        padding:30px;
+    .header{
+        padding:0 14px;
     }
 
-    .hero h1{
-        font-size:32px;
+    .user-name{
+        display:none;
     }
 
     .container{
-        width:94%;
+        width:min(100% - 20px,1100px);
+        margin-top:15px;
     }
 
-    .user-result{
-        align-items:flex-start;
-        flex-direction:column;
-    }
-
-    .chat-input{
-        flex-direction:column;
+    .hero{
+        padding:20px;
     }
 }
-
 </style>
 </head>
 
 <body>
 
-<header>
+<header class="header">
 
-    <div
-        class="logo"
-        onclick="location.href='index.html'">
+    <div class="logo" onclick="goHome()">
         NUGU
     </div>
 
     <div class="header-right">
+        <span id="headerUser" class="user-name"></span>
 
-        <button
-            class="white"
-            onclick="location.href='nugu.html'">
-            자유게시판
-        </button>
-
-        <button
-            id="loginButton"
-            class="primary"
-            onclick="loginWithGoogle()">
+        <button id="loginHeaderBtn"
+                class="btn btn-yellow"
+                onclick="loginWithGoogle()">
             Google 로그인
         </button>
 
-        <button
-            id="logoutButton"
-            class="white hidden"
-            onclick="logout()">
+        <button id="logoutBtn"
+                class="btn hidden"
+                onclick="logout()">
             로그아웃
         </button>
-
     </div>
 
 </header>
 
 
-<div class="container">
+<main class="container">
 
     <section class="hero">
-
-        <div>
-
-            <h1>NUGU</h1>
-
-            <p>
-                사람과 사람을 연결하는 NUGU.<br>
-                친구를 찾고 이야기를 나누고 사진과 영상을 공유하세요.
-            </p>
-
-        </div>
-
-        <div class="hero-buttons">
-
-            <button
-                class="yellow"
-                onclick="location.href='nugu.html'">
-                NUGU 자유게시판
-            </button>
-
-            <button
-                class="white"
-                onclick="document.getElementById('loginArea').scrollIntoView()">
-                시작하기
-            </button>
-
-        </div>
-
+        <h1>NUGU</h1>
+        <p>친구들과 글과 사진, 동영상을 공유하고 이야기를 나눌 수 있는 공간입니다.</p>
     </section>
 
 
-    <section id="loginArea">
-
-        <div class="card">
-
-            <h2>NUGU 시작하기</h2>
-
-            <p>
-                Google 계정으로 로그인하면<br>
-                친구 추가, 1:1 채팅, 게시물 공유 기능을 사용할 수 있습니다.
-            </p>
-
-            <button
-                class="primary"
-                onclick="loginWithGoogle()">
-                Google로 로그인
-            </button>
-
-        </div>
-
-    </section>
+    <div id="loginNotice" class="notice hidden">
+        게시물을 작성하거나 친구를 추가하려면 Google 로그인이 필요합니다.
+    </div>
 
 
-    <section id="userArea">
+    <div class="grid">
 
-        <!-- 프로필 -->
+        <!-- 왼쪽 -->
+        <aside>
 
-        <div class="card section">
+            <div id="profileCard" class="card hidden">
 
-            <div class="profile">
+                <div class="profile">
 
-                <div
-                    class="avatar"
-                    id="avatar">
-                    N
+                    <div id="profileAvatar" class="avatar">
+                        N
+                    </div>
+
+                    <div id="profileName" class="profile-name">
+                        -
+                    </div>
+
+                    <div id="profileId" class="profile-id">
+                        -
+                    </div>
+
                 </div>
 
-                <div>
+                <hr style="border:0;border-top:1px solid #edf0f4;margin:18px 0;">
 
-                    <strong id="displayName">
-                        사용자
-                    </strong>
+                <div class="menu">
 
-                    <div id="usernameText"></div>
+                    <button onclick="openFreeBoard()">
+                        NUGU 자유게시판
+                    </button>
+
+                    <button onclick="scrollToPosts()">
+                        피드
+                    </button>
+
+                    <button onclick="scrollToFriends()">
+                        친구
+                    </button>
+
+                    <button onclick="scrollToChat()">
+                        채팅
+                    </button>
 
                 </div>
 
             </div>
 
-        </div>
 
+            <div id="loginCard" class="card login-box">
 
-        <!-- 친구 관련 -->
-
-        <div class="grid">
-
-            <div class="card">
-
-                <h2>친구 찾기</h2>
+                <h2>로그인</h2>
 
                 <p>
-                    NUGU 아이디를 검색해서 친구 요청을 보낼 수 있습니다.
+                    Google 계정으로 로그인하면<br>
+                    NUGU를 이용할 수 있습니다.
                 </p>
 
-                <div class="search-box">
+                <button class="google-btn"
+                        onclick="loginWithGoogle()">
+                    Google로 로그인
+                </button>
+
+            </div>
+
+
+            <div id="friendsCard" class="card hidden">
+
+                <h2>친구</h2>
+
+                <div class="friend-row">
 
                     <input
                         id="friendSearch"
-                        placeholder="NUGU 아이디">
+                        type="text"
+                        placeholder="아이디 검색"
+                    >
 
-                    <button
-                        class="primary"
-                        onclick="searchUser()">
+                    <button class="btn btn-blue"
+                            onclick="searchUser()">
                         검색
                     </button>
 
                 </div>
 
-                <div
-                    id="searchResult"
-                    class="result">
+                <div id="friendSearchResult"></div>
+
+                <div id="friendList" class="friend-list"></div>
+
+            </div>
+
+        </aside>
+
+
+        <!-- 오른쪽 -->
+        <section>
+
+            <div id="postFormCard" class="card hidden">
+
+                <h2>게시물 작성</h2>
+
+                <div class="post-form">
+
+                    <textarea
+                        id="postContent"
+                        placeholder="무슨 이야기를 하고 싶나요?"
+                    ></textarea>
+
+                    <div class="file-row">
+
+                        <input
+                            id="postFile"
+                            class="file-input"
+                            type="file"
+                            accept="image/*,video/*"
+                        >
+
+                        <button class="btn btn-yellow"
+                                onclick="createPost()">
+                            게시
+                        </button>
+
+                    </div>
+
                 </div>
 
             </div>
 
 
-            <div class="card">
+            <div id="postsCard" class="card">
 
-                <h2>친구 요청</h2>
+                <h2>최근 게시물</h2>
 
-                <div id="friendRequests">
-                    요청을 불러오는 중...
+                <div id="feed">
+                    <div class="empty">
+                        게시물을 불러오는 중...
+                    </div>
+                </div>
+
+                <div id="morePostsWrap"
+                     class="more-wrap hidden">
+
+                    <button id="morePostsBtn"
+                            class="more-btn"
+                            onclick="toggleAllPosts()">
+                        자세히 보기
+                    </button>
+
                 </div>
 
             </div>
 
 
-            <div class="card">
+            <div id="chatCard" class="card hidden">
 
-                <h2>친구</h2>
+                <h2>채팅</h2>
 
-                <div id="friendList">
-                    친구 목록을 불러오는 중...
+                <div id="chatFriendSelect"
+                     class="notice">
+                    친구를 선택하면 채팅할 수 있습니다.
+                </div>
+
+                <div id="chatBox"
+                     class="chat-box hidden">
+
+                    <div id="chatMessages"
+                         class="chat-messages">
+                    </div>
+
+                    <div class="chat-input">
+
+                        <input
+                            id="chatInput"
+                            type="text"
+                            placeholder="메시지를 입력하세요"
+                            onkeydown="chatKeyDown(event)"
+                        >
+
+                        <button onclick="sendMessage()">
+                            보내기
+                        </button>
+
+                    </div>
+
                 </div>
 
             </div>
 
-        </div>
-
-
-        <!-- 게시물 작성 -->
-
-        <section class="card section">
-
-            <h2>게시물 공유</h2>
-
-            <textarea
-                id="postContent"
-                placeholder="무슨 이야기를 공유할까요?"></textarea>
-
-            <br><br>
-
-            <select id="postVisibility">
-
-                <option value="public">
-                    공개 게시물
-                </option>
-
-                <option value="friends">
-                    친구만 보기
-                </option>
-
-            </select>
-
-            <br><br>
-
-            <input
-                type="file"
-                id="postFile"
-                accept="image/*,video/*">
-
-            <div class="notice">
-                공개 게시물은 모든 로그인한 NUGU 사용자가 볼 수 있습니다.
-                친구만 보기 게시물은 친구에게만 표시됩니다.
-            </div>
-
-            <br>
-
-            <button
-                class="primary"
-                onclick="createPost()">
-                공유하기
-            </button>
-
         </section>
 
+    </div>
 
-        <!-- 피드 -->
-
-        <section class="card section">
-
-            <h2>공개 피드</h2>
-
-            <div id="posts">
-                게시물을 불러오는 중...
-            </div>
-
-        </section>
-
-
-        <!-- 채팅 -->
-
-        <section class="card section">
-
-            <h2>1:1 채팅</h2>
-
-            <div
-                id="chatTarget"
-                class="chat-status">
-                친구 목록에서 채팅할 친구를 선택해주세요.
-            </div>
-
-            <div
-                id="chatBox"
-                class="chat-box">
-            </div>
-
-            <div class="chat-input">
-
-                <input
-                    id="chatInput"
-                    placeholder="메시지를 입력하세요">
-
-                <button
-                    class="primary"
-                    onclick="sendMessage()">
-                    전송
-                </button>
-
-            </div>
-
-        </section>
-
-
-        <!-- 자유게시판 -->
-
-        <section class="card section">
-
-            <h2>NUGU 자유게시판</h2>
-
-            <p>
-                기존 NUGU 자유게시판으로 이동할 수 있습니다.
-            </p>
-
-            <button
-                class="primary"
-                onclick="location.href='nugu.html'">
-                자유게시판 열기
-            </button>
-
-        </section>
-
-    </section>
-
-</div>
+</main>
 
 
 <script>
+
+/* =========================
+   SUPABASE
+========================= */
 
 const SUPABASE_URL =
     "https://aqtutjsubqplnjphinjq.supabase.co";
@@ -739,677 +726,1199 @@ const SUPABASE_KEY =
     "sb_publishable__oSX4ddCVrL3SbHY1m_fEw_OOzfidzO";
 
 const supabaseClient =
-    supabase.createClient(
+    window.supabase.createClient(
         SUPABASE_URL,
         SUPABASE_KEY
     );
 
 
+/* =========================
+   전역 변수
+========================= */
+
 let currentUser = null;
 let currentProfile = null;
 
-let selectedFriend = null;
-let currentRoom = null;
-let messageChannel = null;
+let showAllPosts = false;
 
-let usernameAvailable = false;
+let currentChatRoomId = null;
+let currentChatFriendId = null;
+
+let chatChannel = null;
 
 
-/* ========================================
+/* =========================
+   시작
+========================= */
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+    await checkLogin();
+
+    await loadPosts();
+
+});
+
+
+/* =========================
+   로그인
+========================= */
+
+async function checkLogin(){
+
+    const {
+        data:{
+            session
+        }
+    } = await supabaseClient.auth.getSession();
+
+    if(session?.user){
+
+        currentUser = session.user;
+
+        await loadProfile();
+
+        setLoggedInUI();
+
+        await loadFriends();
+
+    }else{
+
+        currentUser = null;
+        currentProfile = null;
+
+        setLoggedOutUI();
+
+    }
+
+    supabaseClient.auth.onAuthStateChange(
+        async(event, session) => {
+
+            if(session?.user){
+
+                currentUser = session.user;
+
+                await loadProfile();
+
+                setLoggedInUI();
+
+                await loadFriends();
+
+            }else{
+
+                currentUser = null;
+                currentProfile = null;
+
+                setLoggedOutUI();
+
+            }
+
+            await loadPosts();
+
+        }
+    );
+}
+
+
+/* =========================
    Google 로그인
-======================================== */
+========================= */
 
 async function loginWithGoogle(){
 
-    const { error } =
-        await supabaseClient.auth.signInWithOAuth({
+    const {
+        error
+    } = await supabaseClient.auth.signInWithOAuth({
 
-            provider:"google",
+        provider:"google",
 
-            options:{
-                redirectTo:
-                    window.location.origin +
-                    window.location.pathname
-            }
+        options:{
+            redirectTo:window.location.origin + window.location.pathname
+        }
 
-        });
+    });
 
     if(error){
-        alert(error.message);
+
+        console.error(error);
+
+        alert(
+            "Google 로그인에 실패했습니다.\n" +
+            error.message
+        );
+
     }
+
 }
 
 
-/* ========================================
+/* =========================
    로그아웃
-======================================== */
+========================= */
 
 async function logout(){
 
-    if(messageChannel){
-
-        await supabaseClient
-            .removeChannel(messageChannel);
-
-        messageChannel = null;
-    }
-
     await supabaseClient.auth.signOut();
 
+    currentUser = null;
+    currentProfile = null;
+
     location.reload();
+
 }
 
 
-/* ========================================
-   초기화
-======================================== */
-
-async function initialize(){
-
-    const {
-        data:{session},
-        error
-    } =
-        await supabaseClient.auth.getSession();
-
-    if(error){
-
-        console.error(error);
-
-        return;
-    }
-
-    if(!session){
-
-        currentUser = null;
-
-        return;
-    }
-
-    currentUser = session.user;
-
-
-    const {
-        data:profile,
-        error:profileError
-    } =
-        await supabaseClient
-        .from("nugu_profiles")
-        .select("*")
-        .eq("id",currentUser.id)
-        .maybeSingle();
-
-
-    if(profileError){
-
-        console.error(profileError);
-
-        return;
-    }
-
-
-    if(!profile){
-
-        showUsernameSetup();
-
-        return;
-    }
-
-
-    currentProfile = profile;
-
-    showLoggedInPage();
-
-    await loadProfile();
-    await loadFriendRequests();
-    await loadFriends();
-    await loadPosts();
-}
-
-
-/* ========================================
-   로그인 화면 전환
-======================================== */
-
-function showLoggedInPage(){
-
-    document
-        .getElementById("loginArea")
-        .classList
-        .add("hidden");
-
-
-    document
-        .getElementById("userArea")
-        .style
-        .display = "block";
-
-
-    document
-        .getElementById("loginButton")
-        .classList
-        .add("hidden");
-
-
-    document
-        .getElementById("logoutButton")
-        .classList
-        .remove("hidden");
-}
-
-
-/* ========================================
-   첫 로그인 아이디 설정
-======================================== */
-
-function showUsernameSetup(){
-
-    const old =
-        document.getElementById("usernameSetup");
-
-    if(old){
-        old.remove();
-    }
-
-
-    const modal =
-        document.createElement("div");
-
-    modal.id = "usernameSetup";
-
-    modal.className = "modal";
-
-
-    modal.innerHTML = `
-
-        <div class="modal-box">
-
-            <h2>
-                NUGU에 오신 것을 환영합니다
-            </h2>
-
-            <p>
-                다른 사람들이 나를 찾을 때 사용할
-                NUGU 아이디를 정해주세요.
-            </p>
-
-            <input
-                id="newUsername"
-                maxlength="20"
-                autocomplete="off"
-                placeholder="영문, 숫자, _ 사용 가능">
-
-            <div
-                id="usernameCheck"
-                class="username-check">
-            </div>
-
-            <button
-                class="white"
-                style="width:100%;margin-top:15px"
-                onclick="checkUsername()">
-                아이디 중복 확인
-            </button>
-
-            <button
-                class="primary"
-                style="width:100%;margin-top:10px"
-                onclick="completeSignup()">
-                NUGU 시작하기
-            </button>
-
-        </div>
-
-    `;
-
-
-    document.body.appendChild(modal);
-
-    document
-        .getElementById("newUsername")
-        .focus();
-}
-
-
-/* ========================================
-   아이디 확인
-======================================== */
-
-async function checkUsername(){
-
-    const input =
-        document.getElementById("newUsername");
-
-    const result =
-        document.getElementById("usernameCheck");
-
-    if(!input || !result){
-        return;
-    }
-
-
-    const username =
-        input.value.trim();
-
-    usernameAvailable = false;
-
-
-    if(!/^[a-zA-Z0-9_]{3,20}$/.test(username)){
-
-        result.textContent =
-            "아이디는 영문, 숫자, _를 사용한 3~20자로 입력해주세요.";
-
-        result.style.color = "#d33";
-
-        return;
-    }
-
-
-    const {
-        data,
-        error
-    } =
-        await supabaseClient
-        .from("nugu_profiles")
-        .select("id")
-        .eq("username",username)
-        .maybeSingle();
-
-
-    if(error){
-
-        console.error(error);
-
-        result.textContent =
-            "아이디 확인 중 오류가 발생했습니다.";
-
-        result.style.color = "#d33";
-
-        return;
-    }
-
-
-    if(data){
-
-        result.textContent =
-            "이미 사용 중인 아이디입니다.";
-
-        result.style.color = "#d33";
-
-        return;
-    }
-
-
-    usernameAvailable = true;
-
-    result.textContent =
-        "사용할 수 있는 아이디입니다.";
-
-    result.style.color = "#16803c";
-}
-
-
-/* ========================================
-   회원가입
-======================================== */
-
-async function completeSignup(){
-
-    const input =
-        document.getElementById("newUsername");
-
-    if(!input){
-        return;
-    }
-
-
-    const username =
-        input.value.trim();
-
-
-    if(!/^[a-zA-Z0-9_]{3,20}$/.test(username)){
-
-        alert(
-            "아이디는 영문, 숫자, _를 사용한 3~20자로 입력해주세요."
-        );
-
-        return;
-    }
-
-
-    const {
-        data:existing
-    } =
-        await supabaseClient
-        .from("nugu_profiles")
-        .select("id")
-        .eq("username",username)
-        .maybeSingle();
-
-
-    if(existing){
-
-        alert(
-            "이미 사용 중인 아이디입니다."
-        );
-
-        return;
-    }
-
-
-    const displayName =
-        currentUser.user_metadata?.full_name ||
-        currentUser.user_metadata?.name ||
-        username;
-
-
-    const avatarUrl =
-        currentUser.user_metadata?.avatar_url ||
-        currentUser.user_metadata?.picture ||
-        null;
-
-
-    const {
-        data,
-        error
-    } =
-        await supabaseClient
-        .from("nugu_profiles")
-        .insert({
-
-            id:currentUser.id,
-
-            username:username,
-
-            display_name:displayName,
-
-            avatar_url:avatarUrl
-
-        })
-        .select()
-        .single();
-
-
-    if(error){
-
-        alert(error.message);
-
-        return;
-    }
-
-
-    currentProfile = data;
-
-
-    const modal =
-        document.getElementById("usernameSetup");
-
-    if(modal){
-        modal.remove();
-    }
-
-
-    showLoggedInPage();
-
-    await loadProfile();
-    await loadFriendRequests();
-    await loadFriends();
-    await loadPosts();
-}
-
-
-/* ========================================
+/* =========================
    프로필
-======================================== */
+========================= */
 
 async function loadProfile(){
 
-    const {
-        data,
-        error
-    } =
-        await supabaseClient
-        .from("nugu_profiles")
-        .select("*")
-        .eq("id",currentUser.id)
-        .single();
-
-
-    if(error || !data){
-
-        console.error(error);
-
+    if(!currentUser){
         return;
     }
 
+    const {
+        data,
+        error
+    } = await supabaseClient
+        .from("nugu_profiles")
+        .select("*")
+        .eq("id", currentUser.id)
+        .maybeSingle();
 
-    currentProfile = data;
+
+    if(error){
+
+        console.error(
+            "프로필 불러오기 실패:",
+            error
+        );
+
+        currentProfile = null;
+
+        return;
+
+    }
+
+
+    if(!data){
+
+        const defaultUsername =
+            "user_" +
+            currentUser.id
+                .replaceAll("-","")
+                .slice(0,8);
+
+
+        const {
+            data:newProfile,
+            error:createError
+        } = await supabaseClient
+            .from("nugu_profiles")
+            .insert({
+
+                id:currentUser.id,
+
+                username:defaultUsername,
+
+                display_name:
+                    currentUser.user_metadata?.full_name ||
+                    currentUser.email?.split("@")[0] ||
+                    "NUGU 사용자"
+
+            })
+            .select()
+            .single();
+
+
+        if(createError){
+
+            console.error(
+                "프로필 생성 실패:",
+                createError
+            );
+
+            currentProfile = null;
+
+            return;
+
+        }
+
+
+        currentProfile = newProfile;
+
+    }else{
+
+        currentProfile = data;
+
+    }
+
+
+    console.log(
+        "현재 프로필:",
+        currentProfile
+    );
+
+    console.log(
+        "관리자 여부:",
+        currentProfile?.is_admin
+    );
+
+
+    updateProfileUI();
+
+}
+
+
+/* =========================
+   UI
+========================= */
+
+function setLoggedInUI(){
+
+    document
+        .getElementById("loginHeaderBtn")
+        .classList.add("hidden");
+
+    document
+        .getElementById("logoutBtn")
+        .classList.remove("hidden");
+
+    document
+        .getElementById("loginCard")
+        .classList.add("hidden");
+
+    document
+        .getElementById("profileCard")
+        .classList.remove("hidden");
+
+    document
+        .getElementById("postFormCard")
+        .classList.remove("hidden");
+
+    document
+        .getElementById("friendsCard")
+        .classList.remove("hidden");
+
+    document
+        .getElementById("chatCard")
+        .classList.remove("hidden");
+
+    document
+        .getElementById("loginNotice")
+        .classList.add("hidden");
+
+}
+
+
+function setLoggedOutUI(){
+
+    document
+        .getElementById("loginHeaderBtn")
+        .classList.remove("hidden");
+
+    document
+        .getElementById("logoutBtn")
+        .classList.add("hidden");
+
+    document
+        .getElementById("loginCard")
+        .classList.remove("hidden");
+
+    document
+        .getElementById("profileCard")
+        .classList.add("hidden");
+
+    document
+        .getElementById("postFormCard")
+        .classList.add("hidden");
+
+    document
+        .getElementById("friendsCard")
+        .classList.add("hidden");
+
+    document
+        .getElementById("chatCard")
+        .classList.add("hidden");
+
+    document
+        .getElementById("loginNotice")
+        .classList.remove("hidden");
+
+    document
+        .getElementById("headerUser")
+        .textContent = "";
+
+}
+
+
+function updateProfileUI(){
+
+    if(!currentProfile){
+        return;
+    }
+
+    const displayName =
+        currentProfile.display_name ||
+        currentProfile.username ||
+        "NUGU 사용자";
+
+    document
+        .getElementById("profileName")
+        .innerHTML =
+            escapeHtml(displayName) +
+            (
+                currentProfile.is_admin
+                ? `<span class="admin-badge">관리자</span>`
+                : ""
+            );
+
+    document
+        .getElementById("profileId")
+        .textContent =
+            "@" +
+            (currentProfile.username || "");
 
 
     document
-        .getElementById("displayName")
+        .getElementById("headerUser")
         .textContent =
-        data.display_name;
-
-
-    document
-        .getElementById("usernameText")
-        .textContent =
-        "@" + data.username;
+            displayName;
 
 
     const avatar =
-        document.getElementById("avatar");
+        document.getElementById("profileAvatar");
 
-
-    if(data.avatar_url){
+    if(currentProfile.avatar_url){
 
         avatar.innerHTML =
-            `<img src="${escapeAttribute(data.avatar_url)}">`;
+            `<img src="${escapeAttribute(currentProfile.avatar_url)}" alt="">`;
 
     }else{
 
         avatar.textContent =
-            data.display_name
-            .charAt(0)
-            .toUpperCase();
+            displayName.charAt(0).toUpperCase();
 
     }
+
 }
 
 
-/* ========================================
-   친구 검색
-======================================== */
+/* =========================
+   게시물 불러오기
+========================= */
 
-async function searchUser(){
+async function loadPosts(){
 
-    const username =
-        document
-        .getElementById("friendSearch")
-        .value
-        .trim();
+    const feed =
+        document.getElementById("feed");
 
-
-    const result =
-        document.getElementById("searchResult");
-
-
-    if(!username){
-
-        result.innerHTML =
-            "<p>아이디를 입력해주세요.</p>";
-
-        return;
-    }
+    feed.innerHTML =
+        `<div class="empty">게시물을 불러오는 중...</div>`;
 
 
     const {
         data,
         error
-    } =
-        await supabaseClient
+    } = await supabaseClient
+
+        .from("nugu_shared_posts")
+
+        .select(`
+            id,
+            user_id,
+            content,
+            visibility,
+            file_url,
+            file_type,
+            created_at,
+            nugu_profiles (
+                username,
+                display_name,
+                avatar_url,
+                is_admin
+            )
+        `)
+
+        .order(
+            "created_at",
+            {
+                ascending:false
+            }
+        );
+
+
+    if(error){
+
+        console.error(
+            "게시물 불러오기 실패:",
+            error
+        );
+
+        feed.innerHTML =
+            `<div class="empty">
+                게시물을 불러오지 못했습니다.<br>
+                ${escapeHtml(error.message)}
+            </div>`;
+
+        return;
+
+    }
+
+
+    renderPosts(data || []);
+
+}
+
+
+/* =========================
+   게시물 렌더링
+========================= */
+
+function renderPosts(posts){
+
+    const feed =
+        document.getElementById("feed");
+
+    if(!posts.length){
+
+        feed.innerHTML =
+            `<div class="empty">
+                아직 게시물이 없습니다.
+            </div>`;
+
+        document
+            .getElementById("morePostsWrap")
+            .classList.add("hidden");
+
+        return;
+
+    }
+
+
+    const visiblePosts =
+        showAllPosts
+        ? posts
+        : posts.slice(0,3);
+
+
+    let html = "";
+
+
+    visiblePosts.forEach(post => {
+
+        const profile =
+            post.nugu_profiles || {};
+
+
+        const displayName =
+            profile.display_name ||
+            profile.username ||
+            "NUGU 사용자";
+
+
+        const username =
+            profile.username ||
+            "";
+
+
+        const isOwner =
+            !!currentUser &&
+            post.user_id === currentUser.id;
+
+
+        const isAdmin =
+            !!currentProfile &&
+            currentProfile.is_admin === true;
+
+
+        /*
+         * 핵심:
+         * 내가 쓴 글 OR 관리자면 삭제 버튼 표시
+         */
+        const canDelete =
+            isOwner || isAdmin;
+
+
+        let actions = "";
+
+
+        if(canDelete){
+
+            actions = `
+                <div class="post-actions">
+
+                    <button
+                        class="delete-btn"
+                        onclick="deletePost('${escapeAttribute(post.id)}')"
+                    >
+                        삭제
+                    </button>
+
+                </div>
+            `;
+
+        }
+
+
+        const avatarHtml =
+            profile.avatar_url
+
+            ? `
+                <img
+                    src="${escapeAttribute(profile.avatar_url)}"
+                    alt=""
+                >
+            `
+
+            : escapeHtml(
+                displayName
+                    .charAt(0)
+                    .toUpperCase()
+              );
+
+
+        const adminHtml =
+            profile.is_admin === true
+
+            ? `<span class="admin-badge">관리자</span>`
+
+            : "";
+
+
+        const mediaHtml =
+            loadPostMedia(post);
+
+
+        html += `
+
+            <article class="post">
+
+                <div class="post-header">
+
+                    <div class="post-user">
+
+                        <div class="small-avatar">
+                            ${avatarHtml}
+                        </div>
+
+                        <div>
+
+                            <div>
+                                <strong>
+                                    ${escapeHtml(displayName)}
+                                </strong>
+
+                                ${adminHtml}
+
+                            </div>
+
+                            <div class="post-meta">
+                                @${escapeHtml(username)}
+                                ·
+                                ${formatDate(post.created_at)}
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    ${actions}
+
+                </div>
+
+
+                ${
+                    post.content
+                    ? `
+                        <div class="post-content">
+                            ${escapeHtml(post.content)}
+                        </div>
+                    `
+                    : ""
+                }
+
+
+                ${mediaHtml}
+
+            </article>
+
+        `;
+
+    });
+
+
+    feed.innerHTML = html;
+
+
+    const moreWrap =
+        document.getElementById("morePostsWrap");
+
+
+    const moreBtn =
+        document.getElementById("morePostsBtn");
+
+
+    if(posts.length > 3){
+
+        moreWrap.classList.remove("hidden");
+
+        moreBtn.textContent =
+            showAllPosts
+            ? "간단히 보기"
+            : "자세히 보기";
+
+    }else{
+
+        moreWrap.classList.add("hidden");
+
+    }
+
+}
+
+
+/* =========================
+   사진 / 동영상
+========================= */
+
+function loadPostMedia(post){
+
+    if(!post.file_url){
+        return "";
+    }
+
+
+    let url = post.file_url;
+
+
+    /*
+     * file_url에 Storage 경로가 들어있는 경우
+     */
+    if(
+        !url.startsWith("http://") &&
+        !url.startsWith("https://")
+    ){
+
+        const {
+            data
+        } =
+            supabaseClient
+                .storage
+                .from("nugu-media")
+                .getPublicUrl(url);
+
+
+        url = data.publicUrl;
+
+    }
+
+
+    const safeUrl =
+        escapeAttribute(url);
+
+
+    if(
+        post.file_type &&
+        post.file_type.startsWith("video/")
+    ){
+
+        return `
+            <div class="post-media">
+
+                <video
+                    src="${safeUrl}"
+                    controls
+                    preload="metadata"
+                ></video>
+
+            </div>
+        `;
+
+    }
+
+
+    return `
+        <div class="post-media">
+
+            <img
+                src="${safeUrl}"
+                alt="게시물 이미지"
+                loading="lazy"
+            >
+
+        </div>
+    `;
+
+}
+
+
+/* =========================
+   게시물 작성
+========================= */
+
+async function createPost(){
+
+    if(!currentUser){
+
+        alert("먼저 로그인해주세요.");
+
+        return;
+
+    }
+
+
+    const textarea =
+        document.getElementById("postContent");
+
+    const fileInput =
+        document.getElementById("postFile");
+
+
+    const content =
+        textarea.value.trim();
+
+
+    const file =
+        fileInput.files[0] || null;
+
+
+    if(!content && !file){
+
+        alert("내용이나 사진/동영상을 입력해주세요.");
+
+        return;
+
+    }
+
+
+    let fileUrl = null;
+    let fileType = null;
+
+
+    if(file){
+
+        const extension =
+            file.name.split(".").pop();
+
+
+        const fileName =
+            `${currentUser.id}/${Date.now()}_${crypto.randomUUID()}.${extension}`;
+
+
+        const {
+            error:uploadError
+        } = await supabaseClient
+
+            .storage
+
+            .from("nugu-media")
+
+            .upload(
+                fileName,
+                file,
+                {
+                    upsert:false
+                }
+            );
+
+
+        if(uploadError){
+
+            console.error(uploadError);
+
+            alert(
+                "파일 업로드 실패:\n" +
+                uploadError.message
+            );
+
+            return;
+
+        }
+
+
+        const {
+            data:publicData
+        } =
+            supabaseClient
+                .storage
+                .from("nugu-media")
+                .getPublicUrl(fileName);
+
+
+        fileUrl =
+            publicData.publicUrl;
+
+        fileType =
+            file.type;
+
+    }
+
+
+    const {
+        error
+    } = await supabaseClient
+
+        .from("nugu_shared_posts")
+
+        .insert({
+
+            user_id:currentUser.id,
+
+            content:content,
+
+            visibility:"public",
+
+            file_url:fileUrl,
+
+            file_type:fileType
+
+        });
+
+
+    if(error){
+
+        console.error(error);
+
+        alert(
+            "게시물 작성 실패:\n" +
+            error.message
+        );
+
+        return;
+
+    }
+
+
+    textarea.value = "";
+    fileInput.value = "";
+
+    showAllPosts = false;
+
+    await loadPosts();
+
+}
+
+
+/* =========================
+   게시물 삭제
+========================= */
+
+async function deletePost(postId){
+
+    if(!currentUser){
+
+        alert("로그인이 필요합니다.");
+
+        return;
+
+    }
+
+
+    const {
+        data:post,
+        error:postError
+    } = await supabaseClient
+
+        .from("nugu_shared_posts")
+
+        .select(`
+            id,
+            user_id,
+            file_url
+        `)
+
+        .eq("id",postId)
+
+        .single();
+
+
+    if(postError){
+
+        console.error(postError);
+
+        alert(
+            "게시물을 찾을 수 없습니다.\n" +
+            postError.message
+        );
+
+        return;
+
+    }
+
+
+    const isOwner =
+        post.user_id === currentUser.id;
+
+
+    const isAdmin =
+        currentProfile?.is_admin === true;
+
+
+    if(!isOwner && !isAdmin){
+
+        alert("이 게시물을 삭제할 권한이 없습니다.");
+
+        return;
+
+    }
+
+
+    if(!confirm("이 게시물을 삭제할까요?")){
+
+        return;
+
+    }
+
+
+    /*
+     * Storage 파일 삭제
+     */
+    if(post.file_url){
+
+        try{
+
+            let path = post.file_url;
+
+
+            /*
+             * public URL 형태라면
+             * nugu-media/ 뒤의 경로만 추출
+             */
+            const marker =
+                "/storage/v1/object/public/nugu-media/";
+
+
+            if(path.includes(marker)){
+
+                path =
+                    path.split(marker)[1];
+
+            }
+
+
+            if(
+                path &&
+                !path.startsWith("http")
+            ){
+
+                const {
+                    error:storageError
+                } =
+                    await supabaseClient
+                        .storage
+                        .from("nugu-media")
+                        .remove([path]);
+
+
+                if(storageError){
+
+                    console.warn(
+                        "Storage 파일 삭제 실패:",
+                        storageError
+                    );
+
+                }
+
+            }
+
+        }catch(e){
+
+            console.warn(
+                "Storage 삭제 처리 오류:",
+                e
+            );
+
+        }
+
+    }
+
+
+    /*
+     * 실제 게시물 삭제
+     *
+     * RLS에서 본인/관리자 삭제 정책이
+     * 허용되어 있어야 한다.
+     */
+    const {
+        error
+    } = await supabaseClient
+
+        .from("nugu_shared_posts")
+
+        .delete()
+
+        .eq("id",postId);
+
+
+    if(error){
+
+        console.error(
+            "게시물 삭제 실패:",
+            error
+        );
+
+        alert(
+            "게시물 삭제에 실패했습니다.\n\n" +
+            error.message
+        );
+
+        return;
+
+    }
+
+
+    await loadPosts();
+
+}
+
+
+/* =========================
+   자세히 보기
+========================= */
+
+async function toggleAllPosts(){
+
+    showAllPosts =
+        !showAllPosts;
+
+    await loadPosts();
+
+}
+
+
+/* =========================
+   친구 검색
+========================= */
+
+async function searchUser(){
+
+    if(!currentUser){
+
+        alert("먼저 로그인해주세요.");
+
+        return;
+
+    }
+
+
+    const input =
+        document.getElementById("friendSearch");
+
+
+    const username =
+        input.value.trim();
+
+
+    if(!username){
+
+        alert("아이디를 입력해주세요.");
+
+        return;
+
+    }
+
+
+    const result =
+        document.getElementById("friendSearchResult");
+
+
+    result.innerHTML =
+        `<div class="empty">검색 중...</div>`;
+
+
+    const {
+        data,
+        error
+    } = await supabaseClient
+
         .from("nugu_profiles")
-        .select("id,username,display_name,avatar_url")
+
+        .select(
+            "id,username,display_name,avatar_url,is_admin"
+        )
+
         .eq("username",username)
+
         .neq("id",currentUser.id)
+
         .maybeSingle();
 
 
     if(error){
 
-        result.textContent =
-            error.message;
+        console.error(error);
+
+        result.innerHTML =
+            `<div class="empty">
+                검색 중 오류가 발생했습니다.
+            </div>`;
 
         return;
+
     }
 
 
     if(!data){
 
         result.innerHTML =
-            "<p>해당 아이디를 찾을 수 없습니다.</p>";
+            `<div class="empty">
+                해당 아이디를 찾을 수 없습니다.
+            </div>`;
 
         return;
-    }
 
-
-    const alreadyFriend =
-        await areFriends(data.id);
-
-
-    if(alreadyFriend){
-
-        result.innerHTML = `
-
-            <div class="user-result">
-
-                <div>
-                    <strong>
-                        ${escapeHtml(data.display_name)}
-                    </strong>
-
-                    <br>
-
-                    @${escapeHtml(data.username)}
-
-                </div>
-
-                <button
-                    class="white"
-                    disabled>
-                    이미 친구
-                </button>
-
-            </div>
-
-        `;
-
-        return;
     }
 
 
     result.innerHTML = `
 
-        <div class="user-result">
+        <div class="friend-item">
 
-            <div>
-                <strong>
-                    ${escapeHtml(data.display_name)}
-                </strong>
+            <strong>
+                ${escapeHtml(
+                    data.display_name ||
+                    data.username
+                )}
+            </strong>
 
-                <br>
-
+            <div class="post-meta">
                 @${escapeHtml(data.username)}
             </div>
 
+            <br>
+
             <button
-                class="primary"
-                onclick="sendFriendRequest('${data.id}')">
+                class="btn btn-yellow"
+                onclick="sendFriendRequest('${escapeAttribute(data.id)}')"
+            >
                 친구 요청
             </button>
 
         </div>
 
     `;
+
 }
 
 
-/* ========================================
-   친구 여부
-======================================== */
-
-async function areFriends(friendId){
-
-    const {
-        data
-    } =
-        await supabaseClient
-        .from("nugu_friends")
-        .select("id")
-        .or(
-            `and(user1_id.eq.${currentUser.id},user2_id.eq.${friendId}),and(user1_id.eq.${friendId},user2_id.eq.${currentUser.id})`
-        )
-        .maybeSingle();
-
-
-    return !!data;
-}
-
-
-/* ========================================
-   친구 요청 보내기
-======================================== */
+/* =========================
+   친구 요청
+========================= */
 
 async function sendFriendRequest(receiverId){
 
-    if(receiverId === currentUser.id){
-        return;
-    }
-
-
-    if(await areFriends(receiverId)){
-
-        alert("이미 친구입니다.");
-
-        return;
-    }
-
-
-    const {
-        data:existing
-    } =
-        await supabaseClient
-        .from("nugu_friend_requests")
-        .select("id,status,sender_id,receiver_id")
-        .or(
-            `and(sender_id.eq.${currentUser.id},receiver_id.eq.${receiverId}),and(sender_id.eq.${receiverId},receiver_id.eq.${currentUser.id})`
-        )
-        .in("status",["pending","accepted"])
-        .maybeSingle();
-
-
-    if(existing){
-
-        if(existing.status === "accepted"){
-
-            alert("이미 친구입니다.");
-
-        }else{
-
-            alert("이미 친구 요청이 존재합니다.");
-
-        }
-
+    if(!currentUser){
         return;
     }
 
 
     const {
         error
-    } =
-        await supabaseClient
+    } = await supabaseClient
+
         .from("nugu_friend_requests")
+
         .insert({
 
             sender_id:currentUser.id,
@@ -1423,548 +1932,438 @@ async function sendFriendRequest(receiverId){
 
     if(error){
 
-        if(error.code === "23505"){
+        console.error(error);
 
-            alert(
-                "이미 친구 요청을 보냈습니다."
-            );
-
-        }else{
-
-            alert(error.message);
-
-        }
+        alert(
+            "친구 요청을 보내지 못했습니다.\n" +
+            error.message
+        );
 
         return;
+
     }
 
 
     alert("친구 요청을 보냈습니다.");
 
-    await loadFriendRequests();
 }
 
 
-/* ========================================
-   받은 친구 요청
-======================================== */
+/* =========================
+   친구 목록
+========================= */
 
-async function loadFriendRequests(){
+async function loadFriends(){
 
-    const box =
-        document.getElementById("friendRequests");
+    if(!currentUser){
+        return;
+    }
 
 
+    const list =
+        document.getElementById("friendList");
+
+
+    list.innerHTML =
+        `<div class="empty">친구를 불러오는 중...</div>`;
+
+
+    /*
+     * user1_id / user2_id 방식
+     */
     const {
         data,
         error
-    } =
-        await supabaseClient
-        .from("nugu_friend_requests")
-        .select("*")
-        .eq("receiver_id",currentUser.id)
-        .eq("status","pending")
-        .order("created_at",{
-            ascending:false
-        });
+    } = await supabaseClient
+
+        .from("nugu_friends")
+
+        .select("*");
 
 
     if(error){
 
-        box.textContent =
-            error.message;
+        console.error(error);
+
+        list.innerHTML =
+            `<div class="empty">
+                친구 목록을 불러오지 못했습니다.
+            </div>`;
 
         return;
+
     }
 
 
-    if(!data || data.length === 0){
-
-        box.innerHTML =
-            `<div class="empty">받은 친구 요청이 없습니다.</div>`;
-
-        return;
-    }
+    const friends = [];
 
 
-    box.innerHTML = "";
+    for(const row of data || []){
+
+        let friendId = null;
 
 
-    for(const request of data){
+        if(row.user1_id === currentUser.id){
 
-        const {
-            data:user
-        } =
-            await supabaseClient
-            .from("nugu_profiles")
-            .select("id,username,display_name")
-            .eq("id",request.sender_id)
-            .maybeSingle();
+            friendId = row.user2_id;
 
+        }else if(row.user2_id === currentUser.id){
 
-        if(!user){
-            continue;
+            friendId = row.user1_id;
+
         }
 
+
+        if(friendId){
+
+            friends.push(friendId);
+
+        }
+
+    }
+
+
+    if(!friends.length){
+
+        list.innerHTML =
+            `<div class="empty">
+                아직 친구가 없습니다.
+            </div>`;
+
+        return;
+
+    }
+
+
+    const {
+        data:profiles,
+        error:profileError
+    } = await supabaseClient
+
+        .from("nugu_profiles")
+
+        .select(
+            "id,username,display_name,avatar_url,is_admin"
+        )
+
+        .in("id",friends);
+
+
+    if(profileError){
+
+        console.error(profileError);
+
+        return;
+
+    }
+
+
+    list.innerHTML = "";
+
+
+    (profiles || []).forEach(friend => {
 
         const div =
             document.createElement("div");
 
+
         div.className =
-            "request-item";
+            "friend-item";
 
 
         div.innerHTML = `
 
             <strong>
-                ${escapeHtml(user.display_name)}
+                ${escapeHtml(
+                    friend.display_name ||
+                    friend.username
+                )}
             </strong>
 
-            <div>
-                @${escapeHtml(user.username)}
+            ${
+                friend.is_admin
+                ? `<span class="admin-badge">관리자</span>`
+                : ""
+            }
+
+            <div class="post-meta">
+                @${escapeHtml(friend.username)}
             </div>
 
-            <div class="request-actions">
+            <br>
 
-                <button
-                    class="success"
-                    onclick="acceptFriendRequest(${request.id},'${user.id}')">
-                    수락
-                </button>
-
-                <button
-                    class="danger"
-                    onclick="rejectFriendRequest(${request.id})">
-                    거절
-                </button>
-
-            </div>
+            <button
+                class="btn btn-blue"
+                onclick="startChat('${escapeAttribute(friend.id)}')"
+            >
+                채팅
+            </button>
 
         `;
 
 
-        box.appendChild(div);
-    }
+        list.appendChild(div);
+
+    });
+
 }
 
 
-/* ========================================
-   친구 요청 수락
-======================================== */
+/* =========================
+   채팅 시작
+========================= */
 
-async function acceptFriendRequest(
-    requestId,
-    senderId
-){
+async function startChat(friendId){
 
-    const {
-        data:request,
-        error:requestError
-    } =
-        await supabaseClient
-        .from("nugu_friend_requests")
-        .select("*")
-        .eq("id",requestId)
-        .eq("receiver_id",currentUser.id)
-        .eq("status","pending")
-        .single();
-
-
-    if(requestError || !request){
-
-        alert(
-            "친구 요청을 찾을 수 없습니다."
-        );
-
+    if(!currentUser){
         return;
     }
 
 
-    const {
-        error:friendError
-    } =
-        await supabaseClient
-        .from("nugu_friends")
-        .insert({
-
-            user1_id:senderId,
-
-            user2_id:currentUser.id
-
-        });
-
-
-    if(friendError &&
-       friendError.code !== "23505"){
-
-        alert(friendError.message);
-
-        return;
-    }
-
-
-    const {
-        error:updateError
-    } =
-        await supabaseClient
-        .from("nugu_friend_requests")
-        .update({
-            status:"accepted"
-        })
-        .eq("id",requestId)
-        .eq("receiver_id",currentUser.id);
-
-
-    if(updateError){
-
-        alert(updateError.message);
-
-        return;
-    }
-
-
-    await loadFriendRequests();
-    await loadFriends();
-    await loadPosts();
-}
-
-
-/* ========================================
-   친구 요청 거절
-======================================== */
-
-async function rejectFriendRequest(requestId){
-
-    const {
-        error
-    } =
-        await supabaseClient
-        .from("nugu_friend_requests")
-        .update({
-            status:"rejected"
-        })
-        .eq("id",requestId)
-        .eq("receiver_id",currentUser.id)
-        .eq("status","pending");
-
-
-    if(error){
-
-        alert(error.message);
-
-        return;
-    }
-
-
-    await loadFriendRequests();
-}
-
-
-/* ========================================
-   친구 목록
-======================================== */
-
-async function loadFriends(){
-
-    const box =
-        document.getElementById("friendList");
+    currentChatFriendId =
+        friendId;
 
 
     const {
         data,
         error
-    } =
-        await supabaseClient
-        .from("nugu_friends")
-        .select("*")
-        .or(
-            `user1_id.eq.${currentUser.id},user2_id.eq.${currentUser.id}`
-        )
-        .order("created_at",{
-            ascending:false
-        });
+    } = await supabaseClient.rpc(
+        "create_or_get_chat_room",
+        {
+            friend_uuid:friendId
+        }
+    );
 
 
     if(error){
 
-        box.textContent =
-            error.message;
+        console.error(
+            "채팅방 생성 오류:",
+            error
+        );
+
+        alert(
+            "채팅방을 만들 수 없습니다.\n\n" +
+            error.message
+        );
 
         return;
+
     }
 
 
-    if(!data || data.length === 0){
+    /*
+     * RPC 반환 형태가 UUID 하나인 경우
+     */
+    currentChatRoomId =
+        typeof data === "string"
+        ? data
+        : data?.room_id || data?.id;
 
-        box.innerHTML =
-            `<div class="empty">아직 친구가 없습니다.</div>`;
+
+    if(!currentChatRoomId){
+
+        alert(
+            "채팅방 ID를 가져오지 못했습니다."
+        );
 
         return;
+
     }
-
-
-    box.innerHTML = "";
-
-
-    for(const friendship of data){
-
-        const friendId =
-            friendship.user1_id === currentUser.id
-            ? friendship.user2_id
-            : friendship.user1_id;
-
-
-        const {
-            data:user
-        } =
-            await supabaseClient
-            .from("nugu_profiles")
-            .select("id,username,display_name")
-            .eq("id",friendId)
-            .maybeSingle();
-
-
-        if(!user){
-            continue;
-        }
-
-
-        const div =
-            document.createElement("div");
-
-        div.className =
-            "user-result";
-
-
-        div.innerHTML = `
-
-            <div>
-
-                <strong>
-                    ${escapeHtml(user.display_name)}
-                </strong>
-
-                <br>
-
-                @${escapeHtml(user.username)}
-
-            </div>
-
-            <div class="user-actions">
-
-                <button
-                    class="primary"
-                    data-chat-id="${user.id}">
-                    채팅
-                </button>
-
-            </div>
-
-        `;
-
-
-        div
-            .querySelector("[data-chat-id]")
-            .onclick =
-            () => openChat(user);
-
-
-        box.appendChild(div);
-    }
-}
-
-
-/* ========================================
-   채팅방 열기
-======================================== */
-
-async function openChat(friend){
-
-    selectedFriend = friend;
 
 
     document
-        .getElementById("chatTarget")
+        .getElementById("chatBox")
+        .classList.remove("hidden");
+
+
+    document
+        .getElementById("chatFriendSelect")
         .textContent =
-        friend.display_name +
-        " (@" +
-        friend.username +
-        ")와 1:1 채팅";
-
-
-    const {
-        data:roomId,
-        error
-    } =
-        await supabaseClient
-        .rpc(
-            "create_or_get_chat_room",
-            {
-                friend_uuid:friend.id
-            }
-        );
-
-
-    if(error){
-
-        alert(error.message);
-
-        return;
-    }
-
-
-    currentRoom = roomId;
+            "채팅방을 불러왔습니다.";
 
 
     await loadMessages();
 
+    subscribeToChat();
 
-    if(messageChannel){
-
-        await supabaseClient
-            .removeChannel(messageChannel);
-
-        messageChannel = null;
-    }
-
-
-    messageChannel =
-        supabaseClient
-        .channel(
-            "chat-" + roomId + "-" + Date.now()
-        )
-        .on(
-
-            "postgres_changes",
-
-            {
-                event:"INSERT",
-
-                schema:"public",
-
-                table:"nugu_messages",
-
-                filter:
-                    "room_id=eq." + roomId
-            },
-
-            payload => {
-
-                if(
-                    payload.new.sender_id !==
-                    currentUser.id
-                ){
-
-                    addMessage(payload.new);
-
-                }
-
-            }
-
-        )
-        .subscribe();
 }
 
 
-/* ========================================
+/* =========================
    메시지 불러오기
-======================================== */
+========================= */
 
 async function loadMessages(){
 
+    if(!currentChatRoomId){
+        return;
+    }
+
+
     const box =
-        document.getElementById("chatBox");
-
-
-    box.innerHTML =
-        `<div class="loading">메시지를 불러오는 중...</div>`;
+        document.getElementById("chatMessages");
 
 
     const {
         data,
         error
-    } =
-        await supabaseClient
+    } = await supabaseClient
+
         .from("nugu_messages")
+
         .select("*")
-        .eq("room_id",currentRoom)
-        .order("created_at",{
-            ascending:true
-        });
+
+        .eq(
+            "room_id",
+            currentChatRoomId
+        )
+
+        .order(
+            "created_at",
+            {
+                ascending:true
+            }
+        );
 
 
     if(error){
 
-        box.textContent =
-            error.message;
+        console.error(
+            "메시지 불러오기 오류:",
+            error
+        );
+
+        box.innerHTML =
+            `<div class="empty">
+                메시지를 불러오지 못했습니다.
+            </div>`;
 
         return;
+
     }
 
 
     box.innerHTML = "";
 
 
-    for(const msg of data || []){
+    (data || []).forEach(message => {
 
-        addMessage(msg);
+        appendMessage(message);
 
-    }
+    });
 
 
     box.scrollTop =
         box.scrollHeight;
+
 }
 
 
-/* ========================================
+/* =========================
    메시지 표시
-======================================== */
+========================= */
 
-function addMessage(msg){
+function appendMessage(message){
 
     const box =
-        document.getElementById("chatBox");
+        document.getElementById("chatMessages");
 
 
     const div =
         document.createElement("div");
 
 
+    const mine =
+        message.sender_id === currentUser?.id;
+
+
     div.className =
-        "message " +
-        (
-            msg.sender_id === currentUser.id
-            ? "my-message"
-            : "other-message"
-        );
+        "message" +
+        (mine ? " mine" : "");
 
 
-    div.textContent =
-        msg.message || "";
+    div.innerHTML = `
+
+        <div class="message-bubble">
+            ${escapeHtml(message.message || "")}
+        </div>
+
+    `;
 
 
     box.appendChild(div);
 
-
-    box.scrollTop =
-        box.scrollHeight;
 }
 
 
-/* ========================================
-   메시지 보내기
-======================================== */
+/* =========================
+   실시간 채팅
+========================= */
+
+function subscribeToChat(){
+
+    if(chatChannel){
+
+        supabaseClient
+            .removeChannel(chatChannel);
+
+    }
+
+
+    chatChannel =
+        supabaseClient
+
+            .channel(
+                "nugu-chat-" +
+                currentChatRoomId
+            )
+
+            .on(
+                "postgres_changes",
+                {
+                    event:"INSERT",
+                    schema:"public",
+                    table:"nugu_messages",
+                    filter:
+                        "room_id=eq." +
+                        currentChatRoomId
+                },
+                payload => {
+
+                    appendMessage(
+                        payload.new
+                    );
+
+                    const box =
+                        document.getElementById(
+                            "chatMessages"
+                        );
+
+                    box.scrollTop =
+                        box.scrollHeight;
+
+                }
+            )
+
+            .subscribe();
+
+}
+
+
+/* =========================
+   메시지 전송
+========================= */
 
 async function sendMessage(){
 
-    if(!currentRoom){
-
-        alert(
-            "먼저 친구 목록에서 채팅할 친구를 선택해주세요."
-        );
+    if(
+        !currentUser ||
+        !currentChatRoomId
+    ){
 
         return;
+
     }
 
 
@@ -1983,12 +2382,13 @@ async function sendMessage(){
 
     const {
         error
-    } =
-        await supabaseClient
+    } = await supabaseClient
+
         .from("nugu_messages")
+
         .insert({
 
-            room_id:currentRoom,
+            room_id:currentChatRoomId,
 
             sender_id:currentUser.id,
 
@@ -1999,446 +2399,142 @@ async function sendMessage(){
 
     if(error){
 
-        alert(error.message);
+        console.error(error);
+
+        alert(
+            "메시지를 보내지 못했습니다.\n\n" +
+            error.message
+        );
 
         return;
+
     }
 
 
     input.value = "";
 
-
-    /*
-        자신의 메시지는 Realtime 이벤트에서
-        다시 표시하지 않고 여기에서 바로 표시한다.
-    */
-
-    addMessage({
-
-        sender_id:currentUser.id,
-
-        message:message
-
-    });
 }
 
 
-/* ========================================
-   게시물 작성
-======================================== */
+function chatKeyDown(event){
 
-async function createPost(){
+    if(event.key === "Enter"){
 
-    const content =
-        document
-        .getElementById("postContent")
-        .value
-        .trim();
+        event.preventDefault();
 
+        sendMessage();
 
-    const visibility =
-        document
-        .getElementById("postVisibility")
-        .value;
-
-
-    const fileInput =
-        document
-        .getElementById("postFile");
-
-
-    const file =
-        fileInput.files[0];
-
-
-    if(!content && !file){
-
-        alert(
-            "내용이나 사진 또는 영상을 추가해주세요."
-        );
-
-        return;
     }
 
-
-    /*
-        먼저 게시물을 만들어 ID를 얻는다.
-        이후 파일을 post ID 폴더에 저장한다.
-    */
-
-    const {
-        data:post,
-        error:postError
-    } =
-        await supabaseClient
-        .from("nugu_shared_posts")
-        .insert({
-
-            user_id:currentUser.id,
-
-            content:content,
-
-            visibility:visibility
-
-        })
-        .select()
-        .single();
+}
 
 
-    if(postError){
+/* =========================
+   이동
+========================= */
 
-        alert(postError.message);
+function goHome(){
 
-        return;
-    }
+    window.scrollTo({
+        top:0,
+        behavior:"smooth"
+    });
 
-
-    let filePath = null;
-
-
-    if(file){
-
-        filePath =
-            currentUser.id +
-            "/" +
-            post.id +
-            "/" +
-            Date.now() +
-            "_" +
-            sanitizeFileName(file.name);
+}
 
 
-        const {
-            error:uploadError
-        } =
-            await supabaseClient
-            .storage
-            .from("nugu-media")
-            .upload(
-                filePath,
-                file,
-                {
-                    contentType:file.type,
-                    upsert:false
-                }
-            );
+function openFreeBoard(){
+
+    window.location.href =
+        "nugu.html";
+
+}
 
 
-        if(uploadError){
-
-            await supabaseClient
-                .from("nugu_shared_posts")
-                .delete()
-                .eq("id",post.id)
-                .eq("user_id",currentUser.id);
-
-
-            alert(uploadError.message);
-
-            return;
-        }
-
-
-        const {
-            error:updateError
-        } =
-            await supabaseClient
-            .from("nugu_shared_posts")
-            .update({
-
-                file_url:filePath,
-
-                file_type:file.type
-
-            })
-            .eq("id",post.id)
-            .eq("user_id",currentUser.id);
-
-
-        if(updateError){
-
-            alert(updateError.message);
-
-            return;
-        }
-    }
-
+function scrollToPosts(){
 
     document
-        .getElementById("postContent")
-        .value = "";
-
-
-    fileInput.value = "";
-
-
-    await loadPosts();
-}
-
-
-/* ========================================
-   게시물 불러오기
-======================================== */
-
-async function loadPosts(){
-
-    const box =
-        document.getElementById("posts");
-
-
-    box.innerHTML =
-        `<div class="loading">게시물을 불러오는 중...</div>`;
-
-
-    const {
-        data,
-        error
-    } =
-        await supabaseClient
-        .from("nugu_shared_posts")
-        .select("*")
-        .order("created_at",{
-            ascending:false
+        .getElementById("postsCard")
+        .scrollIntoView({
+            behavior:"smooth"
         });
 
-
-    if(error){
-
-        box.textContent =
-            error.message;
-
-        return;
-    }
-
-
-    if(!data || data.length === 0){
-
-        box.innerHTML =
-            `<div class="empty">아직 게시물이 없습니다.</div>`;
-
-        return;
-    }
-
-
-    box.innerHTML = "";
-
-
-    for(const post of data){
-
-        const {
-            data:user
-        } =
-            await supabaseClient
-            .from("nugu_profiles")
-            .select(
-                "display_name,username"
-            )
-            .eq("id",post.user_id)
-            .maybeSingle();
-
-
-        const div =
-            document.createElement("div");
-
-
-        div.className =
-            "post";
-
-
-        const visibilityText =
-            post.visibility === "friends"
-            ? "친구만"
-            : "공개";
-
-
-        let media = "";
-
-
-        if(post.file_url){
-
-            const {
-                data:signed
-            } =
-                await supabaseClient
-                .storage
-                .from("nugu-media")
-                .createSignedUrl(
-                    post.file_url,
-                    3600
-                );
-
-
-            if(signed?.signedUrl){
-
-                if(
-                    post.file_type &&
-                    post.file_type.startsWith("video")
-                ){
-
-                    media = `
-
-                        <video
-                            class="post-media"
-                            src="${escapeAttribute(signed.signedUrl)}"
-                            controls>
-                        </video>
-
-                    `;
-
-                }else{
-
-                    media = `
-
-                        <img
-                            class="post-media"
-                            src="${escapeAttribute(signed.signedUrl)}"
-                            alt="게시물 이미지">
-
-                    `;
-                }
-            }
-        }
-
-
-        div.innerHTML = `
-
-            <div class="post-header">
-
-                <div>
-
-                    <div class="post-user">
-                        ${escapeHtml(
-                            user?.display_name ||
-                            "사용자"
-                        )}
-                    </div>
-
-                    <div class="post-username">
-                        @${escapeHtml(
-                            user?.username ||
-                            ""
-                        )}
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <div class="post-visibility">
-                ${visibilityText}
-            </div>
-
-
-            ${
-                post.content
-                ?
-                `<div class="post-content">
-                    ${escapeHtml(post.content)}
-                </div>`
-                :
-                ""
-            }
-
-
-            ${media}
-
-        `;
-
-
-        box.appendChild(div);
-    }
 }
 
 
-/* ========================================
-   Enter 키로 채팅 보내기
-======================================== */
+function scrollToFriends(){
 
-document
-    .getElementById("chatInput")
-    .addEventListener(
-        "keydown",
-        function(event){
+    document
+        .getElementById("friendsCard")
+        .scrollIntoView({
+            behavior:"smooth"
+        });
 
-            if(
-                event.key === "Enter" &&
-                !event.shiftKey
-            ){
+}
 
-                event.preventDefault();
 
-                sendMessage();
-            }
+function scrollToChat(){
 
+    document
+        .getElementById("chatCard")
+        .scrollIntoView({
+            behavior:"smooth"
+        });
+
+}
+
+
+/* =========================
+   유틸
+========================= */
+
+function formatDate(date){
+
+    if(!date){
+        return "";
+    }
+
+
+    const d =
+        new Date(date);
+
+
+    return d.toLocaleString(
+        "ko-KR",
+        {
+            year:"numeric",
+            month:"2-digit",
+            day:"2-digit",
+            hour:"2-digit",
+            minute:"2-digit"
         }
     );
 
-
-/* ========================================
-   파일명 정리
-======================================== */
-
-function sanitizeFileName(name){
-
-    return name
-        .replace(/[^a-zA-Z0-9._-]/g,"_")
-        .slice(-150);
 }
 
 
-/* ========================================
-   HTML 보안 처리
-======================================== */
-
 function escapeHtml(value){
 
-    return String(value)
+    return String(value ?? "")
         .replaceAll("&","&amp;")
         .replaceAll("<","&lt;")
         .replaceAll(">","&gt;")
         .replaceAll('"',"&quot;")
         .replaceAll("'","&#039;");
+
 }
 
 
 function escapeAttribute(value){
 
-    return escapeHtml(value);
+    return String(value ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;");
+
 }
-
-
-/* ========================================
-   로그인 상태 변화
-======================================== */
-
-supabaseClient
-    .auth
-    .onAuthStateChange(
-        async(event,session)=>{
-
-            if(session){
-
-                currentUser =
-                    session.user;
-
-                await initialize();
-
-            }else{
-
-                currentUser = null;
-
-            }
-
-        }
-    );
-
-
-/* ========================================
-   시작
-======================================== */
-
-initialize();
 
 </script>
 
