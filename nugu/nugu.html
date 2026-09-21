@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<link rel="icon" type="image/png" href="../54/54img/nugu.png">
+<title>NUGU 자유게시판</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+margin:0;
+background:#eef5ff;
+color:#17253d;
+font-family:Arial,"Noto Sans KR",sans-serif
+}
+
+header{
+background:#fff;
+border-bottom:1px solid #d8e3f2;
+position:sticky;
+top:0;
+z-index:10
+}
+
+.header-inner{
+max-width:1100px;
+margin:auto;
+padding:20px 22px;
+display:flex;
+align-items:center
+}
+
+.logo{
+font-size:25px;
+font-weight:800
+}
+
+.logo span{
+color:#f2c400
+}
+
+.container{
+max-width:1100px;
+margin:35px auto;
+padding:0 20px
+}
+
+.board{
+background:#fff;
+border:1px solid #d8e3f2;
+border-radius:16px;
+overflow:hidden;
+box-shadow:0 10px 35px rgba(30,80,130,.08)
+}
+
+.board-top{
+padding:25px;
+border-bottom:1px solid #e3ebf5;
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:15px;
+flex-wrap:wrap
+}
+
+.board-title{
+margin:0;
+font-size:24px
+}
+
+.board-description{
+margin:7px 0 0;
+color:#718096;
+font-size:14px
+}
+
+button{
+border:0;
+cursor:pointer;
+border-radius:9px;
+padding:11px 17px;
+font-size:14px;
+font-weight:700
+}
+
+.primary{
+background:#2563a8;
+color:#fff
+}
+
+.primary:hover{
+background:#1e528c
+}
+
+.secondary{
+background:#edf3fa;
+color:#34506e
+}
+
+.danger{
+background:#fce8e8;
+color:#b52d2d
+}
+
+.search-area{
+padding:18px 25px;
+background:#f8fbff;
+border-bottom:1px solid #e3ebf5;
+display:flex;
+gap:10px
+}
+
+.search-area input{
+flex:1
+}
+
+input,textarea{
+width:100%;
+border:1px solid #ccd9e8;
+border-radius:9px;
+padding:12px;
+font-size:14px;
+outline:none;
+font-family:inherit
+}
+
+input:focus,textarea:focus{
+border-color:#2563a8;
+box-shadow:0 0 0 3px rgba(37,99,168,.1)
+}
+
+textarea{
+min-height:220px;
+resize:vertical
+}
+
+.post-list{
+width:100%;
+border-collapse:collapse
+}
+
+.post-list th{
+background:#f7faff;
+color:#62748a;
+font-size:13px
+}
+
+.post-list th,
+.post-list td{
+padding:15px 12px;
+border-bottom:1px solid #edf1f6;
+text-align:center
+}
+
+.post-list td.title{
+text-align:left
+}
+
+.post-title{
+color:#17253d;
+font-weight:700;
+cursor:pointer
+}
+
+.post-title:hover{
+color:#2563a8
+}
+
+.empty,.loading{
+padding:55px 20px;
+text-align:center;
+color:#8997a8
+}
+
+.modal-bg{
+display:none;
+position:fixed;
+inset:0;
+background:rgba(10,30,55,.45);
+z-index:100;
+padding:20px;
+overflow:auto
+}
+
+.modal{
+width:min(760px,100%);
+margin:40px auto;
+background:#fff;
+border-radius:16px;
+overflow:hidden;
+box-shadow:0 20px 70px rgba(0,0,0,.2)
+}
+
+.modal-header{
+padding:20px 23px;
+border-bottom:1px solid #e5ebf2;
+display:flex;
+justify-content:space-between;
+align-items:center
+}
+
+.modal-header h2{
+margin:0;
+font-size:20px
+}
+
+.close{
+background:none;
+font-size:24px;
+color:#718096;
+padding:0 5px
+}
+
+.modal-body{
+padding:24px
+}
+
+.form-group{
+margin-bottom:18px
+}
+
+.form-group label{
+display:block;
+font-size:14px;
+font-weight:700;
+margin-bottom:7px
+}
+
+.post-content{
+white-space:pre-wrap;
+line-height:1.75;
+min-height:150px;
+padding:20px;
+background:#f8fbff;
+border-radius:10px;
+margin-top:18px
+}
+
+.post-info{
+color:#7b8898;
+font-size:13px;
+padding-bottom:15px;
+border-bottom:1px solid #e6edf5
+}
+
+.post-actions{
+display:flex;
+gap:8px;
+justify-content:flex-end;
+margin-top:15px
+}
+
+.comments{
+margin-top:30px
+}
+
+.comments h3{
+margin:0 0 15px;
+font-size:17px
+}
+
+.comment{
+padding:14px 0;
+border-bottom:1px solid #edf1f6
+}
+
+.comment-meta{
+font-size:12px;
+color:#7c8998;
+margin-bottom:6px
+}
+
+.comment-content{
+white-space:pre-wrap;
+line-height:1.5
+}
+
+.comment-form{
+margin-top:18px;
+display:grid;
+grid-template-columns:180px minmax(0,1fr) auto;
+gap:8px;
+align-items:stretch;
+width:100%
+}
+
+.comment-form input{min-width:0}
+
+.comment-form textarea{
+min-width:0;
+width:100%;
+min-height:75px;
+height:75px;
+resize:vertical;
+display:block
+}
+
+.comment-form button{
+height:75px;
+white-space:nowrap
+}
+
+.comment-form textarea{
+min-height:75px;
+flex:1
+}
+
+.form-actions{
+display:flex;
+justify-content:flex-end;
+gap:8px;
+margin-top:20px
+}
+
+.status{
+position:fixed;
+right:20px;
+bottom:20px;
+background:#17253d;
+color:#fff;
+padding:13px 17px;
+border-radius:10px;
+font-size:13px;
+display:none;
+z-index:300
+}
+
+@media(max-width:700px){
+
+.container{
+margin:20px auto;
+padding:0 10px
+}
+
+.header-inner{
+padding:17px
+}
+
+.board-top{
+padding:20px
+}
+
+.post-list th:nth-child(3),
+.post-list td:nth-child(3),
+.post-list th:nth-child(4),
+.post-list td:nth-child(4){
+display:none
+}
+
+.post-list th,
+.post-list td{
+padding:13px 8px
+}
+
+.modal{
+margin:10px auto
+}
+
+.comment-form{
+grid-template-columns:1fr
+}
+
+.comment-form textarea{
+height:110px;
+min-height:110px
+}
+
+.comment-form button{
+height:auto
+}
+
+.search-area{
+padding:15px
+}
+
+.post-actions{
+flex-wrap:wrap
+}
+
+}
+
+
+.logo{
+text-decoration:none;
+color:#17253d;
+}
+
+.logo:hover{
+color:#17253d;
+}
+
+.header-inner{
+justify-content:space-between;
+}
+
+.header-actions{
+display:flex;
+gap:8px;
+align-items:center;
+}
+
+.admin-panel{
+margin-top:15px;
+border:1px solid #d8e3f2;
+border-radius:12px;
+overflow:hidden;
+}
+
+.admin-panel h3{
+margin:0;
+padding:14px 16px;
+background:#f7faff;
+font-size:16px;
+}
+
+.admin-list{
+max-height:360px;
+overflow:auto;
+}
+
+.admin-row{
+display:flex;
+justify-content:space-between;
+gap:12px;
+align-items:center;
+padding:12px 14px;
+border-top:1px solid #edf1f6;
+}
+
+.admin-row-main{
+min-width:0;
+}
+
+.admin-row-title{
+font-weight:700;
+overflow:hidden;
+text-overflow:ellipsis;
+white-space:nowrap;
+}
+
+.admin-row-meta{
+font-size:12px;
+color:#7c8998;
+margin-top:4px;
+}
+
+.admin-row button{
+flex-shrink:0;
+}
+
+.admin-tabs{
+display:flex;
+gap:8px;
+margin-bottom:14px;
+}
+
+.admin-tabs button.active{
+background:#2563a8;
+color:#fff;
+}
+
+.admin-empty{
+padding:25px;
+text-align:center;
+color:#8997a8;
+}
+
+@media(max-width:700px){
+.header-inner{
+flex-wrap:wrap;
+gap:12px;
+}
+.header-actions{
+width:100%;
+}
+.header-actions button{
+flex:1;
+}
+.admin-row{
+align-items:flex-start;
+}
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+<div class="header-inner">
+<a class="logo" href="index.html" aria-label="홈으로 이동">
+<span>NUGU</span> 자유게시판
+</a>
+
+<div class="header-actions">
+<button class="secondary" onclick="openAdmin()">관리자</button>
+</div>
+</div>
+</header>
+
+<div class="container">
+
+<div class="board">
+
+<div class="board-top">
+
+<div>
+<h1 class="board-title">NUGU 자유게시판</h1>
+<p class="board-description">
+누구나 자유롭게 이야기를 나눌 수 있는 공간입니다.
+</p>
+</div>
+
+<button class="primary" onclick="openWrite()">
+글쓰기
+</button>
+
+</div>
+
+<div class="search-area">
+
+<input
+id="searchInput"
+placeholder="제목 또는 내용 검색"
+onkeydown="if(event.key==='Enter')searchPosts()"
+>
+
+<button class="secondary" onclick="searchPosts()">
+검색
+</button>
+
+<button class="secondary" onclick="loadPosts()">
+전체
+</button>
+
+</div>
+
+<div id="listArea">
+<div class="loading">
+게시글을 불러오는 중...
+</div>
+</div>
+
+</div>
+</div>
+
+
+<!-- 글쓰기 -->
+
+<div class="modal-bg" id="writeModal">
+
+<div class="modal">
+
+<div class="modal-header">
+<h2>새 글 작성</h2>
+<button class="close" onclick="closeModal('writeModal')">×</button>
+</div>
+
+<div class="modal-body">
+
+<div class="form-group">
+<label>작성자</label>
+<input id="writeAuthor" maxlength="30">
+</div>
+
+<div class="form-group">
+<label>제목</label>
+<input id="writeTitle" maxlength="100">
+</div>
+
+<div class="form-group">
+<label>내용</label>
+<textarea id="writeContent" maxlength="10000"></textarea>
+</div>
+
+<div class="form-group">
+<label>비밀번호</label>
+<input
+id="writePassword"
+type="password"
+maxlength="50"
+placeholder="수정 또는 삭제할 때 사용합니다"
+>
+</div>
+
+<div class="form-actions">
+
+<button
+class="secondary"
+onclick="closeModal('writeModal')">
+취소
+</button>
+
+<button
+class="primary"
+onclick="createPost()">
+게시하기
+</button>
+
+</div>
+
+</div>
+</div>
+</div>
+
+
+<!-- 게시글 보기 -->
+
+<div class="modal-bg" id="viewModal">
+
+<div class="modal">
+
+<div class="modal-header">
+
+<h2 id="viewTitle"></h2>
+
+<button class="close" onclick="closeModal('viewModal')">
+×
+</button>
+
+</div>
+
+<div class="modal-body">
+
+<div class="post-info" id="viewInfo"></div>
+
+<div class="post-content" id="viewContent"></div>
+
+<div class="post-actions">
+
+<button
+class="secondary"
+onclick="editPost()">
+수정
+</button>
+
+<button
+class="danger"
+onclick="deletePost()">
+삭제
+</button>
+
+</div>
+
+
+<div class="comments">
+
+<h3>댓글</h3>
+
+<div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button type="button" class="secondary" style="padding:7px 10px;font-size:12px" onclick="loadComments(currentPostId)">댓글 새로고침</button></div>
+<div id="commentList">
+<div class="loading">
+댓글을 불러오는 중...
+</div>
+</div>
+
+<div style="font-size:13px;color:#62748a;margin-bottom:8px;font-weight:700">댓글 작성</div>
+<div class="comment-form">
+
+<input
+id="commentAuthor"
+maxlength="30"
+placeholder="작성자"
+>
+
+<textarea
+id="commentContent"
+maxlength="3000"
+placeholder="댓글을 입력하세요"
+></textarea>
+
+<button
+class="primary"
+onclick="createComment()">
+등록
+</button>
+
+</div>
+
+</div>
+
+</div>
+</div>
+</div>
+
+
+<!-- 수정 -->
+
+<div class="modal-bg" id="editModal">
+
+<div class="modal">
+
+<div class="modal-header">
+
+<h2>게시글 수정</h2>
+
+<button class="close" onclick="closeModal('editModal')">
+×
+</button>
+
+</div>
+
+<div class="modal-body">
+
+<div class="form-group">
+<label>제목</label>
+<input id="editTitle" maxlength="100">
+</div>
+
+<div class="form-group">
+<label>내용</label>
+<textarea id="editContent" maxlength="10000"></textarea>
+</div>
+
+<div class="form-group">
+<label>비밀번호</label>
+<input
+id="editPassword"
+type="password"
+maxlength="50"
+placeholder="글 작성 시 설정한 비밀번호"
+>
+</div>
+
+<div class="form-actions">
+
+<button
+class="secondary"
+onclick="closeModal('editModal')">
+취소
+</button>
+
+<button
+class="primary"
+onclick="saveEdit()">
+수정 완료
+</button>
+
+</div>
+
+</div>
+</div>
+</div>
+
+
+<!-- 관리자 -->
+<div class="modal-bg" id="adminModal">
+<div class="modal">
+<div class="modal-header">
+<h2>관리자</h2>
+<button class="close" onclick="closeAdmin()">×</button>
+</div>
+
+<div class="modal-body" id="adminLoginArea">
+<div class="form-group">
+<label>관리자 비밀번호</label>
+<input id="adminPassword" type="password" maxlength="100"
+placeholder="관리자 비밀번호를 입력하세요"
+onkeydown="if(event.key==='Enter')adminLogin()">
+</div>
+
+<div class="form-actions">
+<button class="secondary" onclick="closeAdmin()">취소</button>
+<button class="primary" onclick="adminLogin()">로그인</button>
+</div>
+</div>
+
+<div class="modal-body" id="adminPanelArea" style="display:none">
+<div class="admin-tabs">
+<button id="adminPostTab" class="secondary active" onclick="showAdminPosts()">게시글 관리</button>
+<button id="adminCommentTab" class="secondary" onclick="showAdminComments()">댓글 관리</button>
+</div>
+
+<div id="adminContent">
+<div class="loading">불러오는 중...</div>
+</div>
+
+<div class="form-actions">
+<button class="secondary" onclick="adminLogout()">로그아웃</button>
+<button class="secondary" onclick="closeAdmin()">닫기</button>
+</div>
+</div>
+</div>
+</div>
+
+
+<div class="status" id="status"></div>
+
+
+<script>
+
+const SUPABASE_URL =
+"https://aqtutjsubqplnjphinjq.supabase.co";
+
+const SUPABASE_KEY =
+"sb_publishable__oSX4ddCVrL3SbHY1m_fEw_OOzfidzO";
+
+const db =
+window.supabase.createClient(
+SUPABASE_URL,
+SUPABASE_KEY
+);
+
+let currentPostId=null;
+let currentPost=null;
+let isAdmin=false;
+let adminPassword=null;
+
+
+function showStatus(text){
+
+const box=document.getElementById("status");
+
+box.textContent=text;
+box.style.display="block";
+
+setTimeout(()=>{
+box.style.display="none";
+},2500);
+
+}
+
+
+function formatDate(date){
+
+return new Date(date).toLocaleString(
+"ko-KR",
+{
+year:"numeric",
+month:"2-digit",
+day:"2-digit",
+hour:"2-digit",
+minute:"2-digit"
+}
+);
+
+}
+
+
+function escapeHTML(value){
+
+return String(value??"")
+.replace(/&/g,"&amp;")
+.replace(/</g,"&lt;")
+.replace(/>/g,"&gt;")
+.replace(/"/g,"&quot;")
+.replace(/'/g,"&#039;");
+
+}
+
+
+async function loadPosts(){
+
+const area=document.getElementById("listArea");
+
+area.innerHTML=
+`<div class="loading">게시글을 불러오는 중...</div>`;
+
+const {data,error}=await db
+.from("nugu_posts")
+.select("*")
+.order("created_at",{ascending:false});
+
+if(error){
+
+console.error(error);
+
+area.innerHTML=
+`<div class="empty">
+게시글을 불러오지 못했습니다.
+</div>`;
+
+return;
+}
+
+renderPosts(data||[]);
+
+}
+
+
+function renderPosts(posts){
+
+const area=document.getElementById("listArea");
+
+if(!posts.length){
+
+area.innerHTML=
+`<div class="empty">
+아직 게시글이 없습니다.<br>
+첫 번째 글을 작성해보세요.
+</div>`;
+
+return;
+
+}
+
+let html=`
+
+<table class="post-list">
+
+<thead>
+<tr>
+<th>번호</th>
+<th>제목</th>
+<th>작성자</th>
+<th>작성일</th>
+<th>조회</th>
+</tr>
+</thead>
+
+<tbody>
+`;
+
+posts.forEach((post,index)=>{
+
+html+=`
+
+<tr>
+
+<td>${posts.length-index}</td>
+
+<td class="title">
+
+<span
+class="post-title"
+onclick="openPost(${post.id})">
+
+${escapeHTML(post.title)}
+
+</span>
+
+</td>
+
+<td>${escapeHTML(post.author)}</td>
+
+<td>${formatDate(post.created_at)}</td>
+
+<td>${post.views||0}</td>
+
+</tr>
+`;
+
+});
+
+html+=`
+</tbody>
+</table>
+`;
+
+area.innerHTML=html;
+
+}
+
+
+function openWrite(){
+
+document.getElementById("writeModal").style.display="block";
+
+}
+
+
+async function createPost(){
+
+const author=
+document.getElementById("writeAuthor").value.trim();
+
+const title=
+document.getElementById("writeTitle").value.trim();
+
+const content=
+document.getElementById("writeContent").value.trim();
+
+const password=
+document.getElementById("writePassword").value;
+
+if(!author){
+
+alert("작성자를 입력해주세요.");
+return;
+
+}
+
+if(!title){
+
+alert("제목을 입력해주세요.");
+return;
+
+}
+
+if(!content){
+
+alert("내용을 입력해주세요.");
+return;
+
+}
+
+if(password.length<4){
+
+alert("비밀번호는 4자 이상 입력해주세요.");
+return;
+
+}
+
+
+const {data,error}=await db.rpc(
+"nugu_create_post",
+{
+p_author:author,
+p_title:title,
+p_content:content,
+p_password:password
+}
+);
+
+
+if(error){
+
+console.error(error);
+
+alert(
+"게시글 등록에 실패했습니다.\n\n"+
+error.message
+);
+
+return;
+
+}
+
+
+document.getElementById("writeAuthor").value="";
+document.getElementById("writeTitle").value="";
+document.getElementById("writeContent").value="";
+document.getElementById("writePassword").value="";
+
+closeModal("writeModal");
+
+showStatus("게시글이 등록되었습니다.");
+
+loadPosts();
+
+}
+
+
+async function openPost(id){
+
+currentPostId=id;
+
+const {data,error}=await db
+.from("nugu_posts")
+.select("*")
+.eq("id",id)
+.single();
+
+if(error||!data){
+
+alert("게시글을 불러오지 못했습니다.");
+return;
+
+}
+
+currentPost=data;
+
+
+await db.rpc(
+"nugu_increment_views",
+{
+post_id:id
+}
+);
+
+
+document.getElementById("viewTitle").textContent=
+data.title;
+
+document.getElementById("viewInfo").textContent=
+`${data.author} · ${formatDate(data.created_at)} · 조회 ${(data.views||0)+1}`;
+
+document.getElementById("viewContent").textContent=
+data.content;
+
+document.getElementById("viewModal").style.display="block";
+
+loadComments(id);
+
+}
+
+
+async function editPost(){
+
+if(!currentPost)return;
+
+document.getElementById("editTitle").value=
+currentPost.title;
+
+document.getElementById("editContent").value=
+currentPost.content;
+
+document.getElementById("editPassword").value="";
+
+document.getElementById("editModal").style.display="block";
+
+}
+
+
+async function saveEdit(){
+
+const title=
+document.getElementById("editTitle").value.trim();
+
+const content=
+document.getElementById("editContent").value.trim();
+
+const password=
+document.getElementById("editPassword").value;
+
+if(!title){
+
+alert("제목을 입력해주세요.");
+return;
+
+}
+
+if(!content){
+
+alert("내용을 입력해주세요.");
+return;
+
+}
+
+if(!password){
+
+alert("비밀번호를 입력해주세요.");
+return;
+
+}
+
+
+const {data,error}=await db.rpc(
+"nugu_update_post",
+{
+p_id:currentPostId,
+p_password:password,
+p_title:title,
+p_content:content
+}
+);
+
+
+if(error){
+
+console.error(error);
+
+alert(
+"수정 중 오류가 발생했습니다.\n\n"+
+error.message
+);
+
+return;
+
+}
+
+
+if(data!==true){
+
+alert("비밀번호가 올바르지 않습니다.");
+return;
+
+}
+
+
+closeModal("editModal");
+
+showStatus("게시글이 수정되었습니다.");
+
+await loadPosts();
+
+openPost(currentPostId);
+
+}
+
+
+async function deletePost(){
+
+if(!currentPostId)return;
+
+const password=
+prompt("게시글 작성 시 설정한 비밀번호를 입력하세요.");
+
+if(password===null)return;
+
+if(!password){
+
+alert("비밀번호를 입력해주세요.");
+return;
+
+}
+
+
+if(!confirm(
+"정말 이 게시글을 삭제하시겠습니까?"
+)){
+
+return;
+
+}
+
+
+const {data,error}=await db.rpc(
+"nugu_delete_post",
+{
+p_id:currentPostId,
+p_password:password
+}
+);
+
+
+if(error){
+
+console.error(error);
+
+alert(
+"삭제 중 오류가 발생했습니다.\n\n"+
+error.message
+);
+
+return;
+
+}
+
+
+if(data!==true){
+
+alert("비밀번호가 올바르지 않습니다.");
+return;
+
+}
+
+
+closeModal("viewModal");
+
+showStatus("게시글이 삭제되었습니다.");
+
+currentPostId=null;
+currentPost=null;
+
+loadPosts();
+
+}
+
+
+async function loadComments(postId){
+
+const box=document.getElementById("commentList");
+if(!box)return false;
+
+box.innerHTML='<div class="loading">댓글을 불러오는 중...</div>';
+
+const result=await db
+.from("nugu_comments")
+.select("id,post_id,author,content,created_at")
+.eq("post_id",postId)
+.order("created_at",{ascending:true});
+
+if(result.error){
+console.error("댓글 조회 오류:",result.error);
+box.innerHTML='<div class="empty">댓글을 불러오지 못했습니다.<br><small>'+
+escapeHTML(result.error.message)+'</small></div>';
+return false;
+}
+
+const comments=result.data||[];
+
+if(comments.length===0){
+box.innerHTML='<div class="empty">아직 댓글이 없습니다.</div>';
+return true;
+}
+
+box.innerHTML=comments.map(c=>`
+<div class="comment">
+  <div class="comment-meta">
+    ${escapeHTML(c.author||"익명")} · ${formatDate(c.created_at)}
+    ${isAdmin ? `<button type="button" class="danger" style="padding:4px 8px;font-size:11px;margin-left:6px" onclick="adminDeleteComment(${c.id})">삭제</button>` : ""}
+  </div>
+  <div class="comment-content">${escapeHTML(c.content||"")}</div>
+</div>
+`).join("");
+
+return true;
+}
+
+async function createComment(){
+
+if(!currentPostId){
+alert("게시글을 먼저 선택해주세요.");
+return;
+}
+
+const authorEl=document.getElementById("commentAuthor");
+const contentEl=document.getElementById("commentContent");
+
+const author=(authorEl?.value||"").trim();
+const content=(contentEl?.value||"").trim();
+
+if(!author){
+alert("작성자를 입력해주세요.");
+authorEl?.focus();
+return;
+}
+
+if(!content){
+alert("댓글 내용을 입력해주세요.");
+contentEl?.focus();
+return;
+}
+
+const {data,error}=await db.rpc("nugu_create_comment",{
+p_post_id:Number(currentPostId),
+p_author:author,
+p_content:content
+});
+
+if(error){
+console.error("댓글 등록 RPC 오류:",error);
+alert("댓글 등록에 실패했습니다.\n\n"+error.message);
+return;
+}
+
+if(!data){
+alert("댓글 등록에 실패했습니다.");
+return;
+}
+
+authorEl.value="";
+contentEl.value="";
+
+showStatus("댓글이 등록되었습니다.");
+await loadComments(currentPostId);
+
+}
+
+async function searchPosts(){
+
+const keyword=
+document.getElementById("searchInput").value.trim();
+
+if(!keyword){
+
+loadPosts();
+return;
+
+}
+
+const {data,error}=await db
+.from("nugu_posts")
+.select("*")
+.or(
+`title.ilike.%${keyword}%,content.ilike.%${keyword}%`
+)
+.order("created_at",{ascending:false});
+
+if(error){
+
+alert("검색 중 오류가 발생했습니다.");
+return;
+
+}
+
+renderPosts(data||[]);
+
+}
+
+
+
+function openAdmin(){
+document.getElementById("adminModal").style.display="block";
+
+if(adminPassword){
+document.getElementById("adminLoginArea").style.display="none";
+document.getElementById("adminPanelArea").style.display="block";
+showAdminPosts();
+}else{
+document.getElementById("adminLoginArea").style.display="block";
+document.getElementById("adminPanelArea").style.display="none";
+document.getElementById("adminPassword").value="";
+setTimeout(()=>document.getElementById("adminPassword").focus(),50);
+}
+}
+
+function closeAdmin(){
+document.getElementById("adminModal").style.display="none";
+}
+
+async function adminLogin(){
+const password=document.getElementById("adminPassword").value;
+
+if(!password){
+alert("관리자 비밀번호를 입력해주세요.");
+return;
+}
+
+const {data,error}=await db.rpc("nugu_admin_check",{
+p_password:password
+});
+
+if(error){
+console.error(error);
+alert("관리자 로그인 오류입니다.\n\n"+error.message);
+return;
+}
+
+if(data!==true){
+alert("관리자 비밀번호가 올바르지 않습니다.");
+return;
+}
+
+adminPassword=password;
+document.getElementById("adminLoginArea").style.display="none";
+document.getElementById("adminPanelArea").style.display="block";
+showStatus("관리자 로그인되었습니다.");
+showAdminPosts();
+}
+
+function adminLogout(){
+adminPassword=null;
+document.getElementById("adminLoginArea").style.display="block";
+document.getElementById("adminPanelArea").style.display="none";
+document.getElementById("adminPassword").value="";
+}
+
+function setAdminTab(active){
+document.getElementById("adminPostTab").classList.toggle("active",active==="posts");
+document.getElementById("adminCommentTab").classList.toggle("active",active==="comments");
+}
+
+async function showAdminPosts(){
+if(!adminPassword)return;
+setAdminTab("posts");
+
+const box=document.getElementById("adminContent");
+box.innerHTML='<div class="loading">게시글을 불러오는 중...</div>';
+
+const {data,error}=await db
+.from("nugu_posts")
+.select("id,author,title,created_at,views")
+.order("created_at",{ascending:false});
+
+if(error){
+box.innerHTML='<div class="admin-empty">게시글을 불러오지 못했습니다.</div>';
+console.error(error);
+return;
+}
+
+if(!data.length){
+box.innerHTML='<div class="admin-empty">게시글이 없습니다.</div>';
+return;
+}
+
+box.innerHTML='<div class="admin-panel"><h3>게시글 '+data.length+'개</h3><div class="admin-list">'+
+data.map(post=>`
+<div class="admin-row">
+<div class="admin-row-main">
+<div class="admin-row-title">${escapeHTML(post.title)}</div>
+<div class="admin-row-meta">${escapeHTML(post.author)} · ${formatDate(post.created_at)} · 조회 ${post.views||0}</div>
+</div>
+<button class="danger" onclick="adminDeletePost(${post.id})">강제 삭제</button>
+</div>
+`).join("")+
+'</div></div>';
+}
+
+async function showAdminComments(){
+if(!adminPassword)return;
+setAdminTab("comments");
+
+const box=document.getElementById("adminContent");
+box.innerHTML='<div class="loading">댓글을 불러오는 중...</div>';
+
+const {data,error}=await db
+.from("nugu_comments")
+.select("id,post_id,author,content,created_at")
+.order("created_at",{ascending:false});
+
+if(error){
+box.innerHTML='<div class="admin-empty">댓글을 불러오지 못했습니다.</div>';
+console.error(error);
+return;
+}
+
+if(!data.length){
+box.innerHTML='<div class="admin-empty">댓글이 없습니다.</div>';
+return;
+}
+
+const postIds=[...new Set(data.map(c=>c.post_id))];
+
+let titleMap={};
+if(postIds.length){
+const result=await db
+.from("nugu_posts")
+.select("id,title")
+.in("id",postIds);
+
+if(!result.error){
+(result.data||[]).forEach(p=>titleMap[p.id]=p.title);
+}
+}
+
+box.innerHTML='<div class="admin-panel"><h3>댓글 '+data.length+'개</h3><div class="admin-list">'+
+data.map(comment=>`
+<div class="admin-row">
+<div class="admin-row-main">
+<div class="admin-row-title">${escapeHTML(comment.content)}</div>
+<div class="admin-row-meta">${escapeHTML(comment.author)} · ${formatDate(comment.created_at)} · ${escapeHTML(titleMap[comment.post_id]||"삭제된 게시글")}</div>
+</div>
+<button class="danger" onclick="adminDeleteComment(${comment.id})">강제 삭제</button>
+</div>
+`).join("")+
+'</div></div>';
+}
+
+async function adminDeletePost(id){
+if(!adminPassword)return;
+
+if(!confirm("관리자 권한으로 이 게시글을 삭제하시겠습니까?\n댓글도 함께 삭제됩니다."))return;
+
+const {data,error}=await db.rpc("nugu_admin_delete_post",{
+p_id:id,
+p_password:adminPassword
+});
+
+if(error){
+console.error(error);
+alert("게시글 강제 삭제 중 오류가 발생했습니다.\n\n"+error.message);
+return;
+}
+
+if(data!==true){
+adminLogout();
+alert("관리자 인증이 만료되었거나 비밀번호가 올바르지 않습니다.");
+return;
+}
+
+showStatus("게시글이 강제 삭제되었습니다.");
+await loadPosts();
+showAdminPosts();
+
+if(currentPostId===id){
+closeModal("viewModal");
+currentPostId=null;
+currentPost=null;
+}
+}
+
+async function adminDeleteComment(id){
+if(!adminPassword)return;
+
+if(!confirm("관리자 권한으로 이 댓글을 삭제하시겠습니까?"))return;
+
+const {data,error}=await db.rpc("nugu_admin_delete_comment",{
+p_id:id,
+p_password:adminPassword
+});
+
+if(error){
+console.error(error);
+alert("댓글 강제 삭제 중 오류가 발생했습니다.\n\n"+error.message);
+return;
+}
+
+if(data!==true){
+adminLogout();
+alert("관리자 인증이 만료되었거나 비밀번호가 올바르지 않습니다.");
+return;
+}
+
+showStatus("댓글이 강제 삭제되었습니다.");
+
+if(currentPostId){
+loadComments(currentPostId);
+}
+
+showAdminComments();
+}
+
+function closeModal(id){
+
+document.getElementById(id).style.display="none";
+
+}
+
+
+document.querySelectorAll(".modal-bg")
+.forEach(modal=>{
+
+modal.addEventListener("click",e=>{
+
+if(e.target===modal){
+
+modal.style.display="none";
+
+}
+
+});
+
+});
+
+
+db.channel("nugu-board-realtime")
+
+.on(
+"postgres_changes",
+{
+event:"*",
+schema:"public",
+table:"nugu_posts"
+},
+()=>{
+
+loadPosts();
+
+}
+)
+
+.on(
+"postgres_changes",
+{
+event:"*",
+schema:"public",
+table:"nugu_comments"
+},
+()=>{
+
+if(currentPostId){
+
+loadComments(currentPostId);
+
+}
+
+}
+)
+
+.subscribe();
+
+
+loadPosts();
+
+</script>
+
+</body>
+</html>
