@@ -30,6 +30,11 @@ const SEED_URLS = [
     "https://www.mozilla.org/",
     "https://www.nasa.gov/",
 
+    "https://www.kbs.co.kr//",
+    "https://www.cucumber555.github.io/oscadia/",
+    "https://www.cucumber555.github.io/",
+    "https://www.naver.com/",
+    "https://www.google.com/",
     "https://www.bbc.com/",
     "https://www.cnn.com/",
     "https://www.reddit.com/",
