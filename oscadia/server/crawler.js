@@ -462,11 +462,14 @@ async function crawl() {
 // 실행
 // ==============================
 
-      console.log("================================");
-    console.log(
-        `OSCADIA CRAWLER FINISHED: ${crawled} pages`
-    );
-    console.log("================================");
+    export { crawl };
+
+if (process.argv[1] === new URL(import.meta.url).pathname) {
+    crawl().catch(error => {
+        console.error("CRAWLER FAILED:", error);
+        process.exit(1);
+    });
+}
 
 export { crawl };
 
