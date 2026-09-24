@@ -470,12 +470,3 @@ if (process.argv[1] === new URL(import.meta.url).pathname) {
         process.exit(1);
     });
 }
-
-export { crawl };
-
-if (process.argv[1] === new URL(import.meta.url).pathname) {
-    crawl().catch(error => {
-        console.error("CRAWLER FAILED:", error);
-        process.exit(1);
-    });
-}
