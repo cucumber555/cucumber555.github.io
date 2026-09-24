@@ -5,6 +5,15 @@ import pg from "pg";
 import path from "path";
 import { fileURLToPath } from "url";
 
+process.on("uncaughtException", (error) => {
+    console.error("UNCAUGHT EXCEPTION:");
+    console.error(error);
+});
+
+process.on("unhandledRejection", (error) => {
+    console.error("UNHANDLED REJECTION:");
+    console.error(error);
+});
 dotenv.config();
 
 const { Pool } = pg;
@@ -148,4 +157,9 @@ app.get("/api/health", async (req, res) => {
             code: error.code || null
         });
     }
+});
+const PORT = process.env.PORT || 10000;
+
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`OSCADIA running on port ${PORT}`);
 });
