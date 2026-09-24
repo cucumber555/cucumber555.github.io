@@ -423,12 +423,13 @@ async function crawl() {
 
             crawled++;
 
-        } catch (error) {
-            console.error(
-                `[DB ERROR] ${error.message}`
-            );
-        }
-
+      } catch (error) {
+    console.error("[DB ERROR]");
+    console.error("message:", error.message);
+    console.error("code:", error.code);
+    console.error("detail:", error.detail);
+    console.error("hint:", error.hint);
+}
         // 다음 페이지 추가
         if (depth < MAX_DEPTH) {
             for (const link of data.links) {
@@ -454,7 +455,6 @@ async function crawl() {
     );
     console.log("================================");
 
-    await pool.end();
 }
 
 
@@ -462,11 +462,17 @@ async function crawl() {
 // 실행
 // ==============================
 
-crawl().catch(error => {
-    console.error(
-        "CRAWLER FAILED:",
-        error
+      console.log("================================");
+    console.log(
+        `OSCADIA CRAWLER FINISHED: ${crawled} pages`
     );
+    console.log("================================");
 
-    process.exit(1);
-});
+export { crawl };
+
+if (process.argv[1] === new URL(import.meta.url).pathname) {
+    crawl().catch(error => {
+        console.error("CRAWLER FAILED:", error);
+        process.exit(1);
+    });
+}
