@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+>
+
+<title>OSCADIA</title>
+
+<style>
+
+*{
+    box-sizing:border-box;
+}
+
+body{
+    margin:0;
+    min-height:100vh;
+    font-family:Arial,"Noto Sans KR",sans-serif;
+    color:#202124;
+    background:white;
+}
+
+header{
+    height:64px;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    padding:0 28px;
+
+    border-bottom:1px solid #eee;
+}
+
+.logo{
+    font-size:25px;
+    font-weight:700;
+    letter-spacing:-1px;
+}
+
+nav{
+    display:flex;
+    gap:8px;
+}
+
+nav button{
+    border:0;
+    background:white;
+
+    padding:9px 13px;
+
+    border-radius:8px;
+
+    cursor:pointer;
+}
+
+nav button:hover{
+    background:#f1f3f4;
+}
+
+main{
+    max-width:900px;
+
+    margin:auto;
+
+    padding:
+        120px 20px
+        50px;
+}
+
+.brand{
+    text-align:center;
+
+    font-size:58px;
+    font-weight:700;
+
+    letter-spacing:-3px;
+
+    margin-bottom:35px;
+}
+
+.search-box{
+    position:relative;
+
+    width:min(680px,100%);
+
+    margin:auto;
+}
+
+.search-box input{
+    width:100%;
+    height:55px;
+
+    border:1px solid #dfe1e5;
+
+    border-radius:28px;
+
+    padding:
+        0 60px 0 22px;
+
+    font-size:17px;
+
+    outline:none;
+
+    box-shadow:
+        0 1px 5px
+        rgba(0,0,0,.08);
+}
+
+.search-box input:focus{
+    box-shadow:
+        0 2px 10px
+        rgba(0,0,0,.15);
+}
+
+.search-button{
+    position:absolute;
+
+    right:7px;
+    top:7px;
+
+    width:41px;
+    height:41px;
+
+    border:0;
+    border-radius:50%;
+
+    background:#222;
+    color:white;
+
+    cursor:pointer;
+
+    font-size:18px;
+}
+
+.results{
+    margin-top:55px;
+}
+
+.info{
+    color:#777;
+    font-size:13px;
+    margin-bottom:20px;
+}
+
+.result{
+    padding:
+        17px 0;
+
+    border-bottom:
+        1px solid #eee;
+}
+
+.result a{
+    color:#174ea6;
+    text-decoration:none;
+}
+
+.result a:hover{
+    text-decoration:underline;
+}
+
+.result-title{
+    font-size:19px;
+    margin-bottom:6px;
+}
+
+.result-url{
+    color:#188038;
+    font-size:13px;
+    margin-bottom:6px;
+
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.result-description{
+    color:#5f6368;
+    font-size:14px;
+    line-height:1.5;
+}
+
+.empty{
+    text-align:center;
+    padding:50px 10px;
+    color:#777;
+}
+
+.loading{
+    text-align:center;
+    color:#777;
+    padding:50px;
+}
+
+@media(max-width:600px){
+
+    main{
+        padding-top:90px;
+    }
+
+    .brand{
+        font-size:44px;
+    }
+
+    header{
+        padding:0 15px;
+    }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+<header>
+
+    <div class="logo">
+        OSCADIA
+    </div>
+
+    <nav>
+
+        <button
+            onclick="location.href='osmail.html'"
+        >
+            OSmail
+        </button>
+
+    </nav>
+
+</header>
+
+
+<main>
+
+    <div class="brand">
+        OSCADIA
+    </div>
+
+
+    <div class="search-box">
+
+        <input
+            id="query"
+            type="search"
+            placeholder="웹 검색"
+            autocomplete="off"
+        >
+
+        <button
+            class="search-button"
+            onclick="search()"
+        >
+            ⌕
+        </button>
+
+    </div>
+
+
+    <div
+        id="results"
+        class="results"
+    ></div>
+
+</main>
+
+
+<script>
+
+const queryInput =
+    document.getElementById("query");
+
+const results =
+    document.getElementById("results");
+
+
+queryInput.addEventListener(
+    "keydown",
+    event => {
+
+        if(event.key === "Enter"){
+
+            search();
+
+        }
+
+    }
+);
+
+
+async function search(){
+
+    const q =
+        queryInput.value.trim();
+
+
+    if(!q){
+
+        results.innerHTML = "";
+
+        return;
+
+    }
+
+
+    results.innerHTML =
+        `<div class="loading">
+            검색 중...
+        </div>`;
+
+
+    try{
+
+        const response =
+            await fetch(
+                `/api/search?q=${
+                    encodeURIComponent(q)
+                }`
+            );
+
+
+        if(!response.ok){
+
+            throw new Error(
+                "Search failed"
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        renderResults(data);
+
+
+    }catch(error){
+
+        console.error(error);
+
+        results.innerHTML =
+            `<div class="empty">
+                검색 서버에 연결할 수 없습니다.
+            </div>`;
+
+    }
+
+}
+
+
+function renderResults(data){
+
+    if(!data.results ||
+       data.results.length === 0){
+
+        results.innerHTML =
+            `<div class="empty">
+                "${escapeHtml(data.query)}"
+                에 대한 검색 결과가 없습니다.
+            </div>`;
+
+        return;
+
+    }
+
+
+    let html =
+        `<div class="info">
+            검색 결과 ${data.count}개
+        </div>`;
+
+
+    html += data.results
+        .map(page => `
+
+            <div class="result">
+
+                <div class="result-title">
+
+                    <a
+                        href="${escapeAttribute(page.url)}"
+                        target="_blank"
+                        rel="noopener"
+                    >
+                        ${escapeHtml(
+                            page.title ||
+                            page.url
+                        )}
+                    </a>
+
+                </div>
+
+
+                <div class="result-url">
+
+                    ${escapeHtml(page.url)}
+
+                </div>
+
+
+                <div class="result-description">
+
+                    ${escapeHtml(
+                        page.description ||
+                        makeSnippet(page)
+                    )}
+
+                </div>
+
+            </div>
+
+        `)
+        .join("");
+
+
+    results.innerHTML = html;
+
+}
+
+
+function makeSnippet(page){
+
+    const text =
+        page.description ||
+        "";
+
+    return text.slice(0,180);
+
+}
+
+
+function escapeHtml(value){
+
+    return String(value)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+
+}
+
+
+function escapeAttribute(value){
+
+    return escapeHtml(value);
+
+}
+
+</script>
+
+</body>
+</html>
