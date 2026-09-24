@@ -17,7 +17,7 @@ const pool = new Pool({
 // 설정
 // ==============================
 
-const MAX_PAGES = 100;          // 한 번 실행할 때 최대 페이지 수
+const MAX_PAGES = 500;          // 한 번 실행할 때 최대 페이지 수
 const MAX_DEPTH = 2;            // 링크를 몇 단계까지 따라갈지
 const REQUEST_DELAY = 1200;      // 요청 사이 대기 시간
 const REQUEST_TIMEOUT = 10000;  // 요청 제한 시간
@@ -28,7 +28,19 @@ const SEED_URLS = [
     "https://www.wikipedia.org/",
     "https://github.com/",
     "https://www.mozilla.org/",
-    "https://www.nasa.gov/"
+    "https://www.nasa.gov/",
+
+    "https://www.bbc.com/",
+    "https://www.cnn.com/",
+    "https://www.reddit.com/",
+    "https://stackoverflow.com/",
+    "https://www.nytimes.com/",
+    "https://www.theguardian.com/",
+    "https://www.britannica.com/",
+    "https://www.archive.org/",
+    "https://www.w3.org/",
+    "https://www.python.org/",
+    "https://www.namu.wiki/"
 ];
 
 // 이미 방문한 URL
