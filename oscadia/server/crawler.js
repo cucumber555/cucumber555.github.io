@@ -5,6 +5,11 @@ import robotsParser from "robots-parser";
 
 const { Pool } = pg;
 
+
+// ========================================
+// PostgreSQL
+// ========================================
+
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
@@ -13,9 +18,10 @@ const pool = new Pool({
     max: 2
 });
 
-// ==============================
+
+// ========================================
 // 설정
-// ==============================
+// ========================================
 
 const MAX_PAGES = 2000;
 const MAX_DEPTH = 3;
@@ -25,10 +31,17 @@ const REQUEST_TIMEOUT = 10000;
 
 const MAX_CONTENT = 100000;
 
-// sitemap에서 한 번에 너무 많은 URL이 들어오는 것을 방지
+// sitemap에서 도메인별로 가져올 최대 URL
 const MAX_SITEMAP_URLS_PER_DOMAIN = 300;
 
-// 처음 탐색을 시작할 사이트
+// 큐 최대 크기
+const MAX_QUEUE_SIZE = MAX_PAGES * 3;
+
+
+// ========================================
+// 시작 사이트
+// ========================================
+
 const SEED_URLS = [
     "https://www.wikipedia.org/",
     "https://github.com/",
@@ -50,13 +63,22 @@ const SEED_URLS = [
     "https://www.archive.org/",
     "https://www.w3.org/",
     "https://www.python.org/",
-    "https://www.namu.wiki/"
+    "https://www.namu.wiki/",
+    "https://www.daum.net/"
 ];
 
 
-// ==============================
+// ========================================
+// 캐시
+// ========================================
+
+const robotsCache = new Map();
+const sitemapCache = new Map();
+
+
+// ========================================
 // 유틸
-// ==============================
+// ========================================
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -101,7 +123,7 @@ function normalizeUrl(url, baseUrl) {
 
 function getDomain(url) {
     try {
-        return new URL(url).hostname;
+        return new URL(url).hostname.toLowerCase();
     } catch {
         return "";
     }
@@ -117,7 +139,12 @@ function getOrigin(url) {
 }
 
 
+// ========================================
+// HTML 여부 확인
+// ========================================
+
 function isProbablyHtml(url, contentType = "") {
+
     const lower = url.toLowerCase();
 
     const blockedExtensions = [
@@ -128,6 +155,8 @@ function isProbablyHtml(url, contentType = "") {
         ".webp",
         ".svg",
         ".ico",
+        ".bmp",
+
         ".mp3",
         ".wav",
         ".ogg",
@@ -136,19 +165,24 @@ function isProbablyHtml(url, contentType = "") {
         ".avi",
         ".mov",
         ".mkv",
+
         ".zip",
         ".rar",
         ".7z",
         ".tar",
         ".gz",
+
         ".pdf",
         ".exe",
         ".dmg",
         ".iso",
         ".apk",
         ".bin",
+
         ".css",
-        ".js"
+        ".js",
+        ".json",
+        ".xml"
     ];
 
     const pathname = lower.split("?")[0];
@@ -173,14 +207,12 @@ function isProbablyHtml(url, contentType = "") {
 }
 
 
-// ==============================
+// ========================================
 // robots.txt
-// ==============================
-
-const robotsCache = new Map();
-
+// ========================================
 
 async function getRobots(url) {
+
     let parsed;
 
     try {
@@ -198,12 +230,14 @@ async function getRobots(url) {
     const robotsUrl = `${origin}/robots.txt`;
 
     try {
+
         const response = await fetch(
             robotsUrl,
             {
                 signal: AbortSignal.timeout(
                     REQUEST_TIMEOUT
                 ),
+
                 headers: {
                     "User-Agent":
                         "OSCADIA-Bot/1.0"
@@ -217,11 +251,10 @@ async function getRobots(url) {
             text = await response.text();
         }
 
-        const robots =
-            robotsParser(
-                robotsUrl,
-                text
-            );
+        const robots = robotsParser(
+            robotsUrl,
+            text
+        );
 
         robotsCache.set(
             origin,
@@ -231,11 +264,13 @@ async function getRobots(url) {
         return robots;
 
     } catch {
-        const robots =
-            robotsParser(
-                robotsUrl,
-                ""
-            );
+
+        // robots.txt를 가져오지 못한 경우
+        // 빈 robots 정책 사용
+        const robots = robotsParser(
+            robotsUrl,
+            ""
+        );
 
         robotsCache.set(
             origin,
@@ -248,7 +283,9 @@ async function getRobots(url) {
 
 
 async function allowedByRobots(url) {
+
     try {
+
         const robots =
             await getRobots(url);
 
@@ -264,19 +301,18 @@ async function allowedByRobots(url) {
         );
 
     } catch {
+
         return false;
     }
 }
 
 
-// ==============================
+// ========================================
 // Sitemap
-// ==============================
-
-const sitemapCache = new Map();
-
+// ========================================
 
 async function getSitemapUrls(origin) {
+
     if (sitemapCache.has(origin)) {
         return sitemapCache.get(origin);
     }
@@ -284,6 +320,7 @@ async function getSitemapUrls(origin) {
     const discovered = new Set();
 
     try {
+
         const robotsUrl =
             `${origin}/robots.txt`;
 
@@ -295,6 +332,7 @@ async function getSitemapUrls(origin) {
                         AbortSignal.timeout(
                             REQUEST_TIMEOUT
                         ),
+
                     headers: {
                         "User-Agent":
                             "OSCADIA-Bot/1.0"
@@ -302,9 +340,10 @@ async function getSitemapUrls(origin) {
                 }
             );
 
-        let sitemapLocations = [];
+        const sitemapLocations = [];
 
         if (response.ok) {
+
             const text =
                 await response.text();
 
@@ -312,6 +351,7 @@ async function getSitemapUrls(origin) {
                 const line
                 of text.split(/\r?\n/)
             ) {
+
                 const trimmed =
                     line.trim();
 
@@ -320,6 +360,7 @@ async function getSitemapUrls(origin) {
                         .toLowerCase()
                         .startsWith("sitemap:")
                 ) {
+
                     const sitemap =
                         trimmed
                             .slice(8)
@@ -334,10 +375,12 @@ async function getSitemapUrls(origin) {
             }
         }
 
-        // robots.txt에 Sitemap이 없으면 기본 위치도 시도
+        // robots.txt에 Sitemap이 없으면
+        // 기본 sitemap.xml 시도
         if (
             sitemapLocations.length === 0
         ) {
+
             sitemapLocations.push(
                 `${origin}/sitemap.xml`
             );
@@ -347,6 +390,7 @@ async function getSitemapUrls(origin) {
             const sitemapUrl
             of sitemapLocations
         ) {
+
             await collectSitemapUrls(
                 sitemapUrl,
                 discovered,
@@ -362,7 +406,7 @@ async function getSitemapUrls(origin) {
         }
 
     } catch {
-        // sitemap이 없어도 계속 진행
+        // sitemap 오류는 무시
     }
 
     const result =
@@ -386,6 +430,7 @@ async function collectSitemapUrls(
     result,
     visitedSitemaps
 ) {
+
     if (
         result.size >=
         MAX_SITEMAP_URLS_PER_DOMAIN
@@ -404,18 +449,15 @@ async function collectSitemapUrls(
     }
 
     if (
-        visitedSitemaps.has(
-            normalized
-        )
+        visitedSitemaps.has(normalized)
     ) {
         return;
     }
 
-    visitedSitemaps.add(
-        normalized
-    );
+    visitedSitemaps.add(normalized);
 
     try {
+
         const response =
             await fetch(
                 normalized,
@@ -424,6 +466,7 @@ async function collectSitemapUrls(
                         AbortSignal.timeout(
                             REQUEST_TIMEOUT
                         ),
+
                     headers: {
                         "User-Agent":
                             "OSCADIA-Bot/1.0"
@@ -450,31 +493,57 @@ async function collectSitemapUrls(
                 }
             );
 
-        // sitemap index
+
+        // --------------------------------
+        // Sitemap Index
+        // --------------------------------
+
+        const childSitemaps = [];
+
         $("sitemap > loc").each(
             (_, element) => {
+
                 const loc =
                     $(element)
                         .text()
                         .trim();
 
-                if (
-                    loc &&
-                    result.size <
-                        MAX_SITEMAP_URLS_PER_DOMAIN
-                ) {
-                    collectSitemapUrls(
-                        loc,
-                        result,
-                        visitedSitemaps
-                    );
+                if (loc) {
+                    childSitemaps.push(loc);
                 }
             }
         );
 
-        // 일반 sitemap
+        // 중요:
+        // each 안에서 async를 실행하지 않고
+        // 여기서 순서대로 await
+        for (
+            const loc
+            of childSitemaps
+        ) {
+
+            if (
+                result.size >=
+                MAX_SITEMAP_URLS_PER_DOMAIN
+            ) {
+                break;
+            }
+
+            await collectSitemapUrls(
+                loc,
+                result,
+                visitedSitemaps
+            );
+        }
+
+
+        // --------------------------------
+        // 일반 Sitemap
+        // --------------------------------
+
         $("url > loc").each(
             (_, element) => {
+
                 if (
                     result.size >=
                     MAX_SITEMAP_URLS_PER_DOMAIN
@@ -505,12 +574,14 @@ async function collectSitemapUrls(
 }
 
 
-// ==============================
+// ========================================
 // 페이지 가져오기
-// ==============================
+// ========================================
 
 async function fetchPage(url) {
+
     try {
+
         const response =
             await fetch(
                 url,
@@ -519,10 +590,13 @@ async function fetchPage(url) {
                         AbortSignal.timeout(
                             REQUEST_TIMEOUT
                         ),
+
                     redirect: "follow",
+
                     headers: {
                         "User-Agent":
                             "OSCADIA-Bot/1.0 (+https://oscadia-api.onrender.com)",
+
                         "Accept":
                             "text/html,application/xhtml+xml"
                     }
@@ -530,6 +604,7 @@ async function fetchPage(url) {
             );
 
         if (!response.ok) {
+
             console.log(
                 `[SKIP] ${url} -> HTTP ${response.status}`
             );
@@ -562,6 +637,7 @@ async function fetchPage(url) {
         };
 
     } catch (error) {
+
         console.log(
             `[ERROR] ${url}: ${error.message}`
         );
@@ -571,36 +647,276 @@ async function fetchPage(url) {
 }
 
 
-// ==============================
-// HTML 분석
-// ==============================
+// ========================================
+// 자동 키워드 추출
+// ========================================
 
-function parsePage(html, url) {
+function extractKeywords(
+    title,
+    description,
+    content,
+    metaKeywords,
+    headings,
+    domain
+) {
+
+    const text = `
+        ${title}
+        ${description}
+        ${metaKeywords}
+        ${headings}
+        ${content.slice(0, 30000)}
+        ${domain}
+    `
+        .toLowerCase()
+        .replace(
+            /[^\p{L}\p{N}\s.-]/gu,
+            " "
+        );
+
+    const words =
+        text
+            .split(/\s+/)
+            .filter(
+                word =>
+                    word.length >= 2
+            );
+
+
+    // --------------------------------
+    // 자주 등장하지만 의미가 적은 단어
+    // --------------------------------
+
+    const stopWords = new Set([
+        "the",
+        "and",
+        "for",
+        "with",
+        "this",
+        "that",
+        "from",
+        "your",
+        "have",
+        "will",
+        "www",
+        "http",
+        "https",
+        "com",
+        "org",
+        "net",
+        "html",
+        "home",
+        "page",
+        "site",
+        "menu",
+        "more",
+        "click",
+        "login",
+        "sign",
+        "about"
+    ]);
+
+
+    const counts =
+        new Map();
+
+
+    for (
+        const word
+        of words
+    ) {
+
+        if (
+            stopWords.has(word)
+        ) {
+            continue;
+        }
+
+        counts.set(
+            word,
+            (counts.get(word) || 0) + 1
+        );
+    }
+
+
+    // --------------------------------
+    // 제목에 나온 단어는 가중치 증가
+    // --------------------------------
+
+    const titleWords =
+        title
+            .toLowerCase()
+            .replace(
+                /[^\p{L}\p{N}\s.-]/gu,
+                " "
+            )
+            .split(/\s+/)
+            .filter(
+                word =>
+                    word.length >= 2
+            );
+
+    for (
+        const word
+        of titleWords
+    ) {
+
+        if (
+            stopWords.has(word)
+        ) {
+            continue;
+        }
+
+        counts.set(
+            word,
+            (counts.get(word) || 0) + 10
+        );
+    }
+
+
+    // --------------------------------
+    // meta keywords도 추가
+    // --------------------------------
+
+    const metaWords =
+        metaKeywords
+            .toLowerCase()
+            .split(/[,\s]+/)
+            .filter(
+                word =>
+                    word.length >= 2
+            );
+
+    for (
+        const word
+        of metaWords
+    ) {
+
+        counts.set(
+            word,
+            (counts.get(word) || 0) + 15
+        );
+    }
+
+
+    return [
+        ...counts.entries()
+    ]
+        .sort(
+            (a, b) =>
+                b[1] - a[1]
+        )
+        .slice(0, 50)
+        .map(
+            item => item[0]
+        )
+        .join(", ");
+}
+
+
+// ========================================
+// HTML 분석
+// ========================================
+
+function parsePage(
+    html,
+    url
+) {
+
     const $ =
         cheerio.load(html);
 
+
+    // --------------------------------
     // 불필요한 요소 제거
+    // --------------------------------
+
     $("script").remove();
     $("style").remove();
     $("noscript").remove();
     $("svg").remove();
     $("iframe").remove();
 
+
+    // --------------------------------
+    // 제목
+    // --------------------------------
+
     const title =
         $("title")
             .first()
             .text()
             .trim() ||
+
         $("h1")
             .first()
             .text()
             .trim() ||
+
         getDomain(url);
+
+
+    // --------------------------------
+    // 설명
+    // --------------------------------
 
     const description =
         $('meta[name="description"]')
             .attr("content")
             ?.trim() || "";
+
+
+    // --------------------------------
+    // Meta keywords
+    // --------------------------------
+
+    const metaKeywords =
+        $('meta[name="keywords"]')
+            .attr("content")
+            ?.trim() || "";
+
+
+    // --------------------------------
+    // Open Graph 설명
+    // --------------------------------
+
+    const ogDescription =
+        $('meta[property="og:description"]')
+            .attr("content")
+            ?.trim() || "";
+
+
+    const ogTitle =
+        $('meta[property="og:title"]')
+            .attr("content")
+            ?.trim() || "";
+
+
+    // --------------------------------
+    // 제목/헤딩 수집
+    // --------------------------------
+
+    const headings = [];
+
+    $("h1, h2, h3, h4")
+        .each(
+            (_, element) => {
+
+                const text =
+                    $(element)
+                        .text()
+                        .trim();
+
+                if (text) {
+                    headings.push(text);
+                }
+            }
+        );
+
+
+    // --------------------------------
+    // 본문
+    // --------------------------------
 
     const content =
         $("body")
@@ -612,10 +928,16 @@ function parsePage(html, url) {
                 MAX_CONTENT
             );
 
+
+    // --------------------------------
+    // 링크
+    // --------------------------------
+
     const links = [];
 
     $("a[href]").each(
         (_, element) => {
+
             const href =
                 $(element)
                     .attr("href");
@@ -631,6 +953,7 @@ function parsePage(html, url) {
                 );
 
             if (normalized) {
+
                 links.push(
                     normalized
                 );
@@ -638,25 +961,50 @@ function parsePage(html, url) {
         }
     );
 
+
+    // --------------------------------
+    // 키워드 자동 생성
+    // --------------------------------
+
+    const keywords =
+        extractKeywords(
+            `${title} ${ogTitle}`,
+            `${description} ${ogDescription}`,
+            content,
+            metaKeywords,
+            headings.join(" "),
+            getDomain(url)
+        );
+
+
     return {
-        title,
-        description,
+        title:
+            title || ogTitle,
+
+        description:
+            description || ogDescription,
+
         content,
+
+        keywords,
+
         links
     };
 }
 
 
-// ==============================
+// ========================================
 // DB 저장
-// ==============================
+// ========================================
 
 async function savePage(
     url,
     data
 ) {
+
     const domain =
         getDomain(url);
+
 
     const query = `
         INSERT INTO pages (
@@ -665,6 +1013,7 @@ async function savePage(
             description,
             domain,
             content,
+            keywords,
             last_crawled
         )
         VALUES (
@@ -673,16 +1022,31 @@ async function savePage(
             $3,
             $4,
             $5,
+            $6,
             NOW()
         )
+
         ON CONFLICT (url)
         DO UPDATE SET
-            title = EXCLUDED.title,
-            description = EXCLUDED.description,
-            domain = EXCLUDED.domain,
-            content = EXCLUDED.content,
-            last_crawled = NOW()
+            title =
+                EXCLUDED.title,
+
+            description =
+                EXCLUDED.description,
+
+            domain =
+                EXCLUDED.domain,
+
+            content =
+                EXCLUDED.content,
+
+            keywords =
+                EXCLUDED.keywords,
+
+            last_crawled =
+                NOW()
     `;
+
 
     await pool.query(
         query,
@@ -691,17 +1055,19 @@ async function savePage(
             data.title,
             data.description,
             domain,
-            data.content
+            data.content,
+            data.keywords
         ]
     );
 }
 
 
-// ==============================
+// ========================================
 // 크롤러
-// ==============================
+// ========================================
 
 async function crawl() {
+
     console.log(
         "================================"
     );
@@ -714,17 +1080,26 @@ async function crawl() {
         "================================"
     );
 
-    // 실행마다 새 큐 / 방문 목록
+
+    // --------------------------------
+    // 매 실행마다 새 큐
+    // --------------------------------
+
     const visited =
         new Set();
 
     const queue = [];
 
+
+    // --------------------------------
     // 시작 URL 등록
+    // --------------------------------
+
     for (
         const url
         of SEED_URLS
     ) {
+
         const normalized =
             normalizeUrl(
                 url,
@@ -732,6 +1107,7 @@ async function crawl() {
             );
 
         if (normalized) {
+
             queue.push({
                 url: normalized,
                 depth: 0,
@@ -740,15 +1116,23 @@ async function crawl() {
         }
     }
 
+
     let crawled = 0;
+
 
     const discoveredDomains =
         new Set();
+
+
+    // =================================
+    // 크롤링 시작
+    // =================================
 
     while (
         queue.length > 0 &&
         crawled < MAX_PAGES
     ) {
+
         const item =
             queue.shift();
 
@@ -756,11 +1140,17 @@ async function crawl() {
             break;
         }
 
+
         const {
             url,
             depth,
             source
         } = item;
+
+
+        // --------------------------------
+        // 중복 URL
+        // --------------------------------
 
         if (
             visited.has(url)
@@ -768,28 +1158,38 @@ async function crawl() {
             continue;
         }
 
+
+        // --------------------------------
+        // 깊이 제한
+        // --------------------------------
+
         if (
             depth > MAX_DEPTH
         ) {
             continue;
         }
 
+
         visited.add(url);
+
 
         console.log(
             `[${crawled + 1}/${MAX_PAGES}] ${url}`
         );
 
-        // ==========================
+
+        // --------------------------------
         // robots.txt
-        // ==========================
+        // --------------------------------
 
         const allowed =
             await allowedByRobots(
                 url
             );
 
+
         if (!allowed) {
+
             console.log(
                 `[ROBOTS] 접근 허용 안 됨: ${url}`
             );
@@ -797,12 +1197,14 @@ async function crawl() {
             continue;
         }
 
-        // ==========================
-        // 새로운 도메인 발견
-        // ==========================
+
+        // --------------------------------
+        // 새로운 도메인
+        // --------------------------------
 
         const origin =
             getOrigin(url);
+
 
         if (
             origin &&
@@ -810,97 +1212,124 @@ async function crawl() {
                 origin
             )
         ) {
+
             discoveredDomains.add(
                 origin
             );
+
 
             console.log(
                 `[DISCOVERED DOMAIN] ${origin}`
             );
 
+
+            // --------------------------------
             // sitemap 자동 발견
+            // --------------------------------
+
             const sitemapUrls =
                 await getSitemapUrls(
                     origin
                 );
 
+
             if (
                 sitemapUrls.length > 0
             ) {
+
                 console.log(
                     `[SITEMAP] ${origin} -> ${sitemapUrls.length} URLs`
                 );
+
 
                 for (
                     const sitemapUrl
                     of sitemapUrls
                 ) {
+
                     if (
-                        !visited.has(
+                        visited.has(
                             sitemapUrl
-                        ) &&
-                        !queue.some(
+                        )
+                    ) {
+                        continue;
+                    }
+
+
+                    if (
+                        queue.some(
                             item =>
                                 item.url ===
                                 sitemapUrl
                         )
                     ) {
-                        queue.push({
-                            url:
-                                sitemapUrl,
-                            depth:
-                                Math.min(
-                                    depth + 1,
-                                    MAX_DEPTH
-                                ),
-                            source:
-                                "sitemap"
-                        });
+                        continue;
                     }
+
 
                     if (
                         queue.length >=
-                        MAX_PAGES * 3
+                        MAX_QUEUE_SIZE
                     ) {
                         break;
                     }
+
+
+                    queue.push({
+                        url:
+                            sitemapUrl,
+
+                        depth:
+                            Math.min(
+                                depth + 1,
+                                MAX_DEPTH
+                            ),
+
+                        source:
+                            "sitemap"
+                    });
                 }
             }
         }
 
-        // ==========================
+
+        // --------------------------------
         // 요청 간격
-        // ==========================
+        // --------------------------------
 
         await sleep(
             REQUEST_DELAY
         );
 
-        // ==========================
+
+        // --------------------------------
         // 페이지 가져오기
-        // ==========================
+        // --------------------------------
 
         const page =
             await fetchPage(
                 url
             );
 
+
         if (!page) {
             continue;
         }
+
 
         const finalUrl =
             page.finalUrl ||
             url;
 
-        // redirect된 URL도 방문 처리
+
         visited.add(
             finalUrl
         );
 
-        // ==========================
+
+        // --------------------------------
         // HTML 분석
-        // ==========================
+        // --------------------------------
 
         const data =
             parsePage(
@@ -908,11 +1337,16 @@ async function crawl() {
                 finalUrl
             );
 
-        // 본문이 너무 없는 페이지 제외
+
+        // --------------------------------
+        // 내용이 너무 없는 페이지 제외
+        // --------------------------------
+
         if (
             data.content.length < 50 &&
             data.title.length < 2
         ) {
+
             console.log(
                 `[SKIP] 내용이 너무 적음`
             );
@@ -920,23 +1354,37 @@ async function crawl() {
             continue;
         }
 
-        // ==========================
+
+        // --------------------------------
         // DB 저장
-        // ==========================
+        // --------------------------------
 
         try {
+
             await savePage(
                 finalUrl,
                 data
             );
 
+
             console.log(
                 `[SAVED] ${data.title}`
             );
 
+
+            if (data.keywords) {
+
+                console.log(
+                    `[KEYWORDS] ${data.keywords.slice(0, 150)}`
+                );
+            }
+
+
             crawled++;
 
+
         } catch (error) {
+
             console.error(
                 "[DB ERROR]"
             );
@@ -960,27 +1408,28 @@ async function crawl() {
                 "hint:",
                 error.hint
             );
-
-            // DB 오류가 나도
-            // 크롤러 전체는 계속 진행
         }
 
-        // ==========================
-        // 페이지에서 링크 발견
-        // ==========================
+
+        // =================================
+        // 링크 발견
+        // =================================
 
         if (
             depth < MAX_DEPTH
         ) {
+
             for (
                 const link
                 of data.links
             ) {
+
                 if (
                     visited.has(link)
                 ) {
                     continue;
                 }
+
 
                 if (
                     queue.some(
@@ -992,36 +1441,54 @@ async function crawl() {
                     continue;
                 }
 
+
+                if (
+                    queue.length >=
+                    MAX_QUEUE_SIZE
+                ) {
+                    break;
+                }
+
+
                 const linkDomain =
                     getDomain(link);
 
-                // 외부 도메인도 허용
+
+                const currentDomain =
+                    getDomain(
+                        finalUrl
+                    );
+
+
+                // --------------------------------
+                // 외부 도메인 발견
+                // --------------------------------
+
                 if (
                     linkDomain &&
                     linkDomain !==
-                        getDomain(finalUrl)
+                    currentDomain
                 ) {
+
                     console.log(
                         `[NEW DOMAIN] ${linkDomain}`
                     );
                 }
+
 
                 queue.push({
                     url: link,
                     depth: depth + 1,
                     source: "link"
                 });
-
-                // 큐가 지나치게 커지는 것 방지
-                if (
-                    queue.length >=
-                    MAX_PAGES * 3
-                ) {
-                    break;
-                }
             }
         }
     }
+
+
+    // =================================
+    // 종료
+    // =================================
 
     console.log(
         "================================"
@@ -1045,14 +1512,18 @@ async function crawl() {
 }
 
 
-// ==============================
-// 실행
-// ==============================
+// ========================================
+// export
+// ========================================
 
 export {
     crawl
 };
 
+
+// ========================================
+// 직접 실행했을 때
+// ========================================
 
 if (
     process.argv[1] ===
@@ -1060,8 +1531,10 @@ if (
         import.meta.url
     ).pathname
 ) {
+
     crawl().catch(
         error => {
+
             console.error(
                 "CRAWLER FAILED:",
                 error
