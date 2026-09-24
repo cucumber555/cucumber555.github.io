@@ -1,464 +1,473 @@
-import dotenv from "dotenv";
+import "dotenv/config";
 import pg from "pg";
 import * as cheerio from "cheerio";
-
-dotenv.config();
+import robotsParser from "robots-parser";
 
 const { Pool } = pg;
 
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL
+    connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false
+    },
+    max: 2
 });
 
+// ==============================
+// 설정
+// ==============================
 
-/*
-    OSCADIA 크롤러 설정
-*/
+const MAX_PAGES = 100;          // 한 번 실행할 때 최대 페이지 수
+const MAX_DEPTH = 2;            // 링크를 몇 단계까지 따라갈지
+const REQUEST_DELAY = 1200;      // 요청 사이 대기 시간
+const REQUEST_TIMEOUT = 10000;  // 요청 제한 시간
+const MAX_CONTENT = 100000;     // 저장할 본문 최대 문자 수
 
-const MAX_PAGES = 100;
-
-const DELAY = 1500;
-
-const USER_AGENT =
-    "OSCADIA-Bot/1.0 (+https://oscadia.example/bot)";
-
-
-/*
-    시작 URL
-
-    처음에는 네가 직접 허용한 사이트부터
-    색인하는 것을 권장.
-*/
-
-const START_URLS = [
-    "https://cucumber555.github.io/"
+// 처음 탐색을 시작할 사이트
+const SEED_URLS = [
+    "https://www.wikipedia.org/",
+    "https://github.com/",
+    "https://www.mozilla.org/",
+    "https://www.nasa.gov/"
 ];
 
-
+// 이미 방문한 URL
 const visited = new Set();
 
-const queue = [...START_URLS];
+// 크롤링 대기열
+const queue = [];
+
+// robots.txt 캐시
+const robotsCache = new Map();
 
 
-/*
-    robots.txt
+// ==============================
+// 유틸
+// ==============================
 
-    간단한 robots.txt 확인.
-*/
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
-async function canCrawl(url) {
+function normalizeUrl(url, baseUrl) {
+    try {
+        const parsed = new URL(url, baseUrl);
+
+        // http/https만 허용
+        if (!["http:", "https:"].includes(parsed.protocol)) {
+            return null;
+        }
+
+        // fragment 제거
+        parsed.hash = "";
+
+        // 너무 이상한 URL 제외
+        if (parsed.username || parsed.password) {
+            return null;
+        }
+
+        return parsed.href;
+    } catch {
+        return null;
+    }
+}
+
+function getDomain(url) {
+    try {
+        return new URL(url).hostname;
+    } catch {
+        return "";
+    }
+}
+
+function isProbablyHtml(url, contentType = "") {
+    const lower = url.toLowerCase();
+
+    const blockedExtensions = [
+        ".jpg",
+        ".jpeg",
+        ".png",
+        ".gif",
+        ".webp",
+        ".svg",
+        ".mp3",
+        ".mp4",
+        ".avi",
+        ".mov",
+        ".zip",
+        ".rar",
+        ".7z",
+        ".pdf",
+        ".exe",
+        ".dmg",
+        ".iso"
+    ];
+
+    if (blockedExtensions.some(ext => lower.split("?")[0].endsWith(ext))) {
+        return false;
+    }
+
+    if (
+        contentType &&
+        !contentType.includes("text/html") &&
+        !contentType.includes("application/xhtml+xml")
+    ) {
+        return false;
+    }
+
+    return true;
+}
+
+
+// ==============================
+// robots.txt
+// ==============================
+
+async function getRobots(url) {
+    const parsed = new URL(url);
+    const origin = parsed.origin;
+
+    if (robotsCache.has(origin)) {
+        return robotsCache.get(origin);
+    }
+
+    const robotsUrl = `${origin}/robots.txt`;
 
     try {
-
-        const parsed = new URL(url);
-
-        const robotsURL =
-            `${parsed.origin}/robots.txt`;
-
-        const response = await fetch(
-            robotsURL,
-            {
-                headers: {
-                    "User-Agent": USER_AGENT
-                }
+        const response = await fetch(robotsUrl, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT),
+            headers: {
+                "User-Agent": "OSCADIA-Bot/1.0"
             }
-        );
+        });
+
+        let text = "";
+
+        if (response.ok) {
+            text = await response.text();
+        }
+
+        const robots = robotsParser(robotsUrl, text);
+
+        robotsCache.set(origin, robots);
+
+        return robots;
+
+    } catch {
+        // robots.txt를 가져오지 못했다고
+        // 무조건 크롤링을 중단하지는 않음
+        const robots = robotsParser(robotsUrl, "");
+
+        robotsCache.set(origin, robots);
+
+        return robots;
+    }
+}
+
+async function allowedByRobots(url) {
+    try {
+        const robots = await getRobots(url);
+
+        return robots.isAllowed(
+            url,
+            "OSCADIA-Bot"
+        ) !== false;
+
+    } catch {
+        return false;
+    }
+}
+
+
+// ==============================
+// 페이지 가져오기
+// ==============================
+
+async function fetchPage(url) {
+    try {
+        const response = await fetch(url, {
+            signal: AbortSignal.timeout(REQUEST_TIMEOUT),
+            redirect: "follow",
+            headers: {
+                "User-Agent":
+                    "OSCADIA-Bot/1.0 (+https://oscadia-api.onrender.com)"
+            }
+        });
 
         if (!response.ok) {
-
-            return true;
-
-        }
-
-        const text =
-            await response.text();
-
-        const lines =
-            text.split(/\r?\n/);
-
-        let applies = false;
-
-        for (const raw of lines) {
-
-            const line =
-                raw.trim();
-
-            if (!line) continue;
-
-            const lower =
-                line.toLowerCase();
-
-            if (lower.startsWith("user-agent:")) {
-
-                const agent =
-                    line
-                        .split(":")[1]
-                        ?.trim()
-                        .toLowerCase();
-
-                applies =
-                    agent === "*" ||
-                    agent === "oscadia-bot";
-
-            }
-
-            if (
-                applies &&
-                lower.startsWith("disallow:")
-            ) {
-
-                const path =
-                    line
-                        .split(":")
-                        .slice(1)
-                        .join(":")
-                        .trim();
-
-                if (!path) continue;
-
-                if (
-                    parsed.pathname
-                    .startsWith(path)
-                ) {
-
-                    return false;
-
-                }
-
-            }
-
-        }
-
-        return true;
-
-    } catch {
-
-        return false;
-
-    }
-
-}
-
-
-/*
-    URL 정리
-*/
-
-function normalizeURL(url, base) {
-
-    try {
-
-        const absolute =
-            new URL(url, base);
-
-        if (
-            absolute.protocol !== "http:" &&
-            absolute.protocol !== "https:"
-        ) {
+            console.log(
+                `[SKIP] ${url} -> HTTP ${response.status}`
+            );
 
             return null;
-
         }
 
-        absolute.hash = "";
+        const contentType =
+            response.headers.get("content-type") || "";
 
-        return absolute.href;
+        if (!isProbablyHtml(url, contentType)) {
+            return null;
+        }
 
-    } catch {
+        const html = await response.text();
+
+        return {
+            html,
+            contentType,
+            finalUrl: response.url
+        };
+
+    } catch (error) {
+        console.log(
+            `[ERROR] ${url}: ${error.message}`
+        );
 
         return null;
-
     }
-
 }
 
 
-/*
-    페이지 크롤링
-*/
+// ==============================
+// HTML 분석
+// ==============================
 
-async function crawl(url) {
+function parsePage(html, url) {
+    const $ = cheerio.load(html);
 
-    if (visited.has(url)) {
+    // 불필요한 요소 제거
+    $("script").remove();
+    $("style").remove();
+    $("noscript").remove();
+    $("svg").remove();
 
-        return [];
+    const title =
+        $("title").first().text().trim() ||
+        $("h1").first().text().trim() ||
+        getDomain(url);
 
-    }
+    const description =
+        $('meta[name="description"]')
+            .attr("content")
+            ?.trim() || "";
 
-    if (visited.size >= MAX_PAGES) {
+    const content = $("body")
+        .text(" ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, MAX_CONTENT);
 
-        return [];
+    const links = [];
 
-    }
+    $("a[href]").each((_, element) => {
+        const href = $(element).attr("href");
 
-    visited.add(url);
+        if (!href) {
+            return;
+        }
 
-    console.log("Crawling:", url);
-
-
-    if (!(await canCrawl(url))) {
-
-        console.log(
-            "robots.txt blocked:",
+        const normalized = normalizeUrl(
+            href,
             url
         );
 
-        return [];
-
-    }
-
-
-    try {
-
-        const response =
-            await fetch(
-                url,
-                {
-                    headers: {
-                        "User-Agent": USER_AGENT
-                    },
-                    redirect: "follow"
-                }
-            );
-
-
-        const contentType =
-            response.headers.get(
-                "content-type"
-            ) || "";
-
-
-        if (
-            !contentType.includes("text/html")
-        ) {
-
-            return [];
-
+        if (normalized) {
+            links.push(normalized);
         }
+    });
 
-
-        if (!response.ok) {
-
-            return [];
-
-        }
-
-
-        const html =
-            await response.text();
-
-
-        const $ =
-            cheerio.load(html);
-
-
-        /*
-            불필요한 요소 제거
-        */
-
-        $("script").remove();
-
-        $("style").remove();
-
-        $("noscript").remove();
-
-        $("svg").remove();
-
-
-        const title =
-            $("title")
-                .first()
-                .text()
-                .trim();
-
-
-        const description =
-            $('meta[name="description"]')
-                .attr("content") || "";
-
-
-        const content =
-            $("body")
-                .text()
-                .replace(/\s+/g, " ")
-                .trim()
-                .slice(0, 100000);
-
-
-        const domain =
-            new URL(url).hostname;
-
-
-        /*
-            DB에 저장
-        */
-
-        await pool.query(
-            `
-            INSERT INTO pages
-                (
-                    url,
-                    title,
-                    description,
-                    content,
-                    domain,
-                    last_crawled
-                )
-            VALUES
-                ($1,$2,$3,$4,$5,NOW())
-
-            ON CONFLICT(url)
-
-            DO UPDATE SET
-
-                title = EXCLUDED.title,
-
-                description =
-                    EXCLUDED.description,
-
-                content =
-                    EXCLUDED.content,
-
-                domain =
-                    EXCLUDED.domain,
-
-                last_crawled =
-                    NOW()
-            `,
-            [
-                url,
-                title,
-                description,
-                content,
-                domain
-            ]
-        );
-
-
-        /*
-            페이지 안의 링크 발견
-        */
-
-        const links = [];
-
-
-        $("a[href]").each(
-            (_, element) => {
-
-                const href =
-                    $(element)
-                        .attr("href");
-
-                const next =
-                    normalizeURL(
-                        href,
-                        url
-                    );
-
-                if (!next) return;
-
-
-                /*
-                    일단 같은 도메인만
-                    따라가도록 제한
-                */
-
-                try {
-
-                    if (
-                        new URL(next).hostname ===
-                        new URL(url).hostname
-                    ) {
-
-                        links.push(next);
-
-                    }
-
-                } catch {}
-
-            }
-        );
-
-
-        return [
-            ...new Set(links)
-        ];
-
-
-    } catch (error) {
-
-        console.error(
-            "Crawler error:",
-            url,
-            error.message
-        );
-
-        return [];
-
-    }
-
+    return {
+        title,
+        description,
+        content,
+        links
+    };
 }
 
 
-/*
-    크롤러 실행
-*/
+// ==============================
+// DB 저장
+// ==============================
 
-async function main() {
+async function savePage(url, data) {
+    const domain = getDomain(url);
+
+    const query = `
+        INSERT INTO pages (
+            url,
+            title,
+            description,
+            domain,
+            content,
+            last_crawled
+        )
+        VALUES ($1, $2, $3, $4, $5, NOW())
+        ON CONFLICT (url)
+        DO UPDATE SET
+            title = EXCLUDED.title,
+            description = EXCLUDED.description,
+            domain = EXCLUDED.domain,
+            content = EXCLUDED.content,
+            last_crawled = NOW()
+    `;
+
+    await pool.query(query, [
+        url,
+        data.title,
+        data.description,
+        domain,
+        data.content
+    ]);
+}
+
+
+// ==============================
+// 크롤러
+// ==============================
+
+async function crawl() {
+    console.log("================================");
+    console.log("OSCADIA CRAWLER START");
+    console.log("================================");
+
+    // 시작 URL 등록
+    for (const url of SEED_URLS) {
+        queue.push({
+            url,
+            depth: 0
+        });
+    }
+
+    let crawled = 0;
 
     while (
         queue.length > 0 &&
-        visited.size < MAX_PAGES
+        crawled < MAX_PAGES
     ) {
+        const item = queue.shift();
 
-        const url =
-            queue.shift();
-
-
-        const links =
-            await crawl(url);
-
-
-        for (const link of links) {
-
-            if (
-                !visited.has(link) &&
-                !queue.includes(link) &&
-                visited.size + queue.length <
-                MAX_PAGES
-            ) {
-
-                queue.push(link);
-
-            }
-
+        if (!item) {
+            break;
         }
 
+        const {
+            url,
+            depth
+        } = item;
 
-        /*
-            서버에 부담을 주지 않도록
-            요청 사이에 대기
-        */
+        if (visited.has(url)) {
+            continue;
+        }
 
-        await new Promise(
-            resolve =>
-                setTimeout(
-                    resolve,
-                    DELAY
-                )
+        if (depth > MAX_DEPTH) {
+            continue;
+        }
+
+        visited.add(url);
+
+        console.log(
+            `[${crawled + 1}/${MAX_PAGES}] ${url}`
         );
 
+        // robots.txt 확인
+        const allowed =
+            await allowedByRobots(url);
+
+        if (!allowed) {
+            console.log(
+                `[ROBOTS] 접근 허용 안 됨: ${url}`
+            );
+
+            continue;
+        }
+
+        // 요청 간격
+        await sleep(REQUEST_DELAY);
+
+        const page =
+            await fetchPage(url);
+
+        if (!page) {
+            continue;
+        }
+
+        const finalUrl =
+            page.finalUrl || url;
+
+        const data =
+            parsePage(
+                page.html,
+                finalUrl
+            );
+
+        // 본문이 너무 없는 페이지는 제외
+        if (
+            data.content.length < 50 &&
+            data.title.length < 2
+        ) {
+            console.log(
+                `[SKIP] 내용이 너무 적음`
+            );
+
+            continue;
+        }
+
+        // DB 저장
+        try {
+            await savePage(
+                finalUrl,
+                data
+            );
+
+            console.log(
+                `[SAVED] ${data.title}`
+            );
+
+            crawled++;
+
+        } catch (error) {
+            console.error(
+                `[DB ERROR] ${error.message}`
+            );
+        }
+
+        // 다음 페이지 추가
+        if (depth < MAX_DEPTH) {
+            for (const link of data.links) {
+
+                if (
+                    !visited.has(link) &&
+                    !queue.some(
+                        item => item.url === link
+                    )
+                ) {
+                    queue.push({
+                        url: link,
+                        depth: depth + 1
+                    });
+                }
+            }
+        }
     }
 
-
+    console.log("================================");
     console.log(
-        `Crawl finished. ${visited.size} pages visited.`
+        `OSCADIA CRAWLER FINISHED: ${crawled} pages`
     );
-
+    console.log("================================");
 
     await pool.end();
-
 }
 
 
-main();
+// ==============================
+// 실행
+// ==============================
+
+crawl().catch(error => {
+    console.error(
+        "CRAWLER FAILED:",
+        error
+    );
+
+    process.exit(1);
+});
