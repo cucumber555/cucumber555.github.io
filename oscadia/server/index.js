@@ -2,7 +2,12 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import pg from "pg";
+import path from "path";
+import { fileURLToPath } from "url";
 import { crawl } from "./crawler.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const { Pool } = pg;
 
@@ -1295,21 +1300,27 @@ app.get(
 
 
 // ========================================
-// 기본 페이지
+// OSCADIA 홈페이지
 // ========================================
 
+// public 폴더 안의 CSS, JS, 이미지 등 정적 파일 제공
+app.use(
+    express.static(
+        path.join(__dirname, "../public")
+    )
+);
+
+// 기본 주소 → public/oscadia.html
 app.get(
     "/",
     (req, res) => {
 
-        res.json({
-
-            name:
-                "OSCADIA API",
-
-            status:
-                "online"
-        });
+        res.sendFile(
+            path.join(
+                __dirname,
+                "../public/oscadia.html"
+            )
+        );
     }
 );
 
