@@ -125,6 +125,8 @@ app.get("/api/search", async (req, res) => {
 
 app.get("/api/health", async (req, res) => {
     try {
+        console.log("DATABASE_URL exists:", !!process.env.DATABASE_URL);
+
         const result = await pool.query("SELECT NOW()");
 
         res.json({
@@ -133,12 +135,17 @@ app.get("/api/health", async (req, res) => {
             database: "connected",
             time: result.rows[0].now
         });
+
     } catch (error) {
+
         console.error("DATABASE ERROR:", error);
 
         res.status(500).json({
             ok: false,
-            error: error.message
+            service: "OSCADIA",
+            database: "connection failed",
+            error: error.message,
+            code: error.code || null
         });
     }
 });
