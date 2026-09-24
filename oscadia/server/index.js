@@ -124,33 +124,21 @@ app.get("/api/search", async (req, res) => {
 */
 
 app.get("/api/health", async (req, res) => {
-
     try {
-
-        await pool.query("SELECT 1");
+        const result = await pool.query("SELECT NOW()");
 
         res.json({
             ok: true,
-            service: "OSCADIA"
+            service: "OSCADIA",
+            database: "connected",
+            time: result.rows[0].now
         });
-
-    } catch {
+    } catch (error) {
+        console.error("DATABASE ERROR:", error);
 
         res.status(500).json({
-            ok: false
+            ok: false,
+            error: error.message
         });
-
     }
-
-});
-
-
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-
-    console.log(
-        `OSCADIA running on port ${PORT}`
-    );
-
 });
