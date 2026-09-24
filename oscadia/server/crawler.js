@@ -251,11 +251,10 @@ function parsePage(html, url) {
             ?.trim() || "";
 
     const content = $("body")
-        .text(" ")
-        .replace(/\s+/g, " ")
-        .trim()
-        .slice(0, MAX_CONTENT);
-
+    .text()
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, MAX_CONTENT);
     const links = [];
 
     $("a[href]").each((_, element) => {
