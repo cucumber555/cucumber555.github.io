@@ -31,8 +31,8 @@ const SEED_URLS = [
     "https://www.nasa.gov/",
 
     "https://www.kbs.co.kr/",
-    "https://amazon.com/",
-    "https://daum.net/",
+    "https://www.amazon.com/",
+    "https://www.daum.net/",
     "https://www.naver.com/",
     "https://www.google.com/",
     "https://www.bbc.com/",
