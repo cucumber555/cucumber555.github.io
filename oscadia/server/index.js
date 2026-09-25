@@ -1,4 +1,5 @@
 import "dotenv/config";
+
 import express from "express";
 import cors from "cors";
 import pg from "pg";
@@ -33,7 +34,12 @@ const app = express();
 const PORT = process.env.PORT || 10000;
 
 app.use(cors());
-app.use(express.json({ limit: "10mb" }));
+
+app.use(
+    express.json({
+        limit: "10mb"
+    })
+);
 
 // ========================================
 // PostgreSQL
@@ -63,6 +69,7 @@ let lastCrawlerError = null;
 // ========================================
 
 const SEARCH_ALIASES = {
+
     "구글": ["google", "google.com"],
     "google": ["google", "google.com"],
 
@@ -133,6 +140,7 @@ const SEARCH_ALIASES = {
 // ========================================
 
 const RELATED_TERMS = {
+
     "검색": [
         "search",
         "검색엔진",
@@ -250,6 +258,7 @@ const RELATED_TERMS = {
 // ========================================
 
 function normalizeSearchQuery(query) {
+
     return String(query || "")
         .trim()
         .toLowerCase()
@@ -257,6 +266,7 @@ function normalizeSearchQuery(query) {
 }
 
 function tokenizeQuery(query) {
+
     return normalizeSearchQuery(query)
         .split(/[\s,./!?()[\]{}:;|]+/)
         .map(word => word.trim())
@@ -264,7 +274,9 @@ function tokenizeQuery(query) {
 }
 
 function getSearchTerms(query) {
-    const normalized = normalizeSearchQuery(query);
+
+    const normalized =
+        normalizeSearchQuery(query);
 
     const terms = new Set();
 
@@ -272,21 +284,27 @@ function getSearchTerms(query) {
         terms.add(normalized);
     }
 
-    for (const token of tokenizeQuery(normalized)) {
+    for (
+        const token of tokenizeQuery(normalized)
+    ) {
         terms.add(token);
     }
 
-    const aliases = SEARCH_ALIASES[normalized];
+    const aliases =
+        SEARCH_ALIASES[normalized];
 
     if (aliases) {
+
         for (const alias of aliases) {
             terms.add(alias.toLowerCase());
         }
     }
 
-    const related = RELATED_TERMS[normalized];
+    const related =
+        RELATED_TERMS[normalized];
 
     if (related) {
+
         for (const term of related) {
             terms.add(term.toLowerCase());
         }
@@ -296,12 +314,16 @@ function getSearchTerms(query) {
 }
 
 function getDomainFromUrl(url) {
+
     try {
+
         return new URL(url)
             .hostname
             .toLowerCase()
             .replace(/^www\./, "");
+
     } catch {
+
         return "";
     }
 }
@@ -311,9 +333,12 @@ function getDomainFromUrl(url) {
 // ========================================
 
 app.get("/api/search", async (req, res) => {
-    const originalQuery = String(req.query.q || "").trim();
+
+    const originalQuery =
+        String(req.query.q || "").trim();
 
     if (!originalQuery) {
+
         return res.json({
             ok: true,
             count: 0,
@@ -321,30 +346,52 @@ app.get("/api/search", async (req, res) => {
         });
     }
 
-    const query = normalizeSearchQuery(originalQuery);
-    const terms = getSearchTerms(query).slice(0, 30);
+    const query =
+        normalizeSearchQuery(originalQuery);
+
+    const terms =
+        getSearchTerms(query).slice(0, 30);
 
     try {
+
         const conditions = [];
         const values = [];
 
-        for (let i = 0; i < terms.length; i++) {
+        for (
+            let i = 0;
+            i < terms.length;
+            i++
+        ) {
+
             const p = `$${i + 1}`;
+
             values.push(terms[i]);
 
             conditions.push(`
                 (
-                    LOWER(COALESCE(title, '')) LIKE '%' || LOWER(${p}) || '%'
-                    OR LOWER(COALESCE(description, '')) LIKE '%' || LOWER(${p}) || '%'
-                    OR LOWER(COALESCE(keywords, '')) LIKE '%' || LOWER(${p}) || '%'
-                    OR LOWER(COALESCE(content, '')) LIKE '%' || LOWER(${p}) || '%'
-                    OR LOWER(COALESCE(url, '')) LIKE '%' || LOWER(${p}) || '%'
-                    OR LOWER(COALESCE(domain, '')) LIKE '%' || LOWER(${p}) || '%'
+                    LOWER(COALESCE(title, ''))
+                        LIKE '%' || LOWER(${p}) || '%'
+
+                    OR LOWER(COALESCE(description, ''))
+                        LIKE '%' || LOWER(${p}) || '%'
+
+                    OR LOWER(COALESCE(keywords, ''))
+                        LIKE '%' || LOWER(${p}) || '%'
+
+                    OR LOWER(COALESCE(content, ''))
+                        LIKE '%' || LOWER(${p}) || '%'
+
+                    OR LOWER(COALESCE(url, ''))
+                        LIKE '%' || LOWER(${p}) || '%'
+
+                    OR LOWER(COALESCE(domain, ''))
+                        LIKE '%' || LOWER(${p}) || '%'
                 )
             `);
         }
 
         if (!conditions.length) {
+
             return res.json({
                 ok: true,
                 query: originalQuery,
@@ -353,55 +400,67 @@ app.get("/api/search", async (req, res) => {
             });
         }
 
-        const scoreParts = terms.map((term, i) => {
-            const p = `$${i + 1}`;
+        const scoreParts =
+            terms.map((term, i) => {
 
-            return `
-                (
-                    CASE
-                        WHEN LOWER(COALESCE(title, ''))
-                            LIKE '%' || LOWER(${p}) || '%'
-                        THEN 100
-                        ELSE 0
-                    END
-                    +
-                    CASE
-                        WHEN LOWER(COALESCE(keywords, ''))
-                            LIKE '%' || LOWER(${p}) || '%'
-                        THEN 60
-                        ELSE 0
-                    END
-                    +
-                    CASE
-                        WHEN LOWER(COALESCE(description, ''))
-                            LIKE '%' || LOWER(${p}) || '%'
-                        THEN 45
-                        ELSE 0
-                    END
-                    +
-                    CASE
-                        WHEN LOWER(COALESCE(domain, ''))
-                            LIKE '%' || LOWER(${p}) || '%'
-                        THEN 40
-                        ELSE 0
-                    END
-                    +
-                    CASE
-                        WHEN LOWER(COALESCE(url, ''))
-                            LIKE '%' || LOWER(${p}) || '%'
-                        THEN 30
-                        ELSE 0
-                    END
-                    +
-                    CASE
-                        WHEN LOWER(COALESCE(content, ''))
-                            LIKE '%' || LOWER(${p}) || '%'
-                        THEN 10
-                        ELSE 0
-                    END
-                )
-            `;
-        });
+                const p = `$${i + 1}`;
+
+                return `
+                    (
+                        CASE
+                            WHEN LOWER(COALESCE(title, ''))
+                                LIKE '%' || LOWER(${p}) || '%'
+                            THEN 100
+                            ELSE 0
+                        END
+
+                        +
+
+                        CASE
+                            WHEN LOWER(COALESCE(keywords, ''))
+                                LIKE '%' || LOWER(${p}) || '%'
+                            THEN 60
+                            ELSE 0
+                        END
+
+                        +
+
+                        CASE
+                            WHEN LOWER(COALESCE(description, ''))
+                                LIKE '%' || LOWER(${p}) || '%'
+                            THEN 45
+                            ELSE 0
+                        END
+
+                        +
+
+                        CASE
+                            WHEN LOWER(COALESCE(domain, ''))
+                                LIKE '%' || LOWER(${p}) || '%'
+                            THEN 40
+                            ELSE 0
+                        END
+
+                        +
+
+                        CASE
+                            WHEN LOWER(COALESCE(url, ''))
+                                LIKE '%' || LOWER(${p}) || '%'
+                            THEN 30
+                            ELSE 0
+                        END
+
+                        +
+
+                        CASE
+                            WHEN LOWER(COALESCE(content, ''))
+                                LIKE '%' || LOWER(${p}) || '%'
+                            THEN 10
+                            ELSE 0
+                        END
+                    )
+                `;
+            });
 
         const sql = `
             SELECT
@@ -412,687 +471,1587 @@ app.get("/api/search", async (req, res) => {
                 domain,
                 keywords,
                 last_crawled,
-                (${scoreParts.join(" + ")}) AS relevance_score
+                (${scoreParts.join(" + ")})
+                    AS relevance_score
             FROM pages
             WHERE ${conditions.join(" OR ")}
-            ORDER BY relevance_score DESC, last_crawled DESC
+            ORDER BY relevance_score DESC,
+                     last_crawled DESC
             LIMIT 50
         `;
 
-        const result = await pool.query(sql, values);
+        const result =
+            await pool.query(sql, values);
 
-        const results = result.rows.map(row => {
-            const title = String(row.title || "").toLowerCase();
-            const description = String(row.description || "").toLowerCase();
-            const keywords = String(row.keywords || "").toLowerCase();
-            const content = String(row.content || "").toLowerCase();
-            const domain = String(row.domain || "").toLowerCase();
-            const url = String(row.url || "").toLowerCase();
+        const results =
+            result.rows.map(row => {
 
-            let score = Number(row.relevance_score || 0);
+                const title =
+                    String(row.title || "")
+                        .toLowerCase();
 
-            if (title.includes(query)) score += 250;
-            if (keywords.includes(query)) score += 150;
-            if (description.includes(query)) score += 100;
+                const description =
+                    String(row.description || "")
+                        .toLowerCase();
 
-            let aliasMatch = false;
+                const keywords =
+                    String(row.keywords || "")
+                        .toLowerCase();
 
-            const aliases = SEARCH_ALIASES[query];
+                const content =
+                    String(row.content || "")
+                        .toLowerCase();
 
-            if (aliases) {
-                aliasMatch = aliases.some(alias => {
-                    const a = alias.toLowerCase();
+                const domain =
+                    String(row.domain || "")
+                        .toLowerCase();
 
-                    return (
-                        domain.includes(a) ||
-                        url.includes(a) ||
-                        title.includes(a) ||
-                        keywords.includes(a)
+                const url =
+                    String(row.url || "")
+                        .toLowerCase();
+
+                let score =
+                    Number(
+                        row.relevance_score || 0
                     );
-                });
 
-                if (aliasMatch) {
-                    score += 500;
+                if (title.includes(query)) {
+                    score += 250;
                 }
-            }
 
-            let relatedMatch = false;
-
-            const related = RELATED_TERMS[query];
-
-            if (related) {
-                relatedMatch = related.some(term => {
-                    const t = term.toLowerCase();
-
-                    return (
-                        keywords.includes(t) ||
-                        title.includes(t) ||
-                        description.includes(t) ||
-                        content.includes(t)
-                    );
-                });
-
-                if (relatedMatch) {
-                    score += 180;
+                if (keywords.includes(query)) {
+                    score += 150;
                 }
-            }
 
-            return {
-                id: row.id,
-                url: row.url,
-                title: row.title || "제목 없음",
-                description: row.description || "",
-                domain:
-                    row.domain ||
-                    getDomainFromUrl(row.url),
-                keywords: row.keywords || "",
-                last_crawled: row.last_crawled,
-                rank: score,
-                alias_match: aliasMatch,
-                related_match: relatedMatch
-            };
-        });
+                if (description.includes(query)) {
+                    score += 100;
+                }
+
+                let aliasMatch = false;
+
+                const aliases =
+                    SEARCH_ALIASES[query];
+
+                if (aliases) {
+
+                    aliasMatch =
+                        aliases.some(alias => {
+
+                            const a =
+                                alias.toLowerCase();
+
+                            return (
+                                domain.includes(a) ||
+                                url.includes(a) ||
+                                title.includes(a) ||
+                                keywords.includes(a)
+                            );
+                        });
+
+                    if (aliasMatch) {
+                        score += 500;
+                    }
+                }
+
+                let relatedMatch = false;
+
+                const related =
+                    RELATED_TERMS[query];
+
+                if (related) {
+
+                    relatedMatch =
+                        related.some(term => {
+
+                            const t =
+                                term.toLowerCase();
+
+                            return (
+                                keywords.includes(t) ||
+                                title.includes(t) ||
+                                description.includes(t) ||
+                                content.includes(t)
+                            );
+                        });
+
+                    if (relatedMatch) {
+                        score += 180;
+                    }
+                }
+
+                return {
+
+                    id: row.id,
+
+                    url: row.url,
+
+                    title:
+                        row.title ||
+                        "제목 없음",
+
+                    description:
+                        row.description ||
+                        "",
+
+                    domain:
+                        row.domain ||
+                        getDomainFromUrl(row.url),
+
+                    keywords:
+                        row.keywords ||
+                        "",
+
+                    last_crawled:
+                        row.last_crawled,
+
+                    rank: score,
+
+                    alias_match:
+                        aliasMatch,
+
+                    related_match:
+                        relatedMatch
+                };
+            });
 
         results.sort((a, b) => {
-            if (a.alias_match !== b.alias_match) {
-                return a.alias_match ? -1 : 1;
+
+            if (
+                a.alias_match !==
+                b.alias_match
+            ) {
+                return a.alias_match
+                    ? -1
+                    : 1;
             }
 
-            if (a.related_match !== b.related_match) {
-                return a.related_match ? -1 : 1;
+            if (
+                a.related_match !==
+                b.related_match
+            ) {
+                return a.related_match
+                    ? -1
+                    : 1;
             }
 
-            return Number(b.rank) - Number(a.rank);
+            return (
+                Number(b.rank) -
+                Number(a.rank)
+            );
         });
 
         const uniqueResults = [];
         const seenUrls = new Set();
 
-        for (const result of results) {
-            const normalizedUrl = String(result.url || "")
-                .toLowerCase()
-                .replace(/\/+$/, "");
+        for (
+            const result of results
+        ) {
+
+            const normalizedUrl =
+                String(result.url || "")
+                    .toLowerCase()
+                    .replace(/\/+$/, "");
 
             if (seenUrls.has(normalizedUrl)) {
                 continue;
             }
 
             seenUrls.add(normalizedUrl);
+
             uniqueResults.push(result);
 
-            if (uniqueResults.length >= 50) {
+            if (
+                uniqueResults.length >= 50
+            ) {
                 break;
             }
         }
 
         return res.json({
+
             ok: true,
+
             query: originalQuery,
+
             searchTerms: terms,
-            count: uniqueResults.length,
-            results: uniqueResults
+
+            count:
+                uniqueResults.length,
+
+            results:
+                uniqueResults
         });
 
     } catch (error) {
-        console.error("[SEARCH ERROR]", error);
+
+        console.error(
+            "[SEARCH ERROR]",
+            error
+        );
 
         return res.status(500).json({
             ok: false,
-            error: "검색 중 오류가 발생했습니다."
+            error:
+                "검색 중 오류가 발생했습니다."
         });
     }
 });
+
+// ========================================
+// OscaTranslate
+// 무료 MyMemory Translation API
+// ========================================
+
+const TRANSLATE_API_URL =
+    "https://api.mymemory.translated.net/get";
+
+const SUPPORTED_TRANSLATE_LANGUAGES =
+    new Set([
+        "auto",
+        "ko",
+        "en",
+        "ja",
+        "zh",
+        "de",
+        "fr",
+        "es",
+        "it",
+        "pt",
+        "ru"
+    ]);
+
+function isSupportedTranslateLanguage(
+    language
+) {
+
+    return SUPPORTED_TRANSLATE_LANGUAGES.has(
+        String(language || "")
+            .toLowerCase()
+    );
+}
+
+// ========================================
+// 언어 자동 감지
+// ========================================
+
+function detectLanguage(text) {
+
+    const value =
+        String(text || "").trim();
+
+    if (!value) {
+        return "en";
+    }
+
+    // 한국어
+    if (/[\uAC00-\uD7A3]/.test(value)) {
+        return "ko";
+    }
+
+    // 일본어
+    if (/[\u3040-\u30FF]/.test(value)) {
+        return "ja";
+    }
+
+    // 중국어
+    if (/[\u4E00-\u9FFF]/.test(value)) {
+        return "zh";
+    }
+
+    // 러시아어 / 키릴 문자
+    if (/[\u0400-\u04FF]/.test(value)) {
+        return "ru";
+    }
+
+    // 기본값
+    return "en";
+}
+
+// ========================================
+// 긴 문장 분할
+// ========================================
+
+function splitTextByBytes(
+    text,
+    maxBytes = 450
+) {
+
+    const chunks = [];
+
+    let current = "";
+    let currentBytes = 0;
+
+    for (const char of text) {
+
+        const charBytes =
+            Buffer.byteLength(
+                char,
+                "utf8"
+            );
+
+        if (
+            current &&
+            currentBytes +
+                charBytes >
+                maxBytes
+        ) {
+
+            chunks.push(current);
+
+            current = "";
+            currentBytes = 0;
+        }
+
+        current += char;
+
+        currentBytes += charBytes;
+    }
+
+    if (current) {
+        chunks.push(current);
+    }
+
+    return chunks;
+}
+
+// ========================================
+// MyMemory 번역 1회
+// ========================================
+
+async function translateChunk(
+    text,
+    source,
+    target
+) {
+
+    const params =
+        new URLSearchParams();
+
+    params.set("q", text);
+
+    params.set(
+        "langpair",
+        `${source}|${target}`
+    );
+
+    params.set(
+        "mt",
+        "1"
+    );
+
+    const url =
+        `${TRANSLATE_API_URL}?${params.toString()}`;
+
+    const response =
+        await fetch(
+            url,
+            {
+                method: "GET",
+
+                headers: {
+                    "Accept":
+                        "application/json",
+
+                    "User-Agent":
+                        "OSCADIA-OscaTranslate/1.0"
+                },
+
+                signal:
+                    AbortSignal.timeout(
+                        30000
+                    )
+            }
+        );
+
+    if (!response.ok) {
+
+        throw new Error(
+            `번역 제공 서버 HTTP ${response.status}`
+        );
+    }
+
+    const data =
+        await response.json();
+
+    if (
+        !data ||
+        !data.responseData ||
+        typeof
+            data.responseData
+                .translatedText !==
+            "string"
+    ) {
+
+        throw new Error(
+            "번역 결과가 올바르지 않습니다."
+        );
+    }
+
+    return String(
+        data.responseData
+            .translatedText
+    );
+}
+
+// ========================================
+// 번역 서버 상태
+// ========================================
+
+app.get(
+    "/api/translate/health",
+    (req, res) => {
+
+        return res.json({
+
+            ok: true,
+
+            service:
+                "OscaTranslate",
+
+            provider:
+                "MyMemory",
+
+            configured:
+                true,
+
+            free:
+                true
+        });
+    }
+);
+
+// ========================================
+// 지원 언어
+// ========================================
+
+app.get(
+    "/api/translate/languages",
+    (req, res) => {
+
+        return res.json({
+
+            ok: true,
+
+            languages: [
+
+                {
+                    code: "auto",
+                    name: "자동 감지"
+                },
+
+                {
+                    code: "ko",
+                    name: "한국어"
+                },
+
+                {
+                    code: "en",
+                    name: "English"
+                },
+
+                {
+                    code: "ja",
+                    name: "日本語"
+                },
+
+                {
+                    code: "zh",
+                    name: "中文"
+                },
+
+                {
+                    code: "de",
+                    name: "Deutsch"
+                },
+
+                {
+                    code: "fr",
+                    name: "Français"
+                },
+
+                {
+                    code: "es",
+                    name: "Español"
+                },
+
+                {
+                    code: "it",
+                    name: "Italiano"
+                },
+
+                {
+                    code: "pt",
+                    name: "Português"
+                },
+
+                {
+                    code: "ru",
+                    name: "Русский"
+                }
+            ]
+        });
+    }
+);
+
+// ========================================
+// 실제 번역
+// ========================================
+
+app.post(
+    "/api/translate",
+    async (req, res) => {
+
+        try {
+
+            let {
+                q,
+                source,
+                target
+            } = req.body || {};
+
+            q =
+                String(q || "")
+                    .trim();
+
+            source =
+                String(
+                    source || "auto"
+                )
+                    .trim()
+                    .toLowerCase();
+
+            target =
+                String(
+                    target || ""
+                )
+                    .trim()
+                    .toLowerCase();
+
+            // ----------------------------
+            // 입력 검사
+            // ----------------------------
+
+            if (!q) {
+
+                return res.status(400).json({
+                    ok: false,
+                    error:
+                        "번역할 텍스트를 입력하세요."
+                });
+            }
+
+            if (q.length > 5000) {
+
+                return res.status(400).json({
+                    ok: false,
+                    error:
+                        "번역할 텍스트는 5000자 이하로 입력하세요."
+                });
+            }
+
+            if (!target) {
+
+                return res.status(400).json({
+                    ok: false,
+                    error:
+                        "번역 대상 언어가 필요합니다."
+                });
+            }
+
+            if (
+                !isSupportedTranslateLanguage(
+                    source
+                )
+            ) {
+
+                return res.status(400).json({
+                    ok: false,
+                    error:
+                        "지원하지 않는 원본 언어입니다."
+                });
+            }
+
+            if (
+                !isSupportedTranslateLanguage(
+                    target
+                )
+            ) {
+
+                return res.status(400).json({
+                    ok: false,
+                    error:
+                        "지원하지 않는 번역 언어입니다."
+                });
+            }
+
+            if (target === "auto") {
+
+                return res.status(400).json({
+                    ok: false,
+                    error:
+                        "번역 대상 언어에는 자동 감지를 사용할 수 없습니다."
+                });
+            }
+
+            // ----------------------------
+            // 자동 언어 감지
+            // ----------------------------
+
+            if (source === "auto") {
+
+                source =
+                    detectLanguage(q);
+            }
+
+            // ----------------------------
+            // 같은 언어
+            // ----------------------------
+
+            if (source === target) {
+
+                return res.json({
+
+                    ok: true,
+
+                    translatedText: q,
+
+                    source,
+
+                    target,
+
+                    provider:
+                        "same-language"
+                });
+            }
+
+            console.log(
+                `[TRANSLATE] ${source} -> ${target}, ${q.length} chars`
+            );
+
+            // ----------------------------
+            // 긴 문장 분할
+            // ----------------------------
+
+            const chunks =
+                splitTextByBytes(
+                    q,
+                    450
+                );
+
+            const translatedChunks = [];
+
+            // ----------------------------
+            // 순서대로 번역
+            // ----------------------------
+
+            for (
+                const chunk of chunks
+            ) {
+
+                const translated =
+                    await translateChunk(
+                        chunk,
+                        source,
+                        target
+                    );
+
+                translatedChunks.push(
+                    translated
+                );
+            }
+
+            const translatedText =
+                translatedChunks.join("");
+
+            if (!translatedText) {
+
+                return res.status(502).json({
+                    ok: false,
+                    error:
+                        "번역 결과가 비어 있습니다."
+                });
+            }
+
+            return res.json({
+
+                ok: true,
+
+                translatedText,
+
+                source,
+
+                target,
+
+                provider:
+                    "MyMemory"
+            });
+
+        } catch (error) {
+
+            console.error(
+                "[TRANSLATE ERROR]",
+                error
+            );
+
+            if (
+                error?.name ===
+                "TimeoutError"
+            ) {
+
+                return res.status(504).json({
+                    ok: false,
+                    error:
+                        "번역 서버 응답 시간이 초과되었습니다."
+                });
+            }
+
+            return res.status(502).json({
+
+                ok: false,
+
+                error:
+                    error?.message ||
+                    "번역 서버에 연결할 수 없습니다."
+            });
+        }
+    }
+);
 
 // ========================================
 // Health Check
 // ========================================
 
-app.get("/api/health", async (req, res) => {
-    try {
-        await pool.query("SELECT 1");
+app.get(
+    "/api/health",
+    async (req, res) => {
 
-        res.json({
-            ok: true,
-            database: "connected",
-            crawler: "enabled",
-            service: "OSCADIA"
-        });
+        try {
 
-    } catch (error) {
-        console.error("[HEALTH ERROR]", error);
+            await pool.query(
+                "SELECT 1"
+            );
 
-        res.status(500).json({
-            ok: false,
-            database: "disconnected",
-            error: error.message
-        });
+            res.json({
+
+                ok: true,
+
+                database:
+                    "connected",
+
+                crawler:
+                    "enabled",
+
+                translate:
+                    "enabled",
+
+                service:
+                    "OSCADIA"
+            });
+
+        } catch (error) {
+
+            console.error(
+                "[HEALTH ERROR]",
+                error
+            );
+
+            res.status(500).json({
+
+                ok: false,
+
+                database:
+                    "disconnected",
+
+                error:
+                    error.message
+            });
+        }
     }
-});
+);
 
 // ========================================
 // Crawler
 // ========================================
 
 async function runCrawler() {
+
     if (crawlerRunning) {
-        console.log("[CRAWLER] Already running. Skip.");
+
+        console.log(
+            "[CRAWLER] Already running. Skip."
+        );
+
         return;
     }
 
     crawlerRunning = true;
-    lastCrawlerStart = new Date().toISOString();
+
+    lastCrawlerStart =
+        new Date().toISOString();
+
     lastCrawlerError = null;
 
-    console.log("[CRAWLER] Automatic crawl started.");
+    console.log(
+        "[CRAWLER] Automatic crawl started."
+    );
 
     try {
+
         await crawl();
 
-        lastCrawlerFinish = new Date().toISOString();
+        lastCrawlerFinish =
+            new Date().toISOString();
 
-        console.log("[CRAWLER] Automatic crawl finished.");
+        console.log(
+            "[CRAWLER] Automatic crawl finished."
+        );
 
     } catch (error) {
-        lastCrawlerError = error.message;
 
-        console.error("[CRAWLER ERROR]", error);
+        lastCrawlerError =
+            error.message;
+
+        console.error(
+            "[CRAWLER ERROR]",
+            error
+        );
 
     } finally {
+
         crawlerRunning = false;
     }
 }
 
-app.get("/api/crawler", (req, res) => {
-    res.json({
-        enabled: true,
-        running: crawlerRunning,
-        lastStart: lastCrawlerStart,
-        lastFinish: lastCrawlerFinish,
-        lastError: lastCrawlerError
-    });
-});
+app.get(
+    "/api/crawler",
+    (req, res) => {
+
+        res.json({
+
+            enabled: true,
+
+            running:
+                crawlerRunning,
+
+            lastStart:
+                lastCrawlerStart,
+
+            lastFinish:
+                lastCrawlerFinish,
+
+            lastError:
+                lastCrawlerError
+        });
+    }
+);
 
 // ========================================
 // 사용자 URL 크롤링 큐
 // ========================================
 
-app.post("/api/crawl/queue", async (req, res) => {
-    try {
-        let { url } = req.body;
-
-        if (!url || typeof url !== "string") {
-            return res.status(400).json({
-                ok: false,
-                error: "URL을 입력하세요."
-            });
-        }
-
-        url = url.trim();
-
-        if (!/^https?:\/\//i.test(url)) {
-            url = "https://" + url;
-        }
-
-        let parsed;
+app.post(
+    "/api/crawl/queue",
+    async (req, res) => {
 
         try {
-            parsed = new URL(url);
-        } catch {
-            return res.status(400).json({
-                ok: false,
-                error: "올바른 URL이 아닙니다."
-            });
-        }
 
-        if (
-            parsed.protocol !== "http:" &&
-            parsed.protocol !== "https:"
-        ) {
-            return res.status(400).json({
-                ok: false,
-                error: "HTTP 또는 HTTPS 주소만 사용할 수 있습니다."
-            });
-        }
+            let { url } =
+                req.body;
 
-        if (parsed.username || parsed.password) {
-            return res.status(400).json({
-                ok: false,
-                error: "사용자명 또는 비밀번호가 포함된 URL은 사용할 수 없습니다."
-            });
-        }
+            if (
+                !url ||
+                typeof url !== "string"
+            ) {
 
-        parsed.hash = "";
+                return res.status(400).json({
+                    ok: false,
+                    error:
+                        "URL을 입력하세요."
+                });
+            }
 
-        if (
-            (parsed.protocol === "http:" && parsed.port === "80") ||
-            (parsed.protocol === "https:" && parsed.port === "443")
-        ) {
-            parsed.port = "";
-        }
+            url = url.trim();
 
-        url = parsed.href;
+            if (
+                !/^https?:\/\//i.test(url)
+            ) {
 
-        const existing = await pool.query(
-            `
-            SELECT url
-            FROM pages
-            WHERE url = $1
-            LIMIT 1
-            `,
-            [url]
-        );
+                url =
+                    "https://" + url;
+            }
 
-        if (existing.rows.length > 0) {
-            return res.json({
-                ok: true,
-                queued: false,
-                alreadyIndexed: true,
-                url
-            });
-        }
+            let parsed;
 
-        const result = await pool.query(
-            `
-            INSERT INTO crawl_queue (
-                url,
-                status
-            )
-            VALUES (
-                $1,
-                'pending'
-            )
-            ON CONFLICT (url)
-            DO UPDATE SET
-                status = 'pending',
-                last_error = NULL,
-                finished_at = NULL
-            RETURNING *
-            `,
-            [url]
-        );
+            try {
 
-        console.log("[CRAWL QUEUE] Added:", url);
+                parsed =
+                    new URL(url);
 
-        setTimeout(() => {
-            runCrawler().catch(error => {
-                console.error(
-                    "[QUEUE CRAWLER ERROR]",
-                    error
+            } catch {
+
+                return res.status(400).json({
+                    ok: false,
+                    error:
+                        "올바른 URL이 아닙니다."
+                });
+            }
+
+            if (
+                parsed.protocol !== "http:" &&
+                parsed.protocol !== "https:"
+            ) {
+
+                return res.status(400).json({
+                    ok: false,
+                    error:
+                        "HTTP 또는 HTTPS 주소만 사용할 수 있습니다."
+                });
+            }
+
+            if (
+                parsed.username ||
+                parsed.password
+            ) {
+
+                return res.status(400).json({
+                    ok: false,
+                    error:
+                        "사용자명 또는 비밀번호가 포함된 URL은 사용할 수 없습니다."
+                });
+            }
+
+            parsed.hash = "";
+
+            if (
+                (
+                    parsed.protocol === "http:" &&
+                    parsed.port === "80"
+                ) ||
+                (
+                    parsed.protocol === "https:" &&
+                    parsed.port === "443"
+                )
+            ) {
+
+                parsed.port = "";
+            }
+
+            url =
+                parsed.href;
+
+            const existing =
+                await pool.query(
+                    `
+                    SELECT url
+                    FROM pages
+                    WHERE url = $1
+                    LIMIT 1
+                    `,
+                    [url]
                 );
-            });
-        }, 100);
 
-        return res.json({
-            ok: true,
-            queued: true,
-            url,
-            queue: result.rows[0]
-        });
+            if (
+                existing.rows.length > 0
+            ) {
 
-    } catch (error) {
-        console.error("[CRAWL QUEUE ERROR]", error);
+                return res.json({
 
-        return res.status(500).json({
-            ok: false,
-            error: error.message
-        });
-    }
-});
+                    ok: true,
 
-app.get("/api/crawl/queue", async (req, res) => {
-    try {
-        const result = await pool.query(
-            `
-            SELECT
-                id,
+                    queued: false,
+
+                    alreadyIndexed:
+                        true,
+
+                    url
+                });
+            }
+
+            const result =
+                await pool.query(
+                    `
+                    INSERT INTO crawl_queue (
+                        url,
+                        status
+                    )
+                    VALUES (
+                        $1,
+                        'pending'
+                    )
+                    ON CONFLICT (url)
+                    DO UPDATE SET
+                        status = 'pending',
+                        last_error = NULL,
+                        finished_at = NULL
+                    RETURNING *
+                    `,
+                    [url]
+                );
+
+            console.log(
+                "[CRAWL QUEUE] Added:",
+                url
+            );
+
+            setTimeout(() => {
+
+                runCrawler()
+                    .catch(error => {
+
+                        console.error(
+                            "[QUEUE CRAWLER ERROR]",
+                            error
+                        );
+                    });
+
+            }, 100);
+
+            return res.json({
+
+                ok: true,
+
+                queued: true,
+
                 url,
-                status,
-                attempts,
-                added_at,
-                started_at,
-                finished_at,
-                last_error
-            FROM crawl_queue
-            ORDER BY added_at DESC
-            LIMIT 100
-            `
-        );
 
-        res.json({
-            ok: true,
-            count: result.rows.length,
-            queue: result.rows
-        });
+                queue:
+                    result.rows[0]
+            });
 
-    } catch (error) {
-        console.error(
-            "[CRAWL QUEUE GET ERROR]",
-            error
-        );
+        } catch (error) {
 
-        res.status(500).json({
-            ok: false,
-            error: error.message
-        });
+            console.error(
+                "[CRAWL QUEUE ERROR]",
+                error
+            );
+
+            return res.status(500).json({
+
+                ok: false,
+
+                error:
+                    error.message
+            });
+        }
     }
-});
+);
+
+app.get(
+    "/api/crawl/queue",
+    async (req, res) => {
+
+        try {
+
+            const result =
+                await pool.query(
+                    `
+                    SELECT
+                        id,
+                        url,
+                        status,
+                        attempts,
+                        added_at,
+                        started_at,
+                        finished_at,
+                        last_error
+                    FROM crawl_queue
+                    ORDER BY added_at DESC
+                    LIMIT 100
+                    `
+                );
+
+            res.json({
+
+                ok: true,
+
+                count:
+                    result.rows.length,
+
+                queue:
+                    result.rows
+            });
+
+        } catch (error) {
+
+            console.error(
+                "[CRAWL QUEUE GET ERROR]",
+                error
+            );
+
+            res.status(500).json({
+
+                ok: false,
+
+                error:
+                    error.message
+            });
+        }
+    }
+);
 
 // ========================================
 // OSmail API
 // 반드시 app.listen()보다 먼저 등록
 // ========================================
 
-// ----------------------------------------
-// 현재 로그인한 사용자의 OSmail 정보
-// ----------------------------------------
+// 현재 로그인한 사용자 정보
 
-app.get("/api/osmail/me", async (req, res) => {
-    try {
-        const result = await getMyOSmail(req);
+app.get(
+    "/api/osmail/me",
+    async (req, res) => {
 
-        return res.json({
-            ok: true,
-            ...result
-        });
+        try {
 
-    } catch (error) {
-        console.error("[OSMAIL ME ERROR]", error);
+            const result =
+                await getMyOSmail(req);
 
-        return res.status(401).json({
-            ok: false,
-            error: error.message || "로그인이 필요합니다."
-        });
+            return res.json({
+
+                ok: true,
+
+                ...result
+            });
+
+        } catch (error) {
+
+            console.error(
+                "[OSMAIL ME ERROR]",
+                error
+            );
+
+            return res.status(401).json({
+
+                ok: false,
+
+                error:
+                    error.message ||
+                    "로그인이 필요합니다."
+            });
+        }
     }
-});
+);
 
-// ----------------------------------------
+// ========================================
 // OSmail ID 생성
-// ----------------------------------------
+// ========================================
 
-app.post("/api/osmail/profile", async (req, res) => {
-    try {
-        const {
-            osmailId,
-            displayName
-        } = req.body;
+app.post(
+    "/api/osmail/profile",
+    async (req, res) => {
 
-        if (!osmailId) {
+        try {
+
+            const {
+                osmailId,
+                displayName
+            } = req.body;
+
+            if (!osmailId) {
+
+                return res.status(400).json({
+
+                    ok: false,
+
+                    error:
+                        "OSmail ID를 입력하세요."
+                });
+            }
+
+            const result =
+                await createOSmailProfile(
+                    req,
+                    osmailId,
+                    displayName
+                );
+
+            return res.json({
+
+                ok: true,
+
+                ...result
+            });
+
+        } catch (error) {
+
+            console.error(
+                "[OSMAIL PROFILE ERROR]",
+                error
+            );
+
             return res.status(400).json({
+
                 ok: false,
-                error: "OSmail ID를 입력하세요."
+
+                error:
+                    error.message
             });
         }
-
-        const result = await createOSmailProfile(
-            req,
-            osmailId,
-            displayName
-        );
-
-        return res.json({
-            ok: true,
-            ...result
-        });
-
-    } catch (error) {
-        console.error(
-            "[OSMAIL PROFILE ERROR]",
-            error
-        );
-
-        return res.status(400).json({
-            ok: false,
-            error: error.message
-        });
     }
-});
+);
 
-// ----------------------------------------
+// ========================================
 // 메일 목록
-// ----------------------------------------
+// ========================================
 
-app.get("/api/osmail/emails", async (req, res) => {
-    try {
-        const emails = await getEmails(req);
+app.get(
+    "/api/osmail/emails",
+    async (req, res) => {
 
-        return res.json({
-            ok: true,
-            emails
-        });
+        try {
 
-    } catch (error) {
-        console.error(
-            "[OSMAIL EMAILS ERROR]",
-            error
-        );
+            const emails =
+                await getEmails(req);
 
-        return res.status(401).json({
-            ok: false,
-            error: error.message
-        });
+            return res.json({
+
+                ok: true,
+
+                emails
+            });
+
+        } catch (error) {
+
+            console.error(
+                "[OSMAIL EMAILS ERROR]",
+                error
+            );
+
+            return res.status(401).json({
+
+                ok: false,
+
+                error:
+                    error.message
+            });
+        }
     }
-});
+);
 
-// ----------------------------------------
+// ========================================
 // OSmail 내부 메일
-// ----------------------------------------
+// ========================================
 
-app.post("/api/osmail/send-internal", async (req, res) => {
-    try {
-        const {
-            to,
-            subject,
-            body
-        } = req.body;
+app.post(
+    "/api/osmail/send-internal",
+    async (req, res) => {
 
-        if (!to) {
+        try {
+
+            const {
+                to,
+                subject,
+                body
+            } = req.body;
+
+            if (!to) {
+
+                return res.status(400).json({
+
+                    ok: false,
+
+                    error:
+                        "받는 사람을 입력하세요."
+                });
+            }
+
+            const email =
+                await sendInternalMail(
+                    req,
+                    {
+                        to,
+                        subject:
+                            subject || "",
+                        body:
+                            body || ""
+                    }
+                );
+
+            return res.json({
+
+                ok: true,
+
+                email
+            });
+
+        } catch (error) {
+
+            console.error(
+                "[OSMAIL INTERNAL SEND ERROR]",
+                error
+            );
+
             return res.status(400).json({
+
                 ok: false,
-                error: "받는 사람을 입력하세요."
+
+                error:
+                    error.message
             });
         }
-
-        const email = await sendInternalMail(req, {
-            to,
-            subject: subject || "",
-            body: body || ""
-        });
-
-        return res.json({
-            ok: true,
-            email
-        });
-
-    } catch (error) {
-        console.error(
-            "[OSMAIL INTERNAL SEND ERROR]",
-            error
-        );
-
-        return res.status(400).json({
-            ok: false,
-            error: error.message
-        });
     }
-});
+);
 
-// ----------------------------------------
+// ========================================
 // 외부 이메일
-// ----------------------------------------
+// ========================================
 
-app.post("/api/osmail/send-external", async (req, res) => {
-    try {
-        const {
-            to,
-            subject,
-            body
-        } = req.body;
+app.post(
+    "/api/osmail/send-external",
+    async (req, res) => {
 
-        if (!to) {
+        try {
+
+            const {
+                to,
+                subject,
+                body
+            } = req.body;
+
+            if (!to) {
+
+                return res.status(400).json({
+
+                    ok: false,
+
+                    error:
+                        "받는 사람을 입력하세요."
+                });
+            }
+
+            const result =
+                await sendExternalMail(
+                    req,
+                    {
+                        to,
+                        subject:
+                            subject || "",
+                        body:
+                            body || ""
+                    }
+                );
+
+            return res.json({
+
+                ok: true,
+
+                ...result
+            });
+
+        } catch (error) {
+
+            console.error(
+                "[OSMAIL EXTERNAL SEND ERROR]",
+                error
+            );
+
             return res.status(400).json({
+
                 ok: false,
-                error: "받는 사람을 입력하세요."
+
+                error:
+                    error.message
             });
         }
-
-        const result = await sendExternalMail(req, {
-            to,
-            subject: subject || "",
-            body: body || ""
-        });
-
-        return res.json({
-            ok: true,
-            ...result
-        });
-
-    } catch (error) {
-        console.error(
-            "[OSMAIL EXTERNAL SEND ERROR]",
-            error
-        );
-
-        return res.status(400).json({
-            ok: false,
-            error: error.message
-        });
     }
-});
+);
 
-// ----------------------------------------
+// ========================================
 // 읽음 처리
-// ----------------------------------------
+// ========================================
 
-app.post("/api/osmail/read", async (req, res) => {
-    try {
-        if (!req.body.id) {
+app.post(
+    "/api/osmail/read",
+    async (req, res) => {
+
+        try {
+
+            if (!req.body.id) {
+
+                return res.status(400).json({
+
+                    ok: false,
+
+                    error:
+                        "메일 ID가 필요합니다."
+                });
+            }
+
+            const email =
+                await markAsRead(
+                    req,
+                    req.body.id
+                );
+
+            return res.json({
+
+                ok: true,
+
+                email
+            });
+
+        } catch (error) {
+
+            console.error(
+                "[OSMAIL READ ERROR]",
+                error
+            );
+
             return res.status(400).json({
+
                 ok: false,
-                error: "메일 ID가 필요합니다."
+
+                error:
+                    error.message
             });
         }
-
-        const email = await markAsRead(
-            req,
-            req.body.id
-        );
-
-        return res.json({
-            ok: true,
-            email
-        });
-
-    } catch (error) {
-        console.error(
-            "[OSMAIL READ ERROR]",
-            error
-        );
-
-        return res.status(400).json({
-            ok: false,
-            error: error.message
-        });
     }
-});
+);
 
-// ----------------------------------------
+// ========================================
 // 삭제
-// ----------------------------------------
+// ========================================
 
-app.post("/api/osmail/delete", async (req, res) => {
-    try {
-        if (!req.body.id) {
+app.post(
+    "/api/osmail/delete",
+    async (req, res) => {
+
+        try {
+
+            if (!req.body.id) {
+
+                return res.status(400).json({
+
+                    ok: false,
+
+                    error:
+                        "메일 ID가 필요합니다."
+                });
+            }
+
+            const email =
+                await deleteEmail(
+                    req,
+                    req.body.id
+                );
+
+            return res.json({
+
+                ok: true,
+
+                email
+            });
+
+        } catch (error) {
+
+            console.error(
+                "[OSMAIL DELETE ERROR]",
+                error
+            );
+
             return res.status(400).json({
+
                 ok: false,
-                error: "메일 ID가 필요합니다."
+
+                error:
+                    error.message
             });
         }
-
-        const email = await deleteEmail(
-            req,
-            req.body.id
-        );
-
-        return res.json({
-            ok: true,
-            email
-        });
-
-    } catch (error) {
-        console.error(
-            "[OSMAIL DELETE ERROR]",
-            error
-        );
-
-        return res.status(400).json({
-            ok: false,
-            error: error.message
-        });
     }
-});
+);
 
-// ----------------------------------------
+// ========================================
 // 복구
-// ----------------------------------------
+// ========================================
 
-app.post("/api/osmail/restore", async (req, res) => {
-    try {
-        if (!req.body.id) {
+app.post(
+    "/api/osmail/restore",
+    async (req, res) => {
+
+        try {
+
+            if (!req.body.id) {
+
+                return res.status(400).json({
+
+                    ok: false,
+
+                    error:
+                        "메일 ID가 필요합니다."
+                });
+            }
+
+            const email =
+                await restoreEmail(
+                    req,
+                    req.body.id
+                );
+
+            return res.json({
+
+                ok: true,
+
+                email
+            });
+
+        } catch (error) {
+
+            console.error(
+                "[OSMAIL RESTORE ERROR]",
+                error
+            );
+
             return res.status(400).json({
+
                 ok: false,
-                error: "메일 ID가 필요합니다."
+
+                error:
+                    error.message
             });
         }
-
-        const email = await restoreEmail(
-            req,
-            req.body.id
-        );
-
-        return res.json({
-            ok: true,
-            email
-        });
-
-    } catch (error) {
-        console.error(
-            "[OSMAIL RESTORE ERROR]",
-            error
-        );
-
-        return res.status(400).json({
-            ok: false,
-            error: error.message
-        });
     }
-});
+);
 
-// ----------------------------------------
+// ========================================
 // SMTP 상태 확인
-// ----------------------------------------
+// ========================================
 
-app.get("/api/osmail/test", async (req, res) => {
-    try {
-        const ok = await verifySMTP();
+app.get(
+    "/api/osmail/test",
+    async (req, res) => {
 
-        return res.json({
-            ok,
-            service: "OSmail SMTP"
-        });
+        try {
 
-    } catch (error) {
-        console.error(
-            "[OSMAIL SMTP TEST ERROR]",
-            error
-        );
+            const ok =
+                await verifySMTP();
 
-        return res.status(500).json({
-            ok: false,
-            service: "OSmail SMTP",
-            error: error.message
-        });
+            return res.json({
+
+                ok,
+
+                service:
+                    "OSmail SMTP"
+            });
+
+        } catch (error) {
+
+            console.error(
+                "[OSMAIL SMTP TEST ERROR]",
+                error
+            );
+
+            return res.status(500).json({
+
+                ok: false,
+
+                service:
+                    "OSmail SMTP",
+
+                error:
+                    error.message
+            });
+        }
     }
-});
+);
 
 // ========================================
 // public 파일
@@ -1100,7 +2059,10 @@ app.get("/api/osmail/test", async (req, res) => {
 
 app.use(
     express.static(
-        path.join(__dirname, "../public")
+        path.join(
+            __dirname,
+            "../public"
+        )
     )
 );
 
@@ -1108,26 +2070,39 @@ app.use(
 // 기본 페이지
 // ========================================
 
-app.get("/", (req, res) => {
-    res.sendFile(
-        path.join(
-            __dirname,
-            "../public/oscadia.html"
-        )
-    );
-});
+app.get(
+    "/",
+    (req, res) => {
+
+        res.sendFile(
+            path.join(
+                __dirname,
+                "../public/oscadia.html"
+            )
+        );
+    }
+);
 
 // ========================================
 // 존재하지 않는 API 처리
 // ========================================
 
-app.use("/api", (req, res) => {
-    res.status(404).json({
-        ok: false,
-        error: "API endpoint not found",
-        path: req.path
-    });
-});
+app.use(
+    "/api",
+    (req, res) => {
+
+        res.status(404).json({
+
+            ok: false,
+
+            error:
+                "API endpoint not found",
+
+            path:
+                req.path
+        });
+    }
+);
 
 // ========================================
 // 서버 시작
@@ -1135,44 +2110,74 @@ app.use("/api", (req, res) => {
 // ========================================
 
 async function startServer() {
+
     try {
+
         await verifySMTP();
+
     } catch (error) {
+
         console.error(
             "[SMTP STARTUP ERROR]",
             error
         );
     }
 
-    app.listen(PORT, () => {
-        console.log(
-            `OSCADIA running on port ${PORT}`
-        );
+    app.listen(
+        PORT,
+        () => {
 
-        console.log(
-            `OSmail API: /api/osmail/me`
-        );
+            console.log(
+                `OSCADIA running on port ${PORT}`
+            );
 
-        // 서버 시작 5초 후 크롤링
-        setTimeout(() => {
-            runCrawler().catch(error => {
-                console.error(
-                    "[STARTUP CRAWLER ERROR]",
-                    error
-                );
-            });
-        }, 5000);
+            console.log(
+                `OSmail API: /api/osmail/me`
+            );
 
-        // 30분마다 자동 크롤링
-        setInterval(() => {
-            runCrawler().catch(error => {
-                console.error(
-                    "[INTERVAL CRAWLER ERROR]",
-                    error
-                );
-            });
-        }, 30 * 60 * 1000);
-    });
+            console.log(
+                `OscaTranslate API: /api/translate`
+            );
+
+            console.log(
+                `Translation provider: ${TRANSLATE_API_URL}`
+            );
+
+            console.log(
+                "Translation API key: not required"
+            );
+
+            // 서버 시작 5초 후 크롤링
+
+            setTimeout(() => {
+
+                runCrawler()
+                    .catch(error => {
+
+                        console.error(
+                            "[STARTUP CRAWLER ERROR]",
+                            error
+                        );
+                    });
+
+            }, 5000);
+
+            // 30분마다 자동 크롤링
+
+            setInterval(() => {
+
+                runCrawler()
+                    .catch(error => {
+
+                        console.error(
+                            "[INTERVAL CRAWLER ERROR]",
+                            error
+                        );
+                    });
+
+            }, 30 * 60 * 1000);
+        }
+    );
 }
 
 startServer();
