@@ -2122,7 +2122,136 @@ async function startServer() {
             error
         );
     }
+// ===============================
+// OscaTranslate API
+// ===============================
 
+const TRANSLATE_LANGUAGES = {
+    auto: "auto",
+    ko: "ko",
+    en: "en",
+    ja: "ja",
+    zh: "zh-CN",
+    de: "de",
+    fr: "fr",
+    es: "es",
+    it: "it",
+    pt: "pt",
+    ru: "ru"
+};
+
+app.get("/api/translate/health", (req, res) => {
+    res.json({
+        ok: true,
+        service: "OscaTranslate",
+        provider: "Google Translate public endpoint"
+    });
+});
+
+app.get("/api/translate/languages", (req, res) => {
+    res.json({
+        ok: true,
+        languages: TRANSLATE_LANGUAGES
+    });
+});
+
+app.post("/api/translate", async (req, res) => {
+    try {
+        const { q, source = "auto", target } = req.body || {};
+
+        if (!q || typeof q !== "string") {
+            return res.status(400).json({
+                ok: false,
+                error: "번역할 문장이 없습니다."
+            });
+        }
+
+        if (!target || !TRANSLATE_LANGUAGES[target]) {
+            return res.status(400).json({
+                ok: false,
+                error: "지원하지 않는 번역 언어입니다."
+            });
+        }
+
+        if (q.length > 5000) {
+            return res.status(400).json({
+                ok: false,
+                error: "한 번에 최대 5000자까지 번역할 수 있습니다."
+            });
+        }
+
+        const sourceLang =
+            TRANSLATE_LANGUAGES[source] || "auto";
+
+        const targetLang =
+            TRANSLATE_LANGUAGES[target];
+
+        // 같은 언어면 번역할 필요 없음
+        if (
+            sourceLang !== "auto" &&
+            sourceLang === targetLang
+        ) {
+            return res.json({
+                ok: true,
+                translatedText: q,
+                source,
+                target
+            });
+        }
+
+        const url =
+            "https://translate.googleapis.com/translate_a/single?" +
+            new URLSearchParams({
+                client: "gtx",
+                sl: sourceLang,
+                tl: targetLang,
+                dt: "t",
+                q
+            }).toString();
+
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(
+                `Translation service returned ${response.status}`
+            );
+        }
+
+        const data = await response.json();
+
+        let translatedText = "";
+
+        if (Array.isArray(data) && Array.isArray(data[0])) {
+            translatedText = data[0]
+                .map(part => part?.[0] || "")
+                .join("");
+        }
+
+        if (!translatedText) {
+            throw new Error("번역 결과가 비어 있습니다.");
+        }
+
+        res.json({
+            ok: true,
+            translatedText,
+            source,
+            target,
+            detectedSource:
+                typeof data[2] === "string"
+                    ? data[2]
+                    : null
+        });
+
+    } catch (error) {
+        console.error("OscaTranslate error:", error);
+
+        res.status(502).json({
+            ok: false,
+            error: "번역 서버에 연결할 수 없습니다.",
+            detail: error.message
+        });
+    }
+});
     app.listen(
         PORT,
         () => {
