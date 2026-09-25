@@ -429,6 +429,13 @@ header{
     font-weight:700;
 }
 
+.loading{
+    text-align:center;
+    color:#64748b;
+    margin-top:10px;
+    min-height:20px;
+}
+
 .toast{
     position:fixed;
     bottom:20px;
@@ -440,6 +447,7 @@ header{
     border-radius:9px;
     display:none;
     z-index:300;
+    max-width:90%;
 }
 
 .toast.show{
@@ -498,29 +506,25 @@ header{
 
 <body>
 
-<!-- ================================
-     AUTH
-================================ -->
-
 <div id="authPage" class="auth-page">
 
     <div class="auth-box">
 
         <h1>OSmail</h1>
 
-        <p id="authTitle">
-            로그인
-        </p>
+        <p id="authTitle">로그인</p>
 
         <input
             id="email"
             type="email"
+            autocomplete="email"
             placeholder="이메일"
         >
 
         <input
             id="password"
             type="password"
+            autocomplete="current-password"
             placeholder="비밀번호"
         >
 
@@ -528,7 +532,10 @@ header{
             로그인
         </button>
 
+        <div id="authLoading" class="loading"></div>
+
         <div class="auth-switch">
+
             <span id="authSwitchText">
                 계정이 없나요?
             </span>
@@ -539,16 +546,13 @@ header{
             >
                 회원가입
             </button>
+
         </div>
 
     </div>
 
 </div>
 
-
-<!-- ================================
-     PROFILE SETUP
-================================ -->
 
 <div id="setupPage" class="setup">
 
@@ -564,6 +568,7 @@ header{
             id="osmailId"
             placeholder="예: cucu"
             maxlength="20"
+            autocomplete="off"
         >
 
         <input
@@ -576,14 +581,12 @@ header{
             OSmail 주소 만들기
         </button>
 
+        <div id="setupLoading" class="loading"></div>
+
     </div>
 
 </div>
 
-
-<!-- ================================
-     APP
-================================ -->
 
 <div id="app" style="display:none">
 
@@ -687,14 +690,7 @@ header{
 </div>
 
 
-<!-- ================================
-     COMPOSE
-================================ -->
-
-<div
-    id="composeOverlay"
-    class="overlay"
->
+<div id="composeOverlay" class="overlay">
 
     <div class="modal">
 
@@ -715,9 +711,7 @@ header{
 
             <div class="field">
 
-                <label>
-                    받는 사람
-                </label>
+                <label>받는 사람</label>
 
                 <input
                     id="composeTo"
@@ -728,9 +722,7 @@ header{
 
             <div class="field">
 
-                <label>
-                    제목
-                </label>
+                <label>제목</label>
 
                 <input
                     id="composeSubject"
@@ -741,9 +733,7 @@ header{
 
             <div class="field">
 
-                <label>
-                    내용
-                </label>
+                <label>내용</label>
 
                 <textarea
                     id="composeBody"
@@ -777,14 +767,7 @@ header{
 </div>
 
 
-<!-- ================================
-     DETAIL
-================================ -->
-
-<div
-    id="detailOverlay"
-    class="overlay"
->
+<div id="detailOverlay" class="overlay">
 
     <div class="modal">
 
@@ -811,14 +794,10 @@ header{
 </div>
 
 
-<div
-    id="toast"
-    class="toast"
-></div>
+<div id="toast" class="toast"></div>
 
 
 <script>
-
 const SUPABASE_URL =
     "https://mujmwouyopgxwtezhlzv.supabase.co";
 
@@ -831,17 +810,17 @@ const supabaseClient =
         SUPABASE_ANON_KEY
     );
 
-
 let currentUser = null;
 let currentProfile = null;
 let emails = [];
 let currentFolder = "inbox";
 let authMode = "login";
+let initializing = false;
 
 
-/* =========================================
+/* =========================
    UI
-========================================= */
+========================= */
 
 function showToast(message){
 
@@ -852,24 +831,24 @@ function showToast(message){
 
     toast.classList.add("show");
 
-    setTimeout(() => {
-        toast.classList.remove("show");
-    }, 3000);
+    clearTimeout(window.toastTimer);
+
+    window.toastTimer =
+        setTimeout(() => {
+            toast.classList.remove("show");
+        }, 3500);
 }
 
 
 function showOnly(id){
 
-    document
-        .getElementById("authPage")
+    document.getElementById("authPage")
         .style.display = "none";
 
-    document
-        .getElementById("setupPage")
+    document.getElementById("setupPage")
         .style.display = "none";
 
-    document
-        .getElementById("app")
+    document.getElementById("app")
         .style.display = "none";
 
     document.getElementById(id)
@@ -880,85 +859,141 @@ function showOnly(id){
 }
 
 
-/* =========================================
+/* =========================
    AUTH
-========================================= */
+========================= */
 
 document
     .getElementById("authButton")
-    .addEventListener("click", async () => {
+    .addEventListener("click", handleAuth);
 
-        const email =
-            document.getElementById("email")
-                .value.trim();
 
-        const password =
-            document.getElementById("password")
-                .value;
+document
+    .getElementById("password")
+    .addEventListener("keydown", event => {
 
-        if (!email || !password){
-
-            showToast(
-                "이메일과 비밀번호를 입력하세요."
-            );
-
-            return;
-        }
-
-        if (authMode === "login"){
-
-            const {
-                error
-            } = await supabaseClient.auth
-                .signInWithPassword({
-                    email,
-                    password
-                });
-
-            if (error){
-
-                showToast(error.message);
-
-                return;
-            }
-
-            showToast("로그인되었습니다.");
-
-        }else{
-
-            const {
-                data,
-                error
-            } = await supabaseClient.auth
-                .signUp({
-                    email,
-                    password
-                });
-
-            if (error){
-
-                showToast(error.message);
-
-                return;
-            }
-
-            if (data.session){
-
-                showToast(
-                    "회원가입되었습니다."
-                );
-
-            }else{
-
-                showToast(
-                    "회원가입 완료. 이메일 인증이 필요한 경우 인증 후 로그인하세요."
-                );
-
-            }
-
+        if(event.key === "Enter"){
+            handleAuth();
         }
 
     });
+
+
+async function handleAuth(){
+
+    const email =
+        document.getElementById("email")
+            .value.trim();
+
+    const password =
+        document.getElementById("password")
+            .value;
+
+    const loading =
+        document.getElementById("authLoading");
+
+    if(!email || !password){
+
+        showToast(
+            "이메일과 비밀번호를 입력하세요."
+        );
+
+        return;
+    }
+
+    if(password.length < 6){
+
+        showToast(
+            "비밀번호는 6자 이상이어야 합니다."
+        );
+
+        return;
+    }
+
+    const button =
+        document.getElementById("authButton");
+
+    button.disabled = true;
+
+    loading.textContent =
+        authMode === "login"
+            ? "로그인 중..."
+            : "회원가입 중...";
+
+    try{
+
+        if(authMode === "login"){
+
+            const { data, error } =
+                await supabaseClient.auth
+                    .signInWithPassword({
+                        email,
+                        password
+                    });
+
+            if(error){
+                throw error;
+            }
+
+            currentUser =
+                data.user;
+
+            showToast("로그인되었습니다.");
+
+            await loadProfile();
+
+        }else{
+
+            const { data, error } =
+                await supabaseClient.auth
+                    .signUp({
+                        email,
+                        password
+                    });
+
+            if(error){
+                throw error;
+            }
+
+            /*
+             * Supabase에서 Confirm Email을 OFF로
+             * 설정했을 경우 session이 바로 생긴다.
+             */
+            if(!data.session || !data.user){
+
+                throw new Error(
+                    "회원가입은 완료되었지만 자동 로그인이 되지 않았습니다. Supabase에서 Email 인증 확인(Confirm Email)을 OFF로 설정했는지 확인하세요."
+                );
+            }
+
+            currentUser =
+                data.user;
+
+            showToast(
+                "회원가입되었습니다."
+            );
+
+            await loadProfile();
+
+        }
+
+    }catch(error){
+
+        console.error(error);
+
+        showToast(
+            error.message ||
+            "인증 처리에 실패했습니다."
+        );
+
+    }finally{
+
+        button.disabled = false;
+        loading.textContent = "";
+
+    }
+
+}
 
 
 document
@@ -998,19 +1033,25 @@ document
                 ? "회원가입"
                 : "로그인";
 
+        document
+            .getElementById("password")
+            .autocomplete =
+            authMode === "login"
+                ? "current-password"
+                : "new-password";
+
     });
 
 
-/* =========================================
+/* =========================
    API
-========================================= */
+========================= */
 
 async function getAccessToken(){
 
-    const {
-        data
-    } = await supabaseClient.auth
-        .getSession();
+    const { data } =
+        await supabaseClient.auth
+            .getSession();
 
     return data.session?.access_token || null;
 }
@@ -1021,8 +1062,10 @@ async function api(url, options = {}){
     const token =
         await getAccessToken();
 
-    if (!token){
-        throw new Error("로그인이 필요합니다.");
+    if(!token){
+        throw new Error(
+            "로그인이 필요합니다."
+        );
     }
 
     const response =
@@ -1032,18 +1075,28 @@ async function api(url, options = {}){
 
             headers:{
                 ...(options.headers || {}),
+
                 "Authorization":
                     `Bearer ${token}`,
+
                 "Content-Type":
                     "application/json"
             }
 
         });
 
-    const result =
-        await response.json();
+    let result;
 
-    if (!response.ok || result.ok === false){
+    try{
+        result =
+            await response.json();
+    }catch{
+        throw new Error(
+            "서버에서 올바른 응답을 받지 못했습니다."
+        );
+    }
+
+    if(!response.ok || result.ok === false){
 
         throw new Error(
             result.error ||
@@ -1055,43 +1108,71 @@ async function api(url, options = {}){
 }
 
 
-/* =========================================
+/* =========================
    초기화
-========================================= */
+========================= */
 
 async function initialize(){
 
-    const {
-        data
-    } = await supabaseClient.auth
-        .getSession();
+    if(initializing) return;
 
-    currentUser =
-        data.session?.user || null;
+    initializing = true;
 
-    if (!currentUser){
+    try{
 
-        showOnly("authPage");
+        const { data } =
+            await supabaseClient.auth
+                .getSession();
 
-        return;
+        currentUser =
+            data.session?.user || null;
+
+        if(!currentUser){
+
+            showOnly("authPage");
+
+            return;
+        }
+
+        await loadProfile();
+
+    }finally{
+
+        initializing = false;
+
     }
-
-    await loadProfile();
 
 }
 
+
+/* =========================
+   프로필
+========================= */
 
 async function loadProfile(){
 
     try{
 
         const result =
-            await api("/api/osmail/me");
+            await api(
+                "/api/osmail/me"
+            );
 
         currentProfile =
             result.profile;
 
-        if (!currentProfile){
+        if(!currentProfile){
+
+            document
+                .getElementById("osmailId")
+                .value = "";
+
+            document
+                .getElementById("displayName")
+                .value =
+                currentUser?.email
+                ? currentUser.email.split("@")[0]
+                : "";
 
             showOnly("setupPage");
 
@@ -1111,84 +1192,128 @@ async function loadProfile(){
 
         console.error(error);
 
-        showOnly("authPage");
+        /*
+         * 인증은 정상인데 프로필 API가 실패한 경우
+         * 무조건 로그아웃시키지 않는다.
+         */
+        showToast(error.message);
 
     }
 
 }
 
 
-/* =========================================
+/* =========================
    프로필 생성
-========================================= */
+========================= */
 
 document
     .getElementById("createProfileButton")
-    .addEventListener("click", async () => {
+    .addEventListener(
+        "click",
+        createProfile
+    );
 
-        const osmailId =
-            document
-                .getElementById("osmailId")
-                .value
-                .trim();
 
-        const displayName =
-            document
-                .getElementById("displayName")
-                .value
-                .trim();
+document
+    .getElementById("osmailId")
+    .addEventListener("keydown", event => {
 
-        if (!/^[A-Za-z0-9_]{3,20}$/.test(osmailId)){
-
-            showToast(
-                "OSmail ID는 영문, 숫자, 밑줄(_) 3~20자로 입력하세요."
-            );
-
-            return;
-        }
-
-        try{
-
-            const result =
-                await api(
-                    "/api/osmail/profile",
-                    {
-                        method:"POST",
-                        body:JSON.stringify({
-                            osmailId,
-                            displayName
-                        })
-                    }
-                );
-
-            currentProfile =
-                result.profile;
-
-            document
-                .getElementById("myAddress")
-                .textContent =
-                result.address;
-
-            showToast(
-                "OSmail 주소가 만들어졌습니다."
-            );
-
-            showOnly("app");
-
-            await loadEmails();
-
-        }catch(error){
-
-            showToast(error.message);
-
+        if(event.key === "Enter"){
+            createProfile();
         }
 
     });
 
 
-/* =========================================
-   메일 불러오기
-========================================= */
+async function createProfile(){
+
+    const osmailId =
+        document
+            .getElementById("osmailId")
+            .value
+            .trim()
+            .toLowerCase();
+
+    const displayName =
+        document
+            .getElementById("displayName")
+            .value
+            .trim();
+
+    const loading =
+        document
+            .getElementById("setupLoading");
+
+    const button =
+        document
+            .getElementById("createProfileButton");
+
+    if(!/^[A-Za-z0-9_]{3,20}$/.test(osmailId)){
+
+        showToast(
+            "OSmail ID는 영문, 숫자, 밑줄(_)만 사용해서 3~20자로 입력하세요."
+        );
+
+        return;
+    }
+
+    button.disabled = true;
+    loading.textContent =
+        "OSmail 주소를 만드는 중...";
+
+    try{
+
+        const result =
+            await api(
+                "/api/osmail/profile",
+                {
+                    method:"POST",
+
+                    body:JSON.stringify({
+                        osmailId,
+                        displayName
+                    })
+                }
+            );
+
+        currentProfile =
+            result.profile;
+
+        document
+            .getElementById("myAddress")
+            .textContent =
+            result.address;
+
+        showOnly("app");
+
+        await loadEmails();
+
+        showToast(
+            `OSmail 주소 ${result.address}가 만들어졌습니다.`
+        );
+
+    }catch(error){
+
+        console.error(error);
+
+        showToast(
+            error.message
+        );
+
+    }finally{
+
+        button.disabled = false;
+        loading.textContent = "";
+
+    }
+
+}
+
+
+/* =========================
+   메일
+========================= */
 
 async function loadEmails(){
 
@@ -1206,16 +1331,14 @@ async function loadEmails(){
 
     }catch(error){
 
-        showToast(error.message);
+        showToast(
+            error.message
+        );
 
     }
 
 }
 
-
-/* =========================================
-   폴더 변경
-========================================= */
 
 function changeFolder(folder){
 
@@ -1228,7 +1351,7 @@ function changeFolder(folder){
             button.classList.remove("active");
         });
 
-    if (folder === "inbox"){
+    if(folder === "inbox"){
 
         document
             .getElementById("navInbox")
@@ -1253,13 +1376,9 @@ function changeFolder(folder){
 }
 
 
-/* =========================================
-   폴더 필터
-========================================= */
-
 function folderEmails(){
 
-    if (!currentUser)
+    if(!currentUser)
         return [];
 
     return emails.filter(mail => {
@@ -1270,25 +1389,28 @@ function folderEmails(){
         const recipient =
             mail.recipient_id === currentUser.id;
 
-        if (currentFolder === "inbox"){
+        if(currentFolder === "inbox"){
 
             return recipient &&
                    !mail.recipient_deleted;
 
         }
 
-        if (currentFolder === "sent"){
+        if(currentFolder === "sent"){
 
             return sender &&
                    !mail.sender_deleted;
 
         }
 
-        if (currentFolder === "trash"){
+        if(currentFolder === "trash"){
 
             return (
-                (sender && mail.sender_deleted) ||
-                (recipient && mail.recipient_deleted)
+                (sender &&
+                 mail.sender_deleted) ||
+
+                (recipient &&
+                 mail.recipient_deleted)
             );
 
         }
@@ -1299,10 +1421,6 @@ function folderEmails(){
 
 }
 
-
-/* =========================================
-   메일 렌더링
-========================================= */
 
 function renderMails(){
 
@@ -1321,7 +1439,7 @@ function renderMails(){
     let filtered =
         folderEmails();
 
-    if (search){
+    if(search){
 
         filtered =
             filtered.filter(mail => {
@@ -1340,7 +1458,7 @@ function renderMails(){
 
     }
 
-    if (!filtered.length){
+    if(!filtered.length){
 
         list.innerHTML =
             `<div class="empty">
@@ -1358,9 +1476,7 @@ function renderMails(){
 
             let otherAddress;
 
-            if (
-                currentFolder === "sent"
-            ){
+            if(currentFolder === "sent"){
 
                 otherAddress =
                     mail.recipient_address;
@@ -1425,10 +1541,6 @@ function renderMails(){
 }
 
 
-/* =========================================
-   메일 열기
-========================================= */
-
 async function openMail(id){
 
     const mail =
@@ -1436,10 +1548,10 @@ async function openMail(id){
             item => item.id === id
         );
 
-    if (!mail)
+    if(!mail)
         return;
 
-    if (
+    if(
         mail.recipient_id === currentUser.id &&
         !mail.is_read
     ){
@@ -1450,6 +1562,7 @@ async function openMail(id){
                 "/api/osmail/read",
                 {
                     method:"POST",
+
                     body:JSON.stringify({
                         id
                     })
@@ -1465,12 +1578,6 @@ async function openMail(id){
         }
 
     }
-
-    const sender =
-        mail.sender_address;
-
-    const recipient =
-        mail.recipient_address;
 
     const date =
         new Date(
@@ -1488,7 +1595,9 @@ async function openMail(id){
                 </div>
 
                 <div class="detail-value">
-                    ${escapeHtml(sender)}
+                    ${escapeHtml(
+                        mail.sender_address
+                    )}
                 </div>
 
             </div>
@@ -1500,7 +1609,9 @@ async function openMail(id){
                 </div>
 
                 <div class="detail-value">
-                    ${escapeHtml(recipient)}
+                    ${escapeHtml(
+                        mail.recipient_address
+                    )}
                 </div>
 
             </div>
@@ -1563,7 +1674,6 @@ async function openMail(id){
                 }
 
             </div>
-
         `;
 
     document
@@ -1584,10 +1694,6 @@ function closeDetail(){
 }
 
 
-/* =========================================
-   메일 삭제
-========================================= */
-
 async function deleteMail(id){
 
     try{
@@ -1596,6 +1702,7 @@ async function deleteMail(id){
             "/api/osmail/delete",
             {
                 method:"POST",
+
                 body:JSON.stringify({
                     id
                 })
@@ -1612,16 +1719,14 @@ async function deleteMail(id){
 
     }catch(error){
 
-        showToast(error.message);
+        showToast(
+            error.message
+        );
 
     }
 
 }
 
-
-/* =========================================
-   복구
-========================================= */
 
 async function restoreMail(id){
 
@@ -1631,6 +1736,7 @@ async function restoreMail(id){
             "/api/osmail/restore",
             {
                 method:"POST",
+
                 body:JSON.stringify({
                     id
                 })
@@ -1647,16 +1753,18 @@ async function restoreMail(id){
 
     }catch(error){
 
-        showToast(error.message);
+        showToast(
+            error.message
+        );
 
     }
 
 }
 
 
-/* =========================================
+/* =========================
    작성
-========================================= */
+========================= */
 
 function openCompose(){
 
@@ -1695,7 +1803,7 @@ async function sendMail(){
             .getElementById("composeBody")
             .value;
 
-    if (!to){
+    if(!to){
 
         showToast(
             "받는 사람을 입력하세요."
@@ -1704,7 +1812,7 @@ async function sendMail(){
         return;
     }
 
-    if (!subject){
+    if(!subject){
 
         showToast(
             "제목을 입력하세요."
@@ -1713,7 +1821,7 @@ async function sendMail(){
         return;
     }
 
-    if (!body.trim()){
+    if(!body.trim()){
 
         showToast(
             "내용을 입력하세요."
@@ -1767,7 +1875,7 @@ async function sendMail(){
         showToast(
             internal
                 ? "OSmail을 보냈습니다."
-                : "외부 이메일을 보냈고 보낸 편지함에 저장했습니다."
+                : "외부 이메일을 보냈습니다."
         );
 
     }catch(error){
@@ -1781,9 +1889,9 @@ async function sendMail(){
 }
 
 
-/* =========================================
+/* =========================
    로그아웃
-========================================= */
+========================= */
 
 async function logout(){
 
@@ -1798,9 +1906,9 @@ async function logout(){
 }
 
 
-/* =========================================
+/* =========================
    HTML escaping
-========================================= */
+========================= */
 
 function escapeHtml(value){
 
@@ -1814,22 +1922,26 @@ function escapeHtml(value){
 }
 
 
-/* =========================================
-   Auth 상태 변화
-========================================= */
+/* =========================
+   Auth 상태
+========================= */
 
 supabaseClient.auth
     .onAuthStateChange(
         async (event, session) => {
 
+            /*
+             * SIGNED_IN 이벤트에서 loadProfile을
+             * 다시 실행하면 회원가입 직후 중복 요청이
+             * 발생할 수 있으므로 현재 상태만 갱신한다.
+             */
             currentUser =
                 session?.user || null;
 
-            if (currentUser){
+            if(!currentUser){
 
-                await loadProfile();
-
-            }else{
+                currentProfile = null;
+                emails = [];
 
                 showOnly("authPage");
 
@@ -1839,9 +1951,9 @@ supabaseClient.auth
     );
 
 
-/* =========================================
+/* =========================
    시작
-========================================= */
+========================= */
 
 initialize();
 
