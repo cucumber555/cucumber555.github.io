@@ -7,7 +7,17 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import { crawl } from "./crawler.js";
-
+import {
+    verifySMTP,
+    getMyOSmail,
+    createOSmailProfile,
+    sendInternalMail,
+    sendExternalMail,
+    getEmails,
+    markAsRead,
+    deleteEmail,
+    restoreEmail
+} from "./osmail.js";
 
 // ========================================
 // 기본 설정
@@ -1744,7 +1754,7 @@ app.get(
 // ========================================
 // 서버 시작
 // ========================================
-
+verifySMTP();
 app.listen(
     PORT,
     () => {
@@ -1779,3 +1789,190 @@ app.listen(
 
     }
 );
+// =========================================
+// OSmail
+// =========================================
+
+app.get("/api/osmail/me", async (req, res) => {
+    try {
+        const result = await getMyOSmail(req);
+
+        res.json({
+            ok: true,
+            ...result
+        });
+    } catch (error) {
+        res.status(401).json({
+            ok: false,
+            error: error.message
+        });
+    }
+});
+
+
+app.post("/api/osmail/profile", async (req, res) => {
+    try {
+        const {
+            osmailId,
+            displayName
+        } = req.body;
+
+        const result =
+            await createOSmailProfile(
+                req,
+                osmailId,
+                displayName
+            );
+
+        res.json({
+            ok: true,
+            ...result
+        });
+
+    } catch (error) {
+        res.status(400).json({
+            ok: false,
+            error: error.message
+        });
+    }
+});
+
+
+app.get("/api/osmail/emails", async (req, res) => {
+    try {
+        const emails = await getEmails(req);
+
+        res.json({
+            ok: true,
+            emails
+        });
+
+    } catch (error) {
+        res.status(401).json({
+            ok: false,
+            error: error.message
+        });
+    }
+});
+
+
+app.post("/api/osmail/send-internal", async (req, res) => {
+    try {
+        const email =
+            await sendInternalMail(req, {
+                to: req.body.to,
+                subject: req.body.subject,
+                body: req.body.body
+            });
+
+        res.json({
+            ok: true,
+            email
+        });
+
+    } catch (error) {
+        res.status(400).json({
+            ok: false,
+            error: error.message
+        });
+    }
+});
+
+
+app.post("/api/osmail/send-external", async (req, res) => {
+    try {
+        const result =
+            await sendExternalMail(req, {
+                to: req.body.to,
+                subject: req.body.subject,
+                body: req.body.body
+            });
+
+        res.json({
+            ok: true,
+            ...result
+        });
+
+    } catch (error) {
+        res.status(400).json({
+            ok: false,
+            error: error.message
+        });
+    }
+});
+
+
+app.post("/api/osmail/read", async (req, res) => {
+    try {
+        const email =
+            await markAsRead(
+                req,
+                req.body.id
+            );
+
+        res.json({
+            ok: true,
+            email
+        });
+
+    } catch (error) {
+        res.status(400).json({
+            ok: false,
+            error: error.message
+        });
+    }
+});
+
+
+app.post("/api/osmail/delete", async (req, res) => {
+    try {
+        const email =
+            await deleteEmail(
+                req,
+                req.body.id
+            );
+
+        res.json({
+            ok: true,
+            email
+        });
+
+    } catch (error) {
+        res.status(400).json({
+            ok: false,
+            error: error.message
+        });
+    }
+});
+
+
+app.post("/api/osmail/restore", async (req, res) => {
+    try {
+        const email =
+            await restoreEmail(
+                req,
+                req.body.id
+            );
+
+        res.json({
+            ok: true,
+            email
+        });
+
+    } catch (error) {
+        res.status(400).json({
+            ok: false,
+            error: error.message
+        });
+    }
+});
+
+
+app.get("/api/osmail/test", async (req, res) => {
+    const ok = await verifySMTP();
+
+    res.json({
+        ok,
+        service: "OSmail SMTP"
+    });
+});
