@@ -24,14 +24,18 @@ import {
 // 기본 설정
 // ========================================
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __filename =
+    fileURLToPath(import.meta.url);
+
+const __dirname =
+    path.dirname(__filename);
 
 const { Pool } = pg;
 
 const app = express();
 
-const PORT = process.env.PORT || 10000;
+const PORT =
+    process.env.PORT || 10000;
 
 app.use(cors());
 
@@ -46,7 +50,8 @@ app.use(
 // ========================================
 
 const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString:
+        process.env.DATABASE_URL,
 
     ssl: {
         rejectUnauthorized: false
@@ -60,8 +65,11 @@ const pool = new Pool({
 // ========================================
 
 let crawlerRunning = false;
+
 let lastCrawlerStart = null;
+
 let lastCrawlerFinish = null;
+
 let lastCrawlerError = null;
 
 // ========================================
@@ -70,69 +78,225 @@ let lastCrawlerError = null;
 
 const SEARCH_ALIASES = {
 
-    "구글": ["google", "google.com"],
-    "google": ["google", "google.com"],
+    "구글": [
+        "google",
+        "google.com"
+    ],
 
-    "네이버": ["naver", "naver.com"],
-    "naver": ["naver", "naver.com"],
+    "google": [
+        "google",
+        "google.com"
+    ],
 
-    "다음": ["daum", "daum.net"],
-    "daum": ["daum", "daum.net"],
+    "네이버": [
+        "naver",
+        "naver.com"
+    ],
 
-    "유튜브": ["youtube", "youtube.com"],
-    "youtube": ["youtube", "youtube.com"],
+    "naver": [
+        "naver",
+        "naver.com"
+    ],
 
-    "깃허브": ["github", "github.com"],
-    "github": ["github", "github.com"],
+    "다음": [
+        "daum",
+        "daum.net"
+    ],
 
-    "위키백과": ["wikipedia", "wikipedia.org"],
-    "위키피디아": ["wikipedia", "wikipedia.org"],
-    "wikipedia": ["wikipedia", "wikipedia.org"],
+    "daum": [
+        "daum",
+        "daum.net"
+    ],
 
-    "모질라": ["mozilla", "mozilla.org"],
-    "mozilla": ["mozilla", "mozilla.org"],
+    "유튜브": [
+        "youtube",
+        "youtube.com"
+    ],
 
-    "나사": ["nasa", "nasa.gov"],
-    "nasa": ["nasa", "nasa.gov"],
+    "youtube": [
+        "youtube",
+        "youtube.com"
+    ],
 
-    "아마존": ["amazon", "amazon.com"],
-    "amazon": ["amazon", "amazon.com"],
+    "깃허브": [
+        "github",
+        "github.com"
+    ],
 
-    "비비씨": ["bbc", "bbc.com"],
-    "bbc": ["bbc", "bbc.com"],
+    "github": [
+        "github",
+        "github.com"
+    ],
 
-    "씨엔엔": ["cnn", "cnn.com"],
-    "cnn": ["cnn", "cnn.com"],
+    "위키백과": [
+        "wikipedia",
+        "wikipedia.org"
+    ],
 
-    "레딧": ["reddit", "reddit.com"],
-    "reddit": ["reddit", "reddit.com"],
+    "위키피디아": [
+        "wikipedia",
+        "wikipedia.org"
+    ],
 
-    "스택오버플로": ["stackoverflow", "stackoverflow.com"],
-    "스택오버플로우": ["stackoverflow", "stackoverflow.com"],
-    "stackoverflow": ["stackoverflow", "stackoverflow.com"],
+    "wikipedia": [
+        "wikipedia",
+        "wikipedia.org"
+    ],
 
-    "뉴욕타임스": ["nytimes", "nytimes.com"],
-    "뉴욕 타임스": ["nytimes", "nytimes.com"],
-    "nytimes": ["nytimes", "nytimes.com"],
+    "모질라": [
+        "mozilla",
+        "mozilla.org"
+    ],
 
-    "가디언": ["guardian", "theguardian.com"],
-    "guardian": ["guardian", "theguardian.com"],
+    "mozilla": [
+        "mozilla",
+        "mozilla.org"
+    ],
 
-    "브리태니커": ["britannica", "britannica.com"],
-    "britannica": ["britannica", "britannica.com"],
+    "나사": [
+        "nasa",
+        "nasa.gov"
+    ],
 
-    "인터넷 아카이브": ["archive", "archive.org"],
-    "인터넷아카이브": ["archive", "archive.org"],
-    "archive": ["archive", "archive.org"],
+    "nasa": [
+        "nasa",
+        "nasa.gov"
+    ],
 
-    "w3c": ["w3c", "w3.org"],
-    "월드와이드웹컨소시엄": ["w3c", "w3.org"],
+    "아마존": [
+        "amazon",
+        "amazon.com"
+    ],
 
-    "파이썬": ["python", "python.org"],
-    "python": ["python", "python.org"],
+    "amazon": [
+        "amazon",
+        "amazon.com"
+    ],
 
-    "나무위키": ["namu", "namu.wiki"],
-    "namuwiki": ["namu", "namu.wiki"]
+    "비비씨": [
+        "bbc",
+        "bbc.com"
+    ],
+
+    "bbc": [
+        "bbc",
+        "bbc.com"
+    ],
+
+    "씨엔엔": [
+        "cnn",
+        "cnn.com"
+    ],
+
+    "cnn": [
+        "cnn",
+        "cnn.com"
+    ],
+
+    "레딧": [
+        "reddit",
+        "reddit.com"
+    ],
+
+    "reddit": [
+        "reddit",
+        "reddit.com"
+    ],
+
+    "스택오버플로": [
+        "stackoverflow",
+        "stackoverflow.com"
+    ],
+
+    "스택오버플로우": [
+        "stackoverflow",
+        "stackoverflow.com"
+    ],
+
+    "stackoverflow": [
+        "stackoverflow",
+        "stackoverflow.com"
+    ],
+
+    "뉴욕타임스": [
+        "nytimes",
+        "nytimes.com"
+    ],
+
+    "뉴욕 타임스": [
+        "nytimes",
+        "nytimes.com"
+    ],
+
+    "nytimes": [
+        "nytimes",
+        "nytimes.com"
+    ],
+
+    "가디언": [
+        "guardian",
+        "theguardian.com"
+    ],
+
+    "guardian": [
+        "guardian",
+        "theguardian.com"
+    ],
+
+    "브리태니커": [
+        "britannica",
+        "britannica.com"
+    ],
+
+    "britannica": [
+        "britannica",
+        "britannica.com"
+    ],
+
+    "인터넷 아카이브": [
+        "archive",
+        "archive.org"
+    ],
+
+    "인터넷아카이브": [
+        "archive",
+        "archive.org"
+    ],
+
+    "archive": [
+        "archive",
+        "archive.org"
+    ],
+
+    "w3c": [
+        "w3c",
+        "w3.org"
+    ],
+
+    "월드와이드웹컨소시엄": [
+        "w3c",
+        "w3.org"
+    ],
+
+    "파이썬": [
+        "python",
+        "python.org"
+    ],
+
+    "python": [
+        "python",
+        "python.org"
+    ],
+
+    "나무위키": [
+        "namu",
+        "namu.wiki"
+    ],
+
+    "namuwiki": [
+        "namu",
+        "namu.wiki"
+    ]
 };
 
 // ========================================
@@ -269,7 +433,9 @@ function tokenizeQuery(query) {
 
     return normalizeSearchQuery(query)
         .split(/[\s,./!?()[\]{}:;|]+/)
-        .map(word => word.trim())
+        .map(word =>
+            word.trim()
+        )
         .filter(Boolean);
 }
 
@@ -278,15 +444,18 @@ function getSearchTerms(query) {
     const normalized =
         normalizeSearchQuery(query);
 
-    const terms = new Set();
+    const terms =
+        new Set();
 
     if (normalized) {
         terms.add(normalized);
     }
 
     for (
-        const token of tokenizeQuery(normalized)
+        const token of
+        tokenizeQuery(normalized)
     ) {
+
         terms.add(token);
     }
 
@@ -295,8 +464,13 @@ function getSearchTerms(query) {
 
     if (aliases) {
 
-        for (const alias of aliases) {
-            terms.add(alias.toLowerCase());
+        for (
+            const alias of aliases
+        ) {
+
+            terms.add(
+                alias.toLowerCase()
+            );
         }
     }
 
@@ -305,12 +479,19 @@ function getSearchTerms(query) {
 
     if (related) {
 
-        for (const term of related) {
-            terms.add(term.toLowerCase());
+        for (
+            const term of related
+        ) {
+
+            terms.add(
+                term.toLowerCase()
+            );
         }
     }
 
-    return [...terms];
+    return [
+        ...terms
+    ];
 }
 
 function getDomainFromUrl(url) {
@@ -320,7 +501,10 @@ function getDomainFromUrl(url) {
         return new URL(url)
             .hostname
             .toLowerCase()
-            .replace(/^www\./, "");
+            .replace(
+                /^www\./,
+                ""
+            );
 
     } catch {
 
@@ -332,374 +516,452 @@ function getDomainFromUrl(url) {
 // 검색 API
 // ========================================
 
-app.get("/api/search", async (req, res) => {
+app.get(
+    "/api/search",
+    async (req, res) => {
 
-    const originalQuery =
-        String(req.query.q || "").trim();
+        const originalQuery =
+            String(
+                req.query.q || ""
+            ).trim();
 
-    if (!originalQuery) {
-
-        return res.json({
-            ok: true,
-            count: 0,
-            results: []
-        });
-    }
-
-    const query =
-        normalizeSearchQuery(originalQuery);
-
-    const terms =
-        getSearchTerms(query).slice(0, 30);
-
-    try {
-
-        const conditions = [];
-        const values = [];
-
-        for (
-            let i = 0;
-            i < terms.length;
-            i++
-        ) {
-
-            const p = `$${i + 1}`;
-
-            values.push(terms[i]);
-
-            conditions.push(`
-                (
-                    LOWER(COALESCE(title, ''))
-                        LIKE '%' || LOWER(${p}) || '%'
-
-                    OR LOWER(COALESCE(description, ''))
-                        LIKE '%' || LOWER(${p}) || '%'
-
-                    OR LOWER(COALESCE(keywords, ''))
-                        LIKE '%' || LOWER(${p}) || '%'
-
-                    OR LOWER(COALESCE(content, ''))
-                        LIKE '%' || LOWER(${p}) || '%'
-
-                    OR LOWER(COALESCE(url, ''))
-                        LIKE '%' || LOWER(${p}) || '%'
-
-                    OR LOWER(COALESCE(domain, ''))
-                        LIKE '%' || LOWER(${p}) || '%'
-                )
-            `);
-        }
-
-        if (!conditions.length) {
+        if (!originalQuery) {
 
             return res.json({
                 ok: true,
-                query: originalQuery,
                 count: 0,
                 results: []
             });
         }
 
-        const scoreParts =
-            terms.map((term, i) => {
-
-                const p = `$${i + 1}`;
-
-                return `
-                    (
-                        CASE
-                            WHEN LOWER(COALESCE(title, ''))
-                                LIKE '%' || LOWER(${p}) || '%'
-                            THEN 100
-                            ELSE 0
-                        END
-
-                        +
-
-                        CASE
-                            WHEN LOWER(COALESCE(keywords, ''))
-                                LIKE '%' || LOWER(${p}) || '%'
-                            THEN 60
-                            ELSE 0
-                        END
-
-                        +
-
-                        CASE
-                            WHEN LOWER(COALESCE(description, ''))
-                                LIKE '%' || LOWER(${p}) || '%'
-                            THEN 45
-                            ELSE 0
-                        END
-
-                        +
-
-                        CASE
-                            WHEN LOWER(COALESCE(domain, ''))
-                                LIKE '%' || LOWER(${p}) || '%'
-                            THEN 40
-                            ELSE 0
-                        END
-
-                        +
-
-                        CASE
-                            WHEN LOWER(COALESCE(url, ''))
-                                LIKE '%' || LOWER(${p}) || '%'
-                            THEN 30
-                            ELSE 0
-                        END
-
-                        +
-
-                        CASE
-                            WHEN LOWER(COALESCE(content, ''))
-                                LIKE '%' || LOWER(${p}) || '%'
-                            THEN 10
-                            ELSE 0
-                        END
-                    )
-                `;
-            });
-
-        const sql = `
-            SELECT
-                id,
-                url,
-                title,
-                description,
-                domain,
-                keywords,
-                last_crawled,
-                (${scoreParts.join(" + ")})
-                    AS relevance_score
-            FROM pages
-            WHERE ${conditions.join(" OR ")}
-            ORDER BY relevance_score DESC,
-                     last_crawled DESC
-            LIMIT 50
-        `;
-
-        const result =
-            await pool.query(sql, values);
-
-        const results =
-            result.rows.map(row => {
-
-                const title =
-                    String(row.title || "")
-                        .toLowerCase();
-
-                const description =
-                    String(row.description || "")
-                        .toLowerCase();
-
-                const keywords =
-                    String(row.keywords || "")
-                        .toLowerCase();
-
-                const content =
-                    String(row.content || "")
-                        .toLowerCase();
-
-                const domain =
-                    String(row.domain || "")
-                        .toLowerCase();
-
-                const url =
-                    String(row.url || "")
-                        .toLowerCase();
-
-                let score =
-                    Number(
-                        row.relevance_score || 0
-                    );
-
-                if (title.includes(query)) {
-                    score += 250;
-                }
-
-                if (keywords.includes(query)) {
-                    score += 150;
-                }
-
-                if (description.includes(query)) {
-                    score += 100;
-                }
-
-                let aliasMatch = false;
-
-                const aliases =
-                    SEARCH_ALIASES[query];
-
-                if (aliases) {
-
-                    aliasMatch =
-                        aliases.some(alias => {
-
-                            const a =
-                                alias.toLowerCase();
-
-                            return (
-                                domain.includes(a) ||
-                                url.includes(a) ||
-                                title.includes(a) ||
-                                keywords.includes(a)
-                            );
-                        });
-
-                    if (aliasMatch) {
-                        score += 500;
-                    }
-                }
-
-                let relatedMatch = false;
-
-                const related =
-                    RELATED_TERMS[query];
-
-                if (related) {
-
-                    relatedMatch =
-                        related.some(term => {
-
-                            const t =
-                                term.toLowerCase();
-
-                            return (
-                                keywords.includes(t) ||
-                                title.includes(t) ||
-                                description.includes(t) ||
-                                content.includes(t)
-                            );
-                        });
-
-                    if (relatedMatch) {
-                        score += 180;
-                    }
-                }
-
-                return {
-
-                    id: row.id,
-
-                    url: row.url,
-
-                    title:
-                        row.title ||
-                        "제목 없음",
-
-                    description:
-                        row.description ||
-                        "",
-
-                    domain:
-                        row.domain ||
-                        getDomainFromUrl(row.url),
-
-                    keywords:
-                        row.keywords ||
-                        "",
-
-                    last_crawled:
-                        row.last_crawled,
-
-                    rank: score,
-
-                    alias_match:
-                        aliasMatch,
-
-                    related_match:
-                        relatedMatch
-                };
-            });
-
-        results.sort((a, b) => {
-
-            if (
-                a.alias_match !==
-                b.alias_match
-            ) {
-                return a.alias_match
-                    ? -1
-                    : 1;
-            }
-
-            if (
-                a.related_match !==
-                b.related_match
-            ) {
-                return a.related_match
-                    ? -1
-                    : 1;
-            }
-
-            return (
-                Number(b.rank) -
-                Number(a.rank)
+        const query =
+            normalizeSearchQuery(
+                originalQuery
             );
-        });
 
-        const uniqueResults = [];
-        const seenUrls = new Set();
+        const terms =
+            getSearchTerms(query)
+                .slice(0, 30);
 
-        for (
-            const result of results
-        ) {
+        try {
 
-            const normalizedUrl =
-                String(result.url || "")
-                    .toLowerCase()
-                    .replace(/\/+$/, "");
+            const conditions = [];
 
-            if (seenUrls.has(normalizedUrl)) {
-                continue;
-            }
+            const values = [];
 
-            seenUrls.add(normalizedUrl);
-
-            uniqueResults.push(result);
-
-            if (
-                uniqueResults.length >= 50
+            for (
+                let i = 0;
+                i < terms.length;
+                i++
             ) {
-                break;
+
+                const p =
+                    `$${i + 1}`;
+
+                values.push(
+                    terms[i]
+                );
+
+                conditions.push(`
+                    (
+                        LOWER(COALESCE(title, ''))
+                            LIKE '%' || LOWER(${p}) || '%'
+
+                        OR LOWER(COALESCE(description, ''))
+                            LIKE '%' || LOWER(${p}) || '%'
+
+                        OR LOWER(COALESCE(keywords, ''))
+                            LIKE '%' || LOWER(${p}) || '%'
+
+                        OR LOWER(COALESCE(content, ''))
+                            LIKE '%' || LOWER(${p}) || '%'
+
+                        OR LOWER(COALESCE(url, ''))
+                            LIKE '%' || LOWER(${p}) || '%'
+
+                        OR LOWER(COALESCE(domain, ''))
+                            LIKE '%' || LOWER(${p}) || '%'
+                    )
+                `);
             }
+
+            if (!conditions.length) {
+
+                return res.json({
+                    ok: true,
+                    query: originalQuery,
+                    count: 0,
+                    results: []
+                });
+            }
+
+            const scoreParts =
+                terms.map(
+                    (term, i) => {
+
+                        const p =
+                            `$${i + 1}`;
+
+                        return `
+                            (
+                                CASE
+                                    WHEN LOWER(COALESCE(title, ''))
+                                        LIKE '%' || LOWER(${p}) || '%'
+                                    THEN 100
+                                    ELSE 0
+                                END
+
+                                +
+
+                                CASE
+                                    WHEN LOWER(COALESCE(keywords, ''))
+                                        LIKE '%' || LOWER(${p}) || '%'
+                                    THEN 60
+                                    ELSE 0
+                                END
+
+                                +
+
+                                CASE
+                                    WHEN LOWER(COALESCE(description, ''))
+                                        LIKE '%' || LOWER(${p}) || '%'
+                                    THEN 45
+                                    ELSE 0
+                                END
+
+                                +
+
+                                CASE
+                                    WHEN LOWER(COALESCE(domain, ''))
+                                        LIKE '%' || LOWER(${p}) || '%'
+                                    THEN 40
+                                    ELSE 0
+                                END
+
+                                +
+
+                                CASE
+                                    WHEN LOWER(COALESCE(url, ''))
+                                        LIKE '%' || LOWER(${p}) || '%'
+                                    THEN 30
+                                    ELSE 0
+                                END
+
+                                +
+
+                                CASE
+                                    WHEN LOWER(COALESCE(content, ''))
+                                        LIKE '%' || LOWER(${p}) || '%'
+                                    THEN 10
+                                    ELSE 0
+                                END
+                            )
+                        `;
+                    }
+                );
+
+            const sql = `
+                SELECT
+                    id,
+                    url,
+                    title,
+                    description,
+                    domain,
+                    keywords,
+                    last_crawled,
+                    (${scoreParts.join(" + ")})
+                        AS relevance_score
+                FROM pages
+                WHERE ${conditions.join(" OR ")}
+                ORDER BY relevance_score DESC,
+                         last_crawled DESC
+                LIMIT 50
+            `;
+
+            const result =
+                await pool.query(
+                    sql,
+                    values
+                );
+
+            const results =
+                result.rows.map(
+                    row => {
+
+                        const title =
+                            String(
+                                row.title || ""
+                            ).toLowerCase();
+
+                        const description =
+                            String(
+                                row.description || ""
+                            ).toLowerCase();
+
+                        const keywords =
+                            String(
+                                row.keywords || ""
+                            ).toLowerCase();
+
+                        const content =
+                            String(
+                                row.content || ""
+                            ).toLowerCase();
+
+                        const domain =
+                            String(
+                                row.domain || ""
+                            ).toLowerCase();
+
+                        const url =
+                            String(
+                                row.url || ""
+                            ).toLowerCase();
+
+                        let score =
+                            Number(
+                                row.relevance_score || 0
+                            );
+
+                        if (
+                            title.includes(query)
+                        ) {
+
+                            score += 250;
+                        }
+
+                        if (
+                            keywords.includes(query)
+                        ) {
+
+                            score += 150;
+                        }
+
+                        if (
+                            description.includes(query)
+                        ) {
+
+                            score += 100;
+                        }
+
+                        let aliasMatch =
+                            false;
+
+                        const aliases =
+                            SEARCH_ALIASES[
+                                query
+                            ];
+
+                        if (aliases) {
+
+                            aliasMatch =
+                                aliases.some(
+                                    alias => {
+
+                                        const a =
+                                            alias.toLowerCase();
+
+                                        return (
+                                            domain.includes(a) ||
+                                            url.includes(a) ||
+                                            title.includes(a) ||
+                                            keywords.includes(a)
+                                        );
+                                    }
+                                );
+
+                            if (aliasMatch) {
+                                score += 500;
+                            }
+                        }
+
+                        let relatedMatch =
+                            false;
+
+                        const related =
+                            RELATED_TERMS[
+                                query
+                            ];
+
+                        if (related) {
+
+                            relatedMatch =
+                                related.some(
+                                    term => {
+
+                                        const t =
+                                            term.toLowerCase();
+
+                                        return (
+                                            keywords.includes(t) ||
+                                            title.includes(t) ||
+                                            description.includes(t) ||
+                                            content.includes(t)
+                                        );
+                                    }
+                                );
+
+                            if (relatedMatch) {
+                                score += 180;
+                            }
+                        }
+
+                        return {
+
+                            id:
+                                row.id,
+
+                            url:
+                                row.url,
+
+                            title:
+                                row.title ||
+                                "제목 없음",
+
+                            description:
+                                row.description ||
+                                "",
+
+                            domain:
+                                row.domain ||
+                                getDomainFromUrl(
+                                    row.url
+                                ),
+
+                            keywords:
+                                row.keywords ||
+                                "",
+
+                            last_crawled:
+                                row.last_crawled,
+
+                            rank:
+                                score,
+
+                            alias_match:
+                                aliasMatch,
+
+                            related_match:
+                                relatedMatch
+                        };
+                    }
+                );
+
+            results.sort(
+                (a, b) => {
+
+                    if (
+                        a.alias_match !==
+                        b.alias_match
+                    ) {
+
+                        return a.alias_match
+                            ? -1
+                            : 1;
+                    }
+
+                    if (
+                        a.related_match !==
+                        b.related_match
+                    ) {
+
+                        return a.related_match
+                            ? -1
+                            : 1;
+                    }
+
+                    return (
+                        Number(b.rank) -
+                        Number(a.rank)
+                    );
+                }
+            );
+
+            const uniqueResults =
+                [];
+
+            const seenUrls =
+                new Set();
+
+            for (
+                const result of
+                results
+            ) {
+
+                const normalizedUrl =
+                    String(
+                        result.url || ""
+                    )
+                        .toLowerCase()
+                        .replace(
+                            /\/+$/,
+                            ""
+                        );
+
+                if (
+                    seenUrls.has(
+                        normalizedUrl
+                    )
+                ) {
+
+                    continue;
+                }
+
+                seenUrls.add(
+                    normalizedUrl
+                );
+
+                uniqueResults.push(
+                    result
+                );
+
+                if (
+                    uniqueResults.length >=
+                    50
+                ) {
+
+                    break;
+                }
+            }
+
+            return res.json({
+
+                ok: true,
+
+                query:
+                    originalQuery,
+
+                searchTerms:
+                    terms,
+
+                count:
+                    uniqueResults.length,
+
+                results:
+                    uniqueResults
+            });
+
+        } catch (error) {
+
+            console.error(
+                "[SEARCH ERROR]",
+                error
+            );
+
+            return res.status(500).json({
+
+                ok: false,
+
+                error:
+                    "검색 중 오류가 발생했습니다."
+            });
         }
-
-        return res.json({
-
-            ok: true,
-
-            query: originalQuery,
-
-            searchTerms: terms,
-
-            count:
-                uniqueResults.length,
-
-            results:
-                uniqueResults
-        });
-
-    } catch (error) {
-
-        console.error(
-            "[SEARCH ERROR]",
-            error
-        );
-
-        return res.status(500).json({
-            ok: false,
-            error:
-                "검색 중 오류가 발생했습니다."
-        });
     }
-});
+);
 
 // ========================================
 // OscaTranslate
-// 무료 MyMemory Translation API
+// 무료 MyMemory + Google fallback
 // ========================================
 
 const TRANSLATE_API_URL =
@@ -737,33 +999,53 @@ function isSupportedTranslateLanguage(
 function detectLanguage(text) {
 
     const value =
-        String(text || "").trim();
+        String(text || "")
+            .trim();
 
     if (!value) {
         return "en";
     }
 
     // 한국어
-    if (/[\uAC00-\uD7A3]/.test(value)) {
+    if (
+        /[\uAC00-\uD7A3]/.test(
+            value
+        )
+    ) {
+
         return "ko";
     }
 
     // 일본어
-    if (/[\u3040-\u30FF]/.test(value)) {
+    if (
+        /[\u3040-\u30FF]/.test(
+            value
+        )
+    ) {
+
         return "ja";
     }
 
     // 중국어
-    if (/[\u4E00-\u9FFF]/.test(value)) {
+    if (
+        /[\u4E00-\u9FFF]/.test(
+            value
+        )
+    ) {
+
         return "zh";
     }
 
-    // 러시아어 / 키릴 문자
-    if (/[\u0400-\u04FF]/.test(value)) {
+    // 러시아어
+    if (
+        /[\u0400-\u04FF]/.test(
+            value
+        )
+    ) {
+
         return "ru";
     }
 
-    // 기본값
     return "en";
 }
 
@@ -779,9 +1061,12 @@ function splitTextByBytes(
     const chunks = [];
 
     let current = "";
+
     let currentBytes = 0;
 
-    for (const char of text) {
+    for (
+        const char of text
+    ) {
 
         const charBytes =
             Buffer.byteLength(
@@ -796,19 +1081,26 @@ function splitTextByBytes(
                 maxBytes
         ) {
 
-            chunks.push(current);
+            chunks.push(
+                current
+            );
 
             current = "";
+
             currentBytes = 0;
         }
 
         current += char;
 
-        currentBytes += charBytes;
+        currentBytes +=
+            charBytes;
     }
 
     if (current) {
-        chunks.push(current);
+
+        chunks.push(
+            current
+        );
     }
 
     return chunks;
@@ -827,7 +1119,10 @@ async function translateChunk(
     const params =
         new URLSearchParams();
 
-    params.set("q", text);
+    params.set(
+        "q",
+        text
+    );
 
     params.set(
         "langpair",
@@ -849,6 +1144,7 @@ async function translateChunk(
                 method: "GET",
 
                 headers: {
+
                     "Accept":
                         "application/json",
 
@@ -870,8 +1166,32 @@ async function translateChunk(
         );
     }
 
-    const data =
-        await response.json();
+    // UTF-8을 명시적으로 디코딩
+    const rawBuffer =
+        await response.arrayBuffer();
+
+    const rawText =
+        new TextDecoder(
+            "utf-8"
+        ).decode(
+            rawBuffer
+        );
+
+    let data;
+
+    try {
+
+        data =
+            JSON.parse(
+                rawText
+            );
+
+    } catch {
+
+        throw new Error(
+            "번역 서버가 올바른 JSON을 반환하지 않았습니다."
+        );
+    }
 
     if (
         !data ||
@@ -887,10 +1207,47 @@ async function translateChunk(
         );
     }
 
-    return String(
-        data.responseData
-            .translatedText
-    );
+    const translated =
+        String(
+            data.responseData
+                .translatedText
+        )
+            .replace(
+                /&quot;/g,
+                '"'
+            )
+            .replace(
+                /&#39;/g,
+                "'"
+            )
+            .replace(
+                /&amp;/g,
+                "&"
+            )
+            .replace(
+                /&lt;/g,
+                "<"
+            )
+            .replace(
+                /&gt;/g,
+                ">"
+            )
+            .trim();
+
+    // ????? 같은 잘못된 결과를 정상 번역으로 취급하지 않음
+    if (
+        !translated ||
+        /^\?+$/.test(
+            translated
+        )
+    ) {
+
+        throw new Error(
+            "MyMemory가 정상적인 번역 결과를 반환하지 않았습니다."
+        );
+    }
+
+    return translated;
 }
 
 // ========================================
@@ -909,7 +1266,7 @@ app.get(
                 "OscaTranslate",
 
             provider:
-                "MyMemory",
+                "MyMemory / Google fallback",
 
             configured:
                 true,
@@ -1010,7 +1367,9 @@ app.post(
             } = req.body || {};
 
             q =
-                String(q || "")
+                String(
+                    q || ""
+                )
                     .trim();
 
             source =
@@ -1027,23 +1386,27 @@ app.post(
                     .trim()
                     .toLowerCase();
 
-            // ----------------------------
             // 입력 검사
-            // ----------------------------
-
             if (!q) {
 
                 return res.status(400).json({
+
                     ok: false,
+
                     error:
                         "번역할 텍스트를 입력하세요."
                 });
             }
 
-            if (q.length > 5000) {
+            if (
+                q.length >
+                5000
+            ) {
 
                 return res.status(400).json({
+
                     ok: false,
+
                     error:
                         "번역할 텍스트는 5000자 이하로 입력하세요."
                 });
@@ -1052,7 +1415,9 @@ app.post(
             if (!target) {
 
                 return res.status(400).json({
+
                     ok: false,
+
                     error:
                         "번역 대상 언어가 필요합니다."
                 });
@@ -1065,7 +1430,9 @@ app.post(
             ) {
 
                 return res.status(400).json({
+
                     ok: false,
+
                     error:
                         "지원하지 않는 원본 언어입니다."
                 });
@@ -1078,42 +1445,50 @@ app.post(
             ) {
 
                 return res.status(400).json({
+
                     ok: false,
+
                     error:
                         "지원하지 않는 번역 언어입니다."
                 });
             }
 
-            if (target === "auto") {
+            if (
+                target === "auto"
+            ) {
 
                 return res.status(400).json({
+
                     ok: false,
+
                     error:
                         "번역 대상 언어에는 자동 감지를 사용할 수 없습니다."
                 });
             }
 
-            // ----------------------------
             // 자동 언어 감지
-            // ----------------------------
-
-            if (source === "auto") {
+            if (
+                source === "auto"
+            ) {
 
                 source =
-                    detectLanguage(q);
+                    detectLanguage(
+                        q
+                    );
             }
 
-            // ----------------------------
             // 같은 언어
-            // ----------------------------
-
-            if (source === target) {
+            if (
+                source ===
+                target
+            ) {
 
                 return res.json({
 
                     ok: true,
 
-                    translatedText: q,
+                    translatedText:
+                        q,
 
                     source,
 
@@ -1128,32 +1503,124 @@ app.post(
                 `[TRANSLATE] ${source} -> ${target}, ${q.length} chars`
             );
 
-            // ----------------------------
             // 긴 문장 분할
-            // ----------------------------
-
             const chunks =
                 splitTextByBytes(
                     q,
                     450
                 );
 
-            const translatedChunks = [];
+            const translatedChunks =
+                [];
 
-            // ----------------------------
             // 순서대로 번역
-            // ----------------------------
-
             for (
-                const chunk of chunks
+                const chunk of
+                chunks
             ) {
 
-                const translated =
-                    await translateChunk(
-                        chunk,
-                        source,
-                        target
+                let translated;
+
+                // ----------------------------
+                // 1차: MyMemory
+                // ----------------------------
+
+                try {
+
+                    translated =
+                        await translateChunk(
+                            chunk,
+                            source,
+                            target
+                        );
+
+                } catch (
+                    myMemoryError
+                ) {
+
+                    console.warn(
+                        "[TRANSLATE] MyMemory 실패, Google 공개 엔드포인트로 재시도:",
+                        myMemoryError.message
                     );
+
+                    // ----------------------------
+                    // 2차: Google 공개 엔드포인트
+                    // API 키 없음
+                    // ----------------------------
+
+                    const googleUrl =
+                        "https://translate.googleapis.com/translate_a/single?" +
+                        new URLSearchParams({
+
+                            client:
+                                "gtx",
+
+                            sl:
+                                source,
+
+                            tl:
+                                target,
+
+                            dt:
+                                "t",
+
+                            q:
+                                chunk
+
+                        }).toString();
+
+                    const googleResponse =
+                        await fetch(
+                            googleUrl,
+                            {
+
+                                headers: {
+
+                                    "User-Agent":
+                                        "OSCADIA-OscaTranslate/1.0"
+                                },
+
+                                signal:
+                                    AbortSignal.timeout(
+                                        30000
+                                    )
+                            }
+                        );
+
+                    if (
+                        !googleResponse.ok
+                    ) {
+
+                        throw new Error(
+                            `번역 제공 서버 HTTP ${googleResponse.status}`
+                        );
+                    }
+
+                    const googleData =
+                        await googleResponse.json();
+
+                    translated =
+                        Array.isArray(
+                            googleData?.[0]
+                        )
+                            ? googleData[0]
+                                .map(
+                                    part =>
+                                        part?.[0] ||
+                                        ""
+                                )
+                                .join("")
+                            : "";
+
+                    if (
+                        !translated
+                    ) {
+
+                        throw new Error(
+                            "Google 번역 결과가 비어 있습니다."
+                        );
+                    }
+                }
 
                 translatedChunks.push(
                     translated
@@ -1161,12 +1628,18 @@ app.post(
             }
 
             const translatedText =
-                translatedChunks.join("");
+                translatedChunks.join(
+                    ""
+                );
 
-            if (!translatedText) {
+            if (
+                !translatedText
+            ) {
 
                 return res.status(502).json({
+
                     ok: false,
+
                     error:
                         "번역 결과가 비어 있습니다."
                 });
@@ -1183,7 +1656,7 @@ app.post(
                 target,
 
                 provider:
-                    "MyMemory"
+                    "MyMemory / Google fallback"
             });
 
         } catch (error) {
@@ -1199,7 +1672,9 @@ app.post(
             ) {
 
                 return res.status(504).json({
+
                     ok: false,
+
                     error:
                         "번역 서버 응답 시간이 초과되었습니다."
                 });
@@ -1355,29 +1830,38 @@ app.post(
 
         try {
 
-            let { url } =
+            let {
+                url
+            } =
                 req.body;
 
             if (
                 !url ||
-                typeof url !== "string"
+                typeof url !==
+                    "string"
             ) {
 
                 return res.status(400).json({
+
                     ok: false,
+
                     error:
                         "URL을 입력하세요."
                 });
             }
 
-            url = url.trim();
+            url =
+                url.trim();
 
             if (
-                !/^https?:\/\//i.test(url)
+                !/^https?:\/\//i.test(
+                    url
+                )
             ) {
 
                 url =
-                    "https://" + url;
+                    "https://" +
+                    url;
             }
 
             let parsed;
@@ -1385,24 +1869,32 @@ app.post(
             try {
 
                 parsed =
-                    new URL(url);
+                    new URL(
+                        url
+                    );
 
             } catch {
 
                 return res.status(400).json({
+
                     ok: false,
+
                     error:
                         "올바른 URL이 아닙니다."
                 });
             }
 
             if (
-                parsed.protocol !== "http:" &&
-                parsed.protocol !== "https:"
+                parsed.protocol !==
+                    "http:" &&
+                parsed.protocol !==
+                    "https:"
             ) {
 
                 return res.status(400).json({
+
                     ok: false,
+
                     error:
                         "HTTP 또는 HTTPS 주소만 사용할 수 있습니다."
                 });
@@ -1414,7 +1906,9 @@ app.post(
             ) {
 
                 return res.status(400).json({
+
                     ok: false,
+
                     error:
                         "사용자명 또는 비밀번호가 포함된 URL은 사용할 수 없습니다."
                 });
@@ -1424,12 +1918,16 @@ app.post(
 
             if (
                 (
-                    parsed.protocol === "http:" &&
-                    parsed.port === "80"
+                    parsed.protocol ===
+                        "http:" &&
+                    parsed.port ===
+                        "80"
                 ) ||
                 (
-                    parsed.protocol === "https:" &&
-                    parsed.port === "443"
+                    parsed.protocol ===
+                        "https:" &&
+                    parsed.port ===
+                        "443"
                 )
             ) {
 
@@ -1451,14 +1949,16 @@ app.post(
                 );
 
             if (
-                existing.rows.length > 0
+                existing.rows.length >
+                0
             ) {
 
                 return res.json({
 
                     ok: true,
 
-                    queued: false,
+                    queued:
+                        false,
 
                     alreadyIndexed:
                         true,
@@ -1493,24 +1993,30 @@ app.post(
                 url
             );
 
-            setTimeout(() => {
+            setTimeout(
+                () => {
 
-                runCrawler()
-                    .catch(error => {
+                    runCrawler()
+                        .catch(
+                            error => {
 
-                        console.error(
-                            "[QUEUE CRAWLER ERROR]",
-                            error
+                                console.error(
+                                    "[QUEUE CRAWLER ERROR]",
+                                    error
+                                );
+                            }
                         );
-                    });
 
-            }, 100);
+                },
+                100
+            );
 
             return res.json({
 
                 ok: true,
 
-                queued: true,
+                queued:
+                    true,
 
                 url,
 
@@ -1591,7 +2097,6 @@ app.get(
 
 // ========================================
 // OSmail API
-// 반드시 app.listen()보다 먼저 등록
 // ========================================
 
 // 현재 로그인한 사용자 정보
@@ -1603,7 +2108,9 @@ app.get(
         try {
 
             const result =
-                await getMyOSmail(req);
+                await getMyOSmail(
+                    req
+                );
 
             return res.json({
 
@@ -1644,7 +2151,8 @@ app.post(
             const {
                 osmailId,
                 displayName
-            } = req.body;
+            } =
+                req.body;
 
             if (!osmailId) {
 
@@ -1700,7 +2208,9 @@ app.get(
         try {
 
             const emails =
-                await getEmails(req);
+                await getEmails(
+                    req
+                );
 
             return res.json({
 
@@ -1741,7 +2251,8 @@ app.post(
                 to,
                 subject,
                 body
-            } = req.body;
+            } =
+                req.body;
 
             if (!to) {
 
@@ -1759,8 +2270,10 @@ app.post(
                     req,
                     {
                         to,
+
                         subject:
                             subject || "",
+
                         body:
                             body || ""
                     }
@@ -1805,7 +2318,8 @@ app.post(
                 to,
                 subject,
                 body
-            } = req.body;
+            } =
+                req.body;
 
             if (!to) {
 
@@ -1823,8 +2337,10 @@ app.post(
                     req,
                     {
                         to,
+
                         subject:
                             subject || "",
+
                         body:
                             body || ""
                     }
@@ -1865,7 +2381,9 @@ app.post(
 
         try {
 
-            if (!req.body.id) {
+            if (
+                !req.body.id
+            ) {
 
                 return res.status(400).json({
 
@@ -1917,7 +2435,9 @@ app.post(
 
         try {
 
-            if (!req.body.id) {
+            if (
+                !req.body.id
+            ) {
 
                 return res.status(400).json({
 
@@ -1969,7 +2489,9 @@ app.post(
 
         try {
 
-            if (!req.body.id) {
+            if (
+                !req.body.id
+            ) {
 
                 return res.status(400).json({
 
@@ -2122,136 +2644,7 @@ async function startServer() {
             error
         );
     }
-// ===============================
-// OscaTranslate API
-// ===============================
 
-const TRANSLATE_LANGUAGES = {
-    auto: "auto",
-    ko: "ko",
-    en: "en",
-    ja: "ja",
-    zh: "zh-CN",
-    de: "de",
-    fr: "fr",
-    es: "es",
-    it: "it",
-    pt: "pt",
-    ru: "ru"
-};
-
-app.get("/api/translate/health", (req, res) => {
-    res.json({
-        ok: true,
-        service: "OscaTranslate",
-        provider: "Google Translate public endpoint"
-    });
-});
-
-app.get("/api/translate/languages", (req, res) => {
-    res.json({
-        ok: true,
-        languages: TRANSLATE_LANGUAGES
-    });
-});
-
-app.post("/api/translate", async (req, res) => {
-    try {
-        const { q, source = "auto", target } = req.body || {};
-
-        if (!q || typeof q !== "string") {
-            return res.status(400).json({
-                ok: false,
-                error: "번역할 문장이 없습니다."
-            });
-        }
-
-        if (!target || !TRANSLATE_LANGUAGES[target]) {
-            return res.status(400).json({
-                ok: false,
-                error: "지원하지 않는 번역 언어입니다."
-            });
-        }
-
-        if (q.length > 5000) {
-            return res.status(400).json({
-                ok: false,
-                error: "한 번에 최대 5000자까지 번역할 수 있습니다."
-            });
-        }
-
-        const sourceLang =
-            TRANSLATE_LANGUAGES[source] || "auto";
-
-        const targetLang =
-            TRANSLATE_LANGUAGES[target];
-
-        // 같은 언어면 번역할 필요 없음
-        if (
-            sourceLang !== "auto" &&
-            sourceLang === targetLang
-        ) {
-            return res.json({
-                ok: true,
-                translatedText: q,
-                source,
-                target
-            });
-        }
-
-        const url =
-            "https://translate.googleapis.com/translate_a/single?" +
-            new URLSearchParams({
-                client: "gtx",
-                sl: sourceLang,
-                tl: targetLang,
-                dt: "t",
-                q
-            }).toString();
-
-        const response = await fetch(url);
-
-        if (!response.ok) {
-            throw new Error(
-                `Translation service returned ${response.status}`
-            );
-        }
-
-        const data = await response.json();
-
-        let translatedText = "";
-
-        if (Array.isArray(data) && Array.isArray(data[0])) {
-            translatedText = data[0]
-                .map(part => part?.[0] || "")
-                .join("");
-        }
-
-        if (!translatedText) {
-            throw new Error("번역 결과가 비어 있습니다.");
-        }
-
-        res.json({
-            ok: true,
-            translatedText,
-            source,
-            target,
-            detectedSource:
-                typeof data[2] === "string"
-                    ? data[2]
-                    : null
-        });
-
-    } catch (error) {
-        console.error("OscaTranslate error:", error);
-
-        res.status(502).json({
-            ok: false,
-            error: "번역 서버에 연결할 수 없습니다.",
-            detail: error.message
-        });
-    }
-});
     app.listen(
         PORT,
         () => {
@@ -2278,33 +2671,43 @@ app.post("/api/translate", async (req, res) => {
 
             // 서버 시작 5초 후 크롤링
 
-            setTimeout(() => {
+            setTimeout(
+                () => {
 
-                runCrawler()
-                    .catch(error => {
+                    runCrawler()
+                        .catch(
+                            error => {
 
-                        console.error(
-                            "[STARTUP CRAWLER ERROR]",
-                            error
+                                console.error(
+                                    "[STARTUP CRAWLER ERROR]",
+                                    error
+                                );
+                            }
                         );
-                    });
 
-            }, 5000);
+                },
+                5000
+            );
 
             // 30분마다 자동 크롤링
 
-            setInterval(() => {
+            setInterval(
+                () => {
 
-                runCrawler()
-                    .catch(error => {
+                    runCrawler()
+                        .catch(
+                            error => {
 
-                        console.error(
-                            "[INTERVAL CRAWLER ERROR]",
-                            error
+                                console.error(
+                                    "[INTERVAL CRAWLER ERROR]",
+                                    error
+                                );
+                            }
                         );
-                    });
 
-            }, 30 * 60 * 1000);
+                },
+                30 * 60 * 1000
+            );
         }
     );
 }
