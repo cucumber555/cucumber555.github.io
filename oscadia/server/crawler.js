@@ -66,6 +66,79 @@ const SEED_URLS = [
     "https://www.namu.wiki/",
     "https://www.daum.net/"
 ];
+// ==============================
+// 사용자 요청 크롤링 큐
+// ==============================
+
+async function getUserCrawlQueue() {
+
+    const result = await pool.query(`
+        SELECT
+            id,
+            url,
+            attempts
+        FROM crawl_queue
+        WHERE status = 'pending'
+        ORDER BY added_at ASC
+        LIMIT 500
+    `);
+
+    return result.rows;
+}
+
+
+// ==============================
+// 큐 항목 크롤링 시작 표시
+// ==============================
+
+async function markQueueStarted(id) {
+
+    await pool.query(`
+        UPDATE crawl_queue
+        SET
+            status = 'crawling',
+            attempts = attempts + 1,
+            started_at = NOW(),
+            last_error = NULL
+        WHERE id = $1
+    `, [id]);
+}
+
+
+// ==============================
+// 큐 항목 완료
+// ==============================
+
+async function markQueueFinished(id) {
+
+    await pool.query(`
+        UPDATE crawl_queue
+        SET
+            status = 'completed',
+            finished_at = NOW()
+        WHERE id = $1
+    `, [id]);
+}
+
+
+// ==============================
+// 큐 항목 실패
+// ==============================
+
+async function markQueueFailed(id, error) {
+
+    await pool.query(`
+        UPDATE crawl_queue
+        SET
+            status = 'failed',
+            finished_at = NOW(),
+            last_error = $2
+        WHERE id = $1
+    `, [
+        id,
+        String(error || "Unknown error").slice(0, 1000)
+    ]);
+}
 
 
 // ========================================
@@ -1091,31 +1164,68 @@ async function crawl() {
     const queue = [];
 
 
-    // --------------------------------
-    // 시작 URL 등록
-    // --------------------------------
+// ========================================
+// 1. 사용자 요청 크롤링 큐 먼저 추가
+// ========================================
 
-    for (
-        const url
-        of SEED_URLS
-    ) {
+const userQueue =
+    await getUserCrawlQueue();
 
-        const normalized =
-            normalizeUrl(
-                url,
-                url
-            );
+for (const item of userQueue) {
 
-        if (normalized) {
+    const normalized =
+        normalizeUrl(
+            item.url,
+            item.url
+        );
+
+    if (!normalized) {
+        continue;
+    }
+
+    queue.push({
+        url: normalized,
+        depth: 0,
+        source: "user",
+        queueId: item.id
+    });
+}
+
+
+// ========================================
+// 2. 기본 SEED_URLS 추가
+// ========================================
+
+for (
+    const url
+    of SEED_URLS
+) {
+
+    const normalized =
+        normalizeUrl(
+            url,
+            url
+        );
+
+    if (normalized) {
+
+        // 사용자 큐와 중복 방지
+        if (
+            !queue.some(
+                item =>
+                    item.url === normalized
+            )
+        ) {
 
             queue.push({
                 url: normalized,
                 depth: 0,
-                source: "seed"
+                source: "seed",
+                queueId: null
             });
         }
     }
-
+}
 
     let crawled = 0;
 
@@ -1142,10 +1252,34 @@ async function crawl() {
 
 
         const {
-            url,
-            depth,
-            source
-        } = item;
+    url,
+    depth,
+    source,
+    queueId
+} = item;
+
+
+// 사용자 요청 큐라면
+// 크롤링 시작 상태로 변경
+if (
+    source === "user" &&
+    queueId
+) {
+
+    try {
+
+        await markQueueStarted(
+            queueId
+        );
+
+    } catch (error) {
+
+        console.error(
+            "[QUEUE START ERROR]",
+            error.message
+        );
+    }
+}
 
 
         // --------------------------------
