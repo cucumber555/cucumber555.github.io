@@ -1,10 +1,17 @@
 import "dotenv/config";
+
 import express from "express";
 import cors from "cors";
 import pg from "pg";
 import path from "path";
 import { fileURLToPath } from "url";
+
 import { crawl } from "./crawler.js";
+
+
+// ========================================
+// 기본 설정
+// ========================================
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,6 +19,7 @@ const __dirname = path.dirname(__filename);
 const { Pool } = pg;
 
 const app = express();
+
 const PORT = process.env.PORT || 10000;
 
 app.use(cors());
@@ -24,9 +32,11 @@ app.use(express.json());
 
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
+
     ssl: {
         rejectUnauthorized: false
     },
+
     max: 2
 });
 
@@ -36,6 +46,7 @@ const pool = new Pool({
 // ========================================
 
 let crawlerRunning = false;
+
 let lastCrawlerStart = null;
 let lastCrawlerFinish = null;
 let lastCrawlerError = null;
@@ -351,10 +362,6 @@ const SEARCH_ALIASES = {
 
 // ========================================
 // 일반적인 관련 검색어
-//
-// crawler가 저장한 keywords와 함께 사용.
-// 모든 사이트를 직접 지정하는 방식이 아니라
-// 검색 개념을 넓혀주는 용도.
 // ========================================
 
 const RELATED_TERMS = {
@@ -516,33 +523,48 @@ function getSearchTerms(query) {
     }
 
 
-    // 공백으로 나뉜 개별 단어
+    // 개별 단어
+
     for (const token of tokenizeQuery(normalized)) {
+
         terms.add(token);
+
     }
 
 
     // 별칭
+
     const aliases =
         SEARCH_ALIASES[normalized];
 
     if (aliases) {
 
         for (const alias of aliases) {
-            terms.add(alias.toLowerCase());
+
+            terms.add(
+                alias.toLowerCase()
+            );
+
         }
+
     }
 
 
     // 관련 검색어
+
     const related =
         RELATED_TERMS[normalized];
 
     if (related) {
 
         for (const term of related) {
-            terms.add(term.toLowerCase());
+
+            terms.add(
+                term.toLowerCase()
+            );
+
         }
+
     }
 
 
@@ -566,12 +588,13 @@ function getDomainFromUrl(url) {
     } catch {
 
         return "";
+
     }
 }
 
 
 // ========================================
-// 검색어를 PostgreSQL 검색어로 안전하게 변환
+// PostgreSQL 검색어 안전 처리
 // ========================================
 
 function safeTsQuery(term) {
@@ -586,583 +609,611 @@ function safeTsQuery(term) {
 // 검색 API
 // ========================================
 
-app.get("/api/search", async (req, res) => {
+app.get(
+    "/api/search",
+    async (req, res) => {
 
-    const originalQuery =
-        String(req.query.q || "").trim();
-
-
-    if (!originalQuery) {
-
-        return res.json({
-            ok: true,
-            count: 0,
-            results: []
-        });
-    }
+        const originalQuery =
+            String(req.query.q || "")
+                .trim();
 
 
-    const query =
-        normalizeSearchQuery(originalQuery);
+        if (!originalQuery) {
 
+            return res.json({
 
-    const terms =
-        getSearchTerms(query);
+                ok: true,
 
+                count: 0,
 
-    try {
+                results: []
 
-        // ====================================
-        // 검색어가 너무 많아지는 것 방지
-        // ====================================
-
-        const limitedTerms =
-            terms.slice(0, 30);
-
-
-        // ====================================
-        // PostgreSQL 검색 조건
-        //
-        // title
-        // description
-        // keywords
-        // content
-        // URL
-        // domain
-        // 모두 검색
-        // ====================================
-
-        const searchConditions =
-            limitedTerms.map((term, index) => {
-
-                const parameter =
-                    `$${index + 1}`;
-
-                return `
-                    (
-                        LOWER(COALESCE(title, ''))
-                            LIKE '%' || LOWER(${parameter}) || '%'
-
-                        OR
-
-                        LOWER(COALESCE(description, ''))
-                            LIKE '%' || LOWER(${parameter}) || '%'
-
-                        OR
-
-                        LOWER(COALESCE(keywords, ''))
-                            LIKE '%' || LOWER(${parameter}) || '%'
-
-                        OR
-
-                        LOWER(COALESCE(content, ''))
-                            LIKE '%' || LOWER(${parameter}) || '%'
-
-                        OR
-
-                        LOWER(COALESCE(url, ''))
-                            LIKE '%' || LOWER(${parameter}) || '%'
-
-                        OR
-
-                        LOWER(COALESCE(domain, ''))
-                            LIKE '%' || LOWER(${parameter}) || '%'
-                    )
-                `;
             });
 
-
-        const values =
-            limitedTerms;
-
-
-        // ====================================
-        // 검색어별 점수 계산
-        //
-        // 제목        매우 높음
-        // keywords    높음
-        // 설명        높음
-        // domain      높음
-        // URL         중간
-        // content     낮음
-        // ====================================
-
-        const scoreParts =
-            limitedTerms.map((term, index) => {
-
-                const parameter =
-                    `$${index + 1}`;
-
-                return `
-                    (
-                        CASE
-                            WHEN LOWER(COALESCE(title, ''))
-                                LIKE '%' || LOWER(${parameter}) || '%'
-                            THEN 100
-                            ELSE 0
-                        END
-
-                        +
-
-                        CASE
-                            WHEN LOWER(COALESCE(keywords, ''))
-                                LIKE '%' || LOWER(${parameter}) || '%'
-                            THEN 60
-                            ELSE 0
-                        END
-
-                        +
-
-                        CASE
-                            WHEN LOWER(COALESCE(description, ''))
-                                LIKE '%' || LOWER(${parameter}) || '%'
-                            THEN 45
-                            ELSE 0
-                        END
-
-                        +
-
-                        CASE
-                            WHEN LOWER(COALESCE(domain, ''))
-                                LIKE '%' || LOWER(${parameter}) || '%'
-                            THEN 40
-                            ELSE 0
-                        END
-
-                        +
-
-                        CASE
-                            WHEN LOWER(COALESCE(url, ''))
-                                LIKE '%' || LOWER(${parameter}) || '%'
-                            THEN 30
-                            ELSE 0
-                        END
-
-                        +
-
-                        CASE
-                            WHEN LOWER(COALESCE(content, ''))
-                                LIKE '%' || LOWER(${parameter}) || '%'
-                            THEN 10
-                            ELSE 0
-                        END
-                    )
-                `;
-            });
-
-
-        // ====================================
-        // PostgreSQL Full Text Search 점수
-        // ====================================
-
-        const tsRankParts =
-            limitedTerms
-                .map((term, index) => {
-
-                    const parameter =
-                        `$${index + 1}`;
-
-                    const tsTerm =
-                        safeTsQuery(term);
-
-                    if (!tsTerm) {
-                        return "0";
-                    }
-
-                    return `
-                        ts_rank_cd(
-                            to_tsvector(
-                                'simple',
-                                COALESCE(title, '') || ' ' ||
-                                COALESCE(description, '') || ' ' ||
-                                COALESCE(keywords, '') || ' ' ||
-                                COALESCE(content, '')
-                            ),
-                            plainto_tsquery(
-                                'simple',
-                                ${parameter}
-                            )
-                        ) * 100
-                    `;
-                });
-
-
-        const sql = `
-
-            SELECT
-
-                id,
-                url,
-                title,
-                description,
-                domain,
-                keywords,
-                last_crawled,
-
-                (
-
-                    ${scoreParts.join(" + ")}
-
-                    +
-
-                    (${tsRankParts.join(" + ")})
-
-                ) AS relevance_score
-
-            FROM pages
-
-            WHERE
-
-                ${searchConditions.join(" OR ")}
-
-            ORDER BY
-
-                relevance_score DESC,
-
-                last_crawled DESC
-
-            LIMIT 50
-        `;
-
-
-        const result =
-            await pool.query(
-                sql,
-                values
-            );
-
-
-        // ====================================
-        // 추가적인 결과 점수 보정
-        // ====================================
-
-        const results =
-            result.rows.map(row => {
-
-                const domain =
-                    String(row.domain || "")
-                        .toLowerCase();
-
-                const url =
-                    String(row.url || "")
-                        .toLowerCase();
-
-                const title =
-                    String(row.title || "")
-                        .toLowerCase();
-
-                const description =
-                    String(row.description || "")
-                        .toLowerCase();
-
-                const keywords =
-                    String(row.keywords || "")
-                        .toLowerCase();
-
-
-                let score =
-                    Number(
-                        row.relevance_score || 0
-                    );
-
-
-                // ==================================
-                // 검색어 전체가 제목에 정확히 있으면
-                // 추가 점수
-                // ==================================
-
-                if (
-                    title.includes(query)
-                ) {
-                    score += 250;
-                }
-
-
-                // ==================================
-                // 검색어 전체가 keywords에 있으면
-                // 추가 점수
-                // ==================================
-
-                if (
-                    keywords.includes(query)
-                ) {
-                    score += 150;
-                }
-
-
-                // ==================================
-                // 설명에 검색어 전체가 있으면
-                // ==================================
-
-                if (
-                    description.includes(query)
-                ) {
-                    score += 100;
-                }
-
-
-                // ==================================
-                // 별칭 직접 일치
-                // ==================================
-
-                let aliasMatch = false;
-
-                const aliases =
-                    SEARCH_ALIASES[query];
-
-
-                if (aliases) {
-
-                    aliasMatch =
-                        aliases.some(alias => {
-
-                            const a =
-                                alias.toLowerCase();
-
-                            return (
-                                domain.includes(a) ||
-                                url.includes(a) ||
-                                title.includes(a) ||
-                                keywords.includes(a)
-                            );
-                        });
-
-
-                    if (aliasMatch) {
-                        score += 500;
-                    }
-                }
-
-
-                // ==================================
-                // 관련 검색어가 실제 keywords에
-                // 존재하는 경우 추가 점수
-                // ==================================
-
-                const related =
-                    RELATED_TERMS[query];
-
-
-                let relatedMatch = false;
-
-
-                if (related) {
-
-                    relatedMatch =
-                        related.some(term => {
-
-                            return (
-                                keywords.includes(
-                                    term.toLowerCase()
-                                ) ||
-
-                                title.includes(
-                                    term.toLowerCase()
-                                ) ||
-
-                                description.includes(
-                                    term.toLowerCase()
-                                ) ||
-
-                                String(row.content || "")
-                                    .toLowerCase()
-                                    .includes(
-                                        term.toLowerCase()
-                                    )
-                            );
-                        });
-
-
-                    if (relatedMatch) {
-                        score += 180;
-                    }
-                }
-
-
-                return {
-
-                    id: row.id,
-
-                    url: row.url,
-
-                    title:
-                        row.title ||
-                        "제목 없음",
-
-                    description:
-                        row.description ||
-                        "",
-
-                    domain:
-                        row.domain ||
-                        getDomainFromUrl(
-                            row.url
-                        ),
-
-                    keywords:
-                        row.keywords ||
-                        "",
-
-                    last_crawled:
-                        row.last_crawled,
-
-                    rank:
-                        score,
-
-                    alias_match:
-                        aliasMatch,
-
-                    related_match:
-                        relatedMatch
-                };
-            });
-
-
-        // ====================================
-        // 최종 정렬
-        // ====================================
-
-        results.sort((a, b) => {
-
-            // 직접 별칭 일치
-            if (
-                a.alias_match &&
-                !b.alias_match
-            ) {
-                return -1;
-            }
-
-            if (
-                !a.alias_match &&
-                b.alias_match
-            ) {
-                return 1;
-            }
-
-
-            // 관련 검색어 일치
-            if (
-                a.related_match &&
-                !b.related_match
-            ) {
-                return -1;
-            }
-
-            if (
-                !a.related_match &&
-                b.related_match
-            ) {
-                return 1;
-            }
-
-
-            return (
-                Number(b.rank || 0) -
-                Number(a.rank || 0)
-            );
-        });
-
-
-        // ====================================
-        // 중복 URL 제거
-        // ====================================
-
-        const uniqueResults = [];
-
-        const seenUrls =
-            new Set();
-
-
-        for (const result of results) {
-
-            const normalizedUrl =
-                String(result.url || "")
-                    .toLowerCase()
-                    .replace(/\/+$/, "");
-
-
-            if (
-                seenUrls.has(normalizedUrl)
-            ) {
-                continue;
-            }
-
-
-            seenUrls.add(
-                normalizedUrl
-            );
-
-
-            uniqueResults.push(
-                result
-            );
-
-
-            if (
-                uniqueResults.length >= 50
-            ) {
-                break;
-            }
         }
 
 
-        // ====================================
-        // 응답
-        // ====================================
-
-        return res.json({
-
-            ok: true,
-
-            query: originalQuery,
-
-            searchTerms:
-                limitedTerms,
-
-            count:
-                uniqueResults.length,
-
-            results:
-                uniqueResults
-        });
+        const query =
+            normalizeSearchQuery(
+                originalQuery
+            );
 
 
-    } catch (error) {
-
-        console.error(
-            "SEARCH ERROR"
-        );
-
-        console.error(
-            "message:",
-            error.message
-        );
-
-        console.error(
-            "code:",
-            error.code
-        );
-
-        console.error(
-            "detail:",
-            error.detail
-        );
-
-        console.error(
-            "hint:",
-            error.hint
-        );
+        const terms =
+            getSearchTerms(query);
 
 
-        return res.status(500).json({
+        try {
 
-            ok: false,
+            // 검색어가 너무 많아지는 것 방지
 
-            error:
-                "검색 중 오류가 발생했습니다."
-        });
+            const limitedTerms =
+                terms.slice(0, 30);
+
+
+            // 검색 조건
+
+            const searchConditions =
+                limitedTerms.map(
+                    (term, index) => {
+
+                        const parameter =
+                            `$${index + 1}`;
+
+                        return `
+                            (
+                                LOWER(COALESCE(title, ''))
+                                    LIKE '%' || LOWER(${parameter}) || '%'
+
+                                OR
+
+                                LOWER(COALESCE(description, ''))
+                                    LIKE '%' || LOWER(${parameter}) || '%'
+
+                                OR
+
+                                LOWER(COALESCE(keywords, ''))
+                                    LIKE '%' || LOWER(${parameter}) || '%'
+
+                                OR
+
+                                LOWER(COALESCE(content, ''))
+                                    LIKE '%' || LOWER(${parameter}) || '%'
+
+                                OR
+
+                                LOWER(COALESCE(url, ''))
+                                    LIKE '%' || LOWER(${parameter}) || '%'
+
+                                OR
+
+                                LOWER(COALESCE(domain, ''))
+                                    LIKE '%' || LOWER(${parameter}) || '%'
+                            )
+                        `;
+                    }
+                );
+
+
+            const values =
+                limitedTerms;
+
+
+            // 점수 계산
+
+            const scoreParts =
+                limitedTerms.map(
+                    (term, index) => {
+
+                        const parameter =
+                            `$${index + 1}`;
+
+                        return `
+                            (
+                                CASE
+                                    WHEN LOWER(COALESCE(title, ''))
+                                        LIKE '%' || LOWER(${parameter}) || '%'
+                                    THEN 100
+                                    ELSE 0
+                                END
+
+                                +
+
+                                CASE
+                                    WHEN LOWER(COALESCE(keywords, ''))
+                                        LIKE '%' || LOWER(${parameter}) || '%'
+                                    THEN 60
+                                    ELSE 0
+                                END
+
+                                +
+
+                                CASE
+                                    WHEN LOWER(COALESCE(description, ''))
+                                        LIKE '%' || LOWER(${parameter}) || '%'
+                                    THEN 45
+                                    ELSE 0
+                                END
+
+                                +
+
+                                CASE
+                                    WHEN LOWER(COALESCE(domain, ''))
+                                        LIKE '%' || LOWER(${parameter}) || '%'
+                                    THEN 40
+                                    ELSE 0
+                                END
+
+                                +
+
+                                CASE
+                                    WHEN LOWER(COALESCE(url, ''))
+                                        LIKE '%' || LOWER(${parameter}) || '%'
+                                    THEN 30
+                                    ELSE 0
+                                END
+
+                                +
+
+                                CASE
+                                    WHEN LOWER(COALESCE(content, ''))
+                                        LIKE '%' || LOWER(${parameter}) || '%'
+                                    THEN 10
+                                    ELSE 0
+                                END
+                            )
+                        `;
+                    }
+                );
+
+
+            // PostgreSQL Full Text Search
+
+            const tsRankParts =
+                limitedTerms.map(
+                    (term, index) => {
+
+                        const parameter =
+                            `$${index + 1}`;
+
+                        const tsTerm =
+                            safeTsQuery(term);
+
+                        if (!tsTerm) {
+
+                            return "0";
+
+                        }
+
+                        return `
+                            ts_rank_cd(
+                                to_tsvector(
+                                    'simple',
+
+                                    COALESCE(title, '') || ' ' ||
+                                    COALESCE(description, '') || ' ' ||
+                                    COALESCE(keywords, '') || ' ' ||
+                                    COALESCE(content, '')
+                                ),
+
+                                plainto_tsquery(
+                                    'simple',
+                                    ${parameter}
+                                )
+                            ) * 100
+                        `;
+                    }
+                );
+
+
+            const sql = `
+
+                SELECT
+
+                    id,
+
+                    url,
+
+                    title,
+
+                    description,
+
+                    domain,
+
+                    keywords,
+
+                    last_crawled,
+
+                    (
+                        ${scoreParts.join(" + ")}
+
+                        +
+
+                        (${tsRankParts.join(" + ")})
+                    ) AS relevance_score
+
+                FROM pages
+
+                WHERE
+
+                    ${searchConditions.join(" OR ")}
+
+                ORDER BY
+
+                    relevance_score DESC,
+
+                    last_crawled DESC
+
+                LIMIT 50
+
+            `;
+
+
+            const result =
+                await pool.query(
+                    sql,
+                    values
+                );
+
+
+            // 추가 점수 보정
+
+            const results =
+                result.rows.map(row => {
+
+                    const domain =
+                        String(row.domain || "")
+                            .toLowerCase();
+
+                    const url =
+                        String(row.url || "")
+                            .toLowerCase();
+
+                    const title =
+                        String(row.title || "")
+                            .toLowerCase();
+
+                    const description =
+                        String(row.description || "")
+                            .toLowerCase();
+
+                    const keywords =
+                        String(row.keywords || "")
+                            .toLowerCase();
+
+                    const content =
+                        String(row.content || "")
+                            .toLowerCase();
+
+
+                    let score =
+                        Number(
+                            row.relevance_score || 0
+                        );
+
+
+                    // 제목 정확 일치
+
+                    if (
+                        title.includes(query)
+                    ) {
+
+                        score += 250;
+
+                    }
+
+
+                    // keywords 정확 일치
+
+                    if (
+                        keywords.includes(query)
+                    ) {
+
+                        score += 150;
+
+                    }
+
+
+                    // 설명 일치
+
+                    if (
+                        description.includes(query)
+                    ) {
+
+                        score += 100;
+
+                    }
+
+
+                    // 별칭 일치
+
+                    let aliasMatch = false;
+
+                    const aliases =
+                        SEARCH_ALIASES[query];
+
+
+                    if (aliases) {
+
+                        aliasMatch =
+                            aliases.some(
+                                alias => {
+
+                                    const a =
+                                        alias.toLowerCase();
+
+                                    return (
+
+                                        domain.includes(a) ||
+
+                                        url.includes(a) ||
+
+                                        title.includes(a) ||
+
+                                        keywords.includes(a)
+
+                                    );
+
+                                }
+                            );
+
+
+                        if (aliasMatch) {
+
+                            score += 500;
+
+                        }
+
+                    }
+
+
+                    // 관련 검색어 일치
+
+                    const related =
+                        RELATED_TERMS[query];
+
+                    let relatedMatch = false;
+
+
+                    if (related) {
+
+                        relatedMatch =
+                            related.some(
+                                term => {
+
+                                    const t =
+                                        term.toLowerCase();
+
+                                    return (
+
+                                        keywords.includes(t) ||
+
+                                        title.includes(t) ||
+
+                                        description.includes(t) ||
+
+                                        content.includes(t)
+
+                                    );
+
+                                }
+                            );
+
+
+                        if (relatedMatch) {
+
+                            score += 180;
+
+                        }
+
+                    }
+
+
+                    return {
+
+                        id: row.id,
+
+                        url: row.url,
+
+                        title:
+                            row.title ||
+                            "제목 없음",
+
+                        description:
+                            row.description ||
+                            "",
+
+                        domain:
+                            row.domain ||
+                            getDomainFromUrl(
+                                row.url
+                            ),
+
+                        keywords:
+                            row.keywords ||
+                            "",
+
+                        last_crawled:
+                            row.last_crawled,
+
+                        rank:
+                            score,
+
+                        alias_match:
+                            aliasMatch,
+
+                        related_match:
+                            relatedMatch
+
+                    };
+
+                });
+
+
+            // 최종 정렬
+
+            results.sort(
+                (a, b) => {
+
+                    if (
+                        a.alias_match &&
+                        !b.alias_match
+                    ) {
+
+                        return -1;
+
+                    }
+
+
+                    if (
+                        !a.alias_match &&
+                        b.alias_match
+                    ) {
+
+                        return 1;
+
+                    }
+
+
+                    if (
+                        a.related_match &&
+                        !b.related_match
+                    ) {
+
+                        return -1;
+
+                    }
+
+
+                    if (
+                        !a.related_match &&
+                        b.related_match
+                    ) {
+
+                        return 1;
+
+                    }
+
+
+                    return (
+                        Number(b.rank || 0) -
+                        Number(a.rank || 0)
+                    );
+
+                }
+            );
+
+
+            // 중복 URL 제거
+
+            const uniqueResults = [];
+
+            const seenUrls =
+                new Set();
+
+
+            for (
+                const result
+                of results
+            ) {
+
+                const normalizedUrl =
+                    String(result.url || "")
+                        .toLowerCase()
+                        .replace(/\/+$/, "");
+
+
+                if (
+                    seenUrls.has(
+                        normalizedUrl
+                    )
+                ) {
+
+                    continue;
+
+                }
+
+
+                seenUrls.add(
+                    normalizedUrl
+                );
+
+
+                uniqueResults.push(
+                    result
+                );
+
+
+                if (
+                    uniqueResults.length >= 50
+                ) {
+
+                    break;
+
+                }
+
+            }
+
+
+            return res.json({
+
+                ok: true,
+
+                query:
+                    originalQuery,
+
+                searchTerms:
+                    limitedTerms,
+
+                count:
+                    uniqueResults.length,
+
+                results:
+                    uniqueResults
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "SEARCH ERROR"
+            );
+
+            console.error(
+                "message:",
+                error.message
+            );
+
+            console.error(
+                "code:",
+                error.code
+            );
+
+            console.error(
+                "detail:",
+                error.detail
+            );
+
+            console.error(
+                "hint:",
+                error.hint
+            );
+
+
+            return res.status(500).json({
+
+                ok: false,
+
+                error:
+                    "검색 중 오류가 발생했습니다."
+
+            });
+
+        }
+
     }
-});
+);
 
 
 // ========================================
@@ -1189,6 +1240,7 @@ app.get(
 
                 crawler:
                     "enabled"
+
             });
 
 
@@ -1203,8 +1255,11 @@ app.get(
 
                 error:
                     error.message
+
             });
+
         }
+
     }
 );
 
@@ -1222,6 +1277,7 @@ async function runCrawler() {
         );
 
         return;
+
     }
 
 
@@ -1267,7 +1323,9 @@ async function runCrawler() {
     } finally {
 
         crawlerRunning = false;
+
     }
+
 }
 
 
@@ -1294,7 +1352,356 @@ app.get(
 
             lastError:
                 lastCrawlerError
+
         });
+
+    }
+);
+
+
+// ========================================
+// 사용자 URL 크롤링 큐
+// ========================================
+
+app.post(
+    "/api/crawl/queue",
+    async (req, res) => {
+
+        try {
+
+            let { url } = req.body;
+
+
+            // URL 입력 확인
+
+            if (
+                !url ||
+                typeof url !== "string"
+            ) {
+
+                return res.status(400).json({
+
+                    ok: false,
+
+                    error:
+                        "URL을 입력하세요."
+
+                });
+
+            }
+
+
+            url = url.trim();
+
+
+            // https:// 자동 추가
+
+            if (
+                !/^https?:\/\//i.test(url)
+            ) {
+
+                url =
+                    "https://" + url;
+
+            }
+
+
+            // URL 파싱
+
+            let parsed;
+
+            try {
+
+                parsed =
+                    new URL(url);
+
+            } catch {
+
+                return res.status(400).json({
+
+                    ok: false,
+
+                    error:
+                        "올바른 URL이 아닙니다."
+
+                });
+
+            }
+
+
+            // HTTP / HTTPS만 허용
+
+            if (
+                parsed.protocol !== "http:" &&
+                parsed.protocol !== "https:"
+            ) {
+
+                return res.status(400).json({
+
+                    ok: false,
+
+                    error:
+                        "HTTP 또는 HTTPS 주소만 사용할 수 있습니다."
+
+                });
+
+            }
+
+
+            // 사용자명 / 비밀번호가 있는 주소 차단
+
+            if (
+                parsed.username ||
+                parsed.password
+            ) {
+
+                return res.status(400).json({
+
+                    ok: false,
+
+                    error:
+                        "사용자명 또는 비밀번호가 포함된 URL은 사용할 수 없습니다."
+
+                });
+
+            }
+
+
+            // fragment 제거
+
+            parsed.hash = "";
+
+
+            // 기본 포트 제거
+
+            if (
+                (
+                    parsed.protocol === "http:" &&
+                    parsed.port === "80"
+                ) ||
+                (
+                    parsed.protocol === "https:" &&
+                    parsed.port === "443"
+                )
+            ) {
+
+                parsed.port = "";
+
+            }
+
+
+            url =
+                parsed.href;
+
+
+            // ====================================
+            // 이미 색인된 페이지인지 확인
+            // ====================================
+
+            const existing =
+                await pool.query(
+                    `
+                    SELECT url
+
+                    FROM pages
+
+                    WHERE url = $1
+
+                    LIMIT 1
+                    `,
+                    [url]
+                );
+
+
+            if (
+                existing.rows.length > 0
+            ) {
+
+                return res.json({
+
+                    ok: true,
+
+                    queued: false,
+
+                    alreadyIndexed: true,
+
+                    url
+
+                });
+
+            }
+
+
+            // ====================================
+            // 크롤링 큐에 추가
+            // ====================================
+
+            const result =
+                await pool.query(
+                    `
+                    INSERT INTO crawl_queue (
+                        url,
+                        status
+                    )
+
+                    VALUES (
+                        $1,
+                        'pending'
+                    )
+
+                    ON CONFLICT (url)
+
+                    DO UPDATE SET
+
+                        status = 'pending',
+
+                        last_error = NULL,
+
+                        finished_at = NULL
+
+                    RETURNING *
+                    `,
+                    [url]
+                );
+
+
+            console.log(
+                "[CRAWL QUEUE] Added:",
+                url
+            );
+
+
+            // ====================================
+            // 크롤러 실행
+            // ====================================
+
+            setTimeout(
+                () => {
+
+                    runCrawler()
+                        .catch(error => {
+
+                            console.error(
+                                "[QUEUE CRAWLER ERROR]",
+                                error
+                            );
+
+                        });
+
+                },
+                100
+            );
+
+
+            return res.json({
+
+                ok: true,
+
+                queued: true,
+
+                url,
+
+                queue:
+                    result.rows[0]
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "[CRAWL QUEUE ERROR]",
+                error
+            );
+
+
+            return res.status(500).json({
+
+                ok: false,
+
+                error:
+                    error.message
+
+            });
+
+        }
+
+    }
+);
+
+
+// ========================================
+// 사용자 URL 큐 상태 조회
+// ========================================
+
+app.get(
+    "/api/crawl/queue",
+    async (req, res) => {
+
+        try {
+
+            const result =
+                await pool.query(
+                    `
+                    SELECT
+
+                        id,
+
+                        url,
+
+                        status,
+
+                        attempts,
+
+                        added_at,
+
+                        started_at,
+
+                        finished_at,
+
+                        last_error
+
+                    FROM crawl_queue
+
+                    ORDER BY added_at DESC
+
+                    LIMIT 100
+                    `
+                );
+
+
+            res.json({
+
+                ok: true,
+
+                count:
+                    result.rows.length,
+
+                queue:
+                    result.rows
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "[CRAWL QUEUE GET ERROR]",
+                error
+            );
+
+
+            res.status(500).json({
+
+                ok: false,
+
+                error:
+                    error.message
+
+            });
+
+        }
+
     }
 );
 
@@ -1303,14 +1710,22 @@ app.get(
 // OSCADIA 홈페이지
 // ========================================
 
-// public 폴더 안의 CSS, JS, 이미지 등 정적 파일 제공
+// public 폴더의 CSS / JS / 이미지 제공
+
 app.use(
     express.static(
-        path.join(__dirname, "../public")
+        path.join(
+            __dirname,
+            "../public"
+        )
     )
 );
 
-// 기본 주소 → public/oscadia.html
+
+// ========================================
+// 기본 주소
+// ========================================
+
 app.get(
     "/",
     (req, res) => {
@@ -1321,6 +1736,7 @@ app.get(
                 "../public/oscadia.html"
             )
         );
+
     }
 );
 
@@ -1339,19 +1755,27 @@ app.listen(
 
 
         // 서버 시작 5초 후 첫 크롤링
-        setTimeout(() => {
 
-            runCrawler();
+        setTimeout(
+            () => {
 
-        }, 5000);
+                runCrawler();
+
+            },
+            5000
+        );
 
 
         // 30분마다 자동 크롤링
-        setInterval(() => {
 
-            runCrawler();
+        setInterval(
+            () => {
 
-        }, 30 * 60 * 1000);
+                runCrawler();
+
+            },
+            30 * 60 * 1000
+        );
 
     }
 );

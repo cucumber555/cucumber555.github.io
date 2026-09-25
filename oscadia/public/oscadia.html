@@ -226,6 +226,25 @@ main{
         OSCADIA
     </div>
 
+    <div class="os-cadia-address-bar">
+
+    <input
+        id="osAddressInput"
+        type="text"
+        placeholder="웹 주소를 입력하세요"
+        autocomplete="off"
+        spellcheck="false"
+    >
+
+    <button
+        id="osAddressGo"
+        type="button"
+    >
+        이동
+    </button>
+
+</div>
+
     <nav>
 
         <button
@@ -455,6 +474,90 @@ function escapeAttribute(value){
     return escapeHtml(value);
 
 }
+const addressInput =
+    document.getElementById("osAddressInput");
+
+const addressGo =
+    document.getElementById("osAddressGo");
+
+
+async function goAddress() {
+
+    let value =
+        addressInput.value.trim();
+
+    if (!value) {
+        return;
+    }
+
+    if (!/^https?:\/\//i.test(value)) {
+        value = "https://" + value;
+    }
+
+    try {
+
+        const response =
+            await fetch(
+                `${OSCADIA_API}/api/crawl/queue`,
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        url: value
+                    })
+                }
+            );
+
+        const data =
+            await response.json();
+
+        if (!data.ok) {
+
+            alert(
+                data.error ||
+                "주소를 처리할 수 없습니다."
+            );
+
+            return;
+        }
+
+        window.location.href = value;
+
+    } catch (error) {
+
+        alert(
+            "주소를 처리하는 중 오류가 발생했습니다."
+        );
+
+        console.error(error);
+    }
+}
+
+
+addressGo.addEventListener(
+    "click",
+    goAddress
+);
+
+
+addressInput.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key === "Enter"
+        ) {
+
+            goAddress();
+        }
+
+    }
+);
 
 </script>
 
