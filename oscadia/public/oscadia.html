@@ -1,253 +1,380 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-
 <meta charset="UTF-8">
-
 <meta
     name="viewport"
-    content="width=device-width,initial-scale=1"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
 >
 
 <title>OSCADIA</title>
 
 <style>
-
-*{
-    box-sizing:border-box;
+* {
+    box-sizing: border-box;
 }
 
-body{
-    margin:0;
-    min-height:100vh;
-    font-family:Arial,"Noto Sans KR",sans-serif;
-    color:#202124;
-    background:white;
+html,
+body {
+    margin: 0;
+    min-height: 100%;
 }
 
-header{
-    height:64px;
-
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-
-    padding:0 28px;
-
-    border-bottom:1px solid #eee;
+body {
+    min-height: 100vh;
+    font-family: Arial, "Noto Sans KR", sans-serif;
+    color: #202124;
+    background: #fff;
 }
 
-.logo{
-    font-size:25px;
-    font-weight:700;
-    letter-spacing:-1px;
+/* =========================
+   HEADER
+========================= */
+
+header {
+    min-height: 64px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 10px 28px;
+    border-bottom: 1px solid #eee;
+    background: #fff;
 }
 
-nav{
-    display:flex;
-    gap:8px;
+.logo {
+    flex: 0 0 auto;
+    font-size: 25px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    cursor: pointer;
+    white-space: nowrap;
 }
 
-nav button{
-    border:0;
-    background:white;
+/* =========================
+   ADDRESS BAR
+========================= */
 
-    padding:9px 13px;
-
-    border-radius:8px;
-
-    cursor:pointer;
+.os-cadia-address-bar {
+    flex: 1;
+    min-width: 0;
+    max-width: 600px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 
-nav button:hover{
-    background:#f1f3f4;
+.os-cadia-address-bar input {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    height: 40px;
+    border: 1px solid #dfe1e5;
+    border-radius: 20px;
+    padding: 0 15px;
+    outline: none;
+    font-size: 14px;
+    color: #202124;
+    background: #f8f9fa;
 }
 
-main{
-    max-width:900px;
-
-    margin:auto;
-
-    padding:
-        120px 20px
-        50px;
+.os-cadia-address-bar input:focus {
+    border-color: #aaa;
+    background: #fff;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, .08);
 }
 
-.brand{
-    text-align:center;
-
-    font-size:58px;
-    font-weight:700;
-
-    letter-spacing:-3px;
-
-    margin-bottom:35px;
+.os-cadia-address-bar button {
+    flex: 0 0 auto;
+    height: 40px;
+    padding: 0 15px;
+    border: 0;
+    border-radius: 20px;
+    background: #222;
+    color: #fff;
+    cursor: pointer;
+    font-size: 14px;
+    white-space: nowrap;
 }
 
-.search-box{
-    position:relative;
-
-    width:min(680px,100%);
-
-    margin:auto;
+.os-cadia-address-bar button:hover {
+    background: #444;
 }
 
-.search-box input{
-    width:100%;
-    height:55px;
+/* =========================
+   NAV
+========================= */
 
-    border:1px solid #dfe1e5;
-
-    border-radius:28px;
-
-    padding:
-        0 60px 0 22px;
-
-    font-size:17px;
-
-    outline:none;
-
-    box-shadow:
-        0 1px 5px
-        rgba(0,0,0,.08);
+nav {
+    flex: 0 0 auto;
+    display: flex;
+    gap: 8px;
 }
 
-.search-box input:focus{
-    box-shadow:
-        0 2px 10px
-        rgba(0,0,0,.15);
+nav button {
+    border: 0;
+    background: #fff;
+    padding: 9px 13px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    white-space: nowrap;
 }
 
-.search-button{
-    position:absolute;
-
-    right:7px;
-    top:7px;
-
-    width:41px;
-    height:41px;
-
-    border:0;
-    border-radius:50%;
-
-    background:#222;
-    color:white;
-
-    cursor:pointer;
-
-    font-size:18px;
+nav button:hover {
+    background: #f1f3f4;
 }
 
-.results{
-    margin-top:55px;
+/* =========================
+   MAIN
+========================= */
+
+main {
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 120px 20px 50px;
 }
 
-.info{
-    color:#777;
-    font-size:13px;
-    margin-bottom:20px;
+.brand {
+    text-align: center;
+    font-size: 58px;
+    font-weight: 700;
+    letter-spacing: -3px;
+    margin-bottom: 35px;
 }
 
-.result{
-    padding:
-        17px 0;
+/* =========================
+   SEARCH
+========================= */
 
-    border-bottom:
-        1px solid #eee;
+.search-box {
+    position: relative;
+    width: min(680px, 100%);
+    margin: 0 auto;
 }
 
-.result a{
-    color:#174ea6;
-    text-decoration:none;
+.search-box input {
+    width: 100%;
+    height: 55px;
+    border: 1px solid #dfe1e5;
+    border-radius: 28px;
+    padding: 0 60px 0 22px;
+    font-size: 17px;
+    outline: none;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, .08);
 }
 
-.result a:hover{
-    text-decoration:underline;
+.search-box input:focus {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, .15);
 }
 
-.result-title{
-    font-size:19px;
-    margin-bottom:6px;
+.search-button {
+    position: absolute;
+    right: 7px;
+    top: 7px;
+    width: 41px;
+    height: 41px;
+    border: 0;
+    border-radius: 50%;
+    background: #222;
+    color: #fff;
+    cursor: pointer;
+    font-size: 18px;
 }
 
-.result-url{
-    color:#188038;
-    font-size:13px;
-    margin-bottom:6px;
-
-    overflow:hidden;
-    text-overflow:ellipsis;
+.search-button:hover {
+    background: #444;
 }
 
-.result-description{
-    color:#5f6368;
-    font-size:14px;
-    line-height:1.5;
+/* =========================
+   RESULTS
+========================= */
+
+.results {
+    margin-top: 55px;
 }
 
-.empty{
-    text-align:center;
-    padding:50px 10px;
-    color:#777;
+.info {
+    color: #777;
+    font-size: 13px;
+    margin-bottom: 20px;
 }
 
-.loading{
-    text-align:center;
-    color:#777;
-    padding:50px;
+.result {
+    padding: 17px 0;
+    border-bottom: 1px solid #eee;
 }
 
-@media(max-width:600px){
+.result a {
+    color: #174ea6;
+    text-decoration: none;
+}
 
-    main{
-        padding-top:90px;
+.result a:hover {
+    text-decoration: underline;
+}
+
+.result-title {
+    font-size: 19px;
+    margin-bottom: 6px;
+    word-break: break-word;
+}
+
+.result-url {
+    color: #188038;
+    font-size: 13px;
+    margin-bottom: 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.result-description {
+    color: #5f6368;
+    font-size: 14px;
+    line-height: 1.5;
+    word-break: break-word;
+}
+
+.empty {
+    text-align: center;
+    padding: 50px 10px;
+    color: #777;
+}
+
+.loading {
+    text-align: center;
+    color: #777;
+    padding: 50px;
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 700px) {
+
+    header {
+        min-height: auto;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 12px 15px;
     }
 
-    .brand{
-        font-size:44px;
+    .logo {
+        font-size: 22px;
     }
 
-    header{
-        padding:0 15px;
+    .os-cadia-address-bar {
+        order: 3;
+        flex-basis: 100%;
+        max-width: none;
     }
 
+    nav {
+        margin-left: auto;
+    }
+
+    nav button {
+        padding: 8px 11px;
+    }
+
+    main {
+        padding: 75px 15px 40px;
+    }
+
+    .brand {
+        font-size: 45px;
+        letter-spacing: -2px;
+        margin-bottom: 28px;
+    }
+
+    .search-box input {
+        height: 52px;
+        font-size: 16px;
+        padding-left: 18px;
+        padding-right: 58px;
+    }
+
+    .search-button {
+        width: 38px;
+        height: 38px;
+        right: 7px;
+        top: 7px;
+    }
+
+    .results {
+        margin-top: 40px;
+    }
+
+    .result {
+        padding: 15px 0;
+    }
+
+    .result-title {
+        font-size: 17px;
+    }
+
+    .result-description {
+        font-size: 13px;
+    }
 }
 
+@media (max-width: 420px) {
+
+    .brand {
+        font-size: 38px;
+    }
+
+    .os-cadia-address-bar input {
+        font-size: 13px;
+    }
+
+    .os-cadia-address-bar button {
+        padding: 0 13px;
+    }
+
+    main {
+        padding-top: 60px;
+    }
+}
 </style>
-
 </head>
-
 
 <body>
 
 <header>
 
-    <div class="logo">
+    <div
+        class="logo"
+        onclick="location.href='oscadia.html'"
+    >
         OSCADIA
     </div>
 
     <div class="os-cadia-address-bar">
 
-    <input
-        id="osAddressInput"
-        type="text"
-        placeholder="웹 주소를 입력하세요"
-        autocomplete="off"
-        spellcheck="false"
-    >
+        <input
+            id="osAddressInput"
+            type="text"
+            placeholder="웹 주소를 입력하세요"
+            autocomplete="off"
+            spellcheck="false"
+        >
 
-    <button
-        id="osAddressGo"
-        type="button"
-    >
-        이동
-    </button>
+        <button
+            id="osAddressGo"
+            type="button"
+        >
+            이동
+        </button>
 
-</div>
+    </div>
 
     <nav>
 
         <button
+            type="button"
             onclick="location.href='osmail.html'"
         >
             OSmail
@@ -276,7 +403,9 @@ main{
 
         <button
             class="search-button"
+            type="button"
             onclick="search()"
+            aria-label="검색"
         >
             ⌕
         </button>
@@ -294,6 +423,18 @@ main{
 
 <script>
 
+/* =========================
+   OSCADIA API
+========================= */
+
+const OSCADIA_API =
+    "https://oscadia-api.onrender.com";
+
+
+/* =========================
+   SEARCH
+========================= */
+
 const queryInput =
     document.getElementById("query");
 
@@ -305,53 +446,51 @@ queryInput.addEventListener(
     "keydown",
     event => {
 
-        if(event.key === "Enter"){
-
+        if (event.key === "Enter") {
             search();
-
         }
 
     }
 );
 
 
-async function search(){
+async function search() {
 
     const q =
         queryInput.value.trim();
 
 
-    if(!q){
+    if (!q) {
 
         results.innerHTML = "";
 
         return;
-
     }
 
 
-    results.innerHTML =
-        `<div class="loading">
+    results.innerHTML = `
+        <div class="loading">
             검색 중...
-        </div>`;
+        </div>
+    `;
 
 
-    try{
+    try {
 
         const response =
             await fetch(
-                `/api/search?q=${
-                    encodeURIComponent(q)
-                }`
+                OSCADIA_API +
+                "/api/search?q=" +
+                encodeURIComponent(q)
             );
 
 
-        if(!response.ok){
+        if (!response.ok) {
 
             throw new Error(
-                "Search failed"
+                "Search failed: " +
+                response.status
             );
-
         }
 
 
@@ -362,40 +501,50 @@ async function search(){
         renderResults(data);
 
 
-    }catch(error){
+    } catch (error) {
 
-        console.error(error);
+        console.error(
+            "OSCADIA 검색 오류:",
+            error
+        );
 
-        results.innerHTML =
-            `<div class="empty">
+
+        results.innerHTML = `
+            <div class="empty">
                 검색 서버에 연결할 수 없습니다.
-            </div>`;
-
+            </div>
+        `;
     }
-
 }
 
 
-function renderResults(data){
+/* =========================
+   RESULT RENDERING
+========================= */
 
-    if(!data.results ||
-       data.results.length === 0){
+function renderResults(data) {
 
-        results.innerHTML =
-            `<div class="empty">
-                "${escapeHtml(data.query)}"
+    if (
+        !data.results ||
+        data.results.length === 0
+    ) {
+
+        results.innerHTML = `
+            <div class="empty">
+                "${escapeHtml(data.query || "")}"
                 에 대한 검색 결과가 없습니다.
-            </div>`;
+            </div>
+        `;
 
         return;
-
     }
 
 
-    let html =
-        `<div class="info">
+    let html = `
+        <div class="info">
             검색 결과 ${data.count}개
-        </div>`;
+        </div>
+    `;
 
 
     html += data.results
@@ -408,7 +557,7 @@ function renderResults(data){
                     <a
                         href="${escapeAttribute(page.url)}"
                         target="_blank"
-                        rel="noopener"
+                        rel="noopener noreferrer"
                     >
                         ${escapeHtml(
                             page.title ||
@@ -420,19 +569,15 @@ function renderResults(data){
 
 
                 <div class="result-url">
-
                     ${escapeHtml(page.url)}
-
                 </div>
 
 
                 <div class="result-description">
-
                     ${escapeHtml(
                         page.description ||
                         makeSnippet(page)
                     )}
-
                 </div>
 
             </div>
@@ -442,43 +587,74 @@ function renderResults(data){
 
 
     results.innerHTML = html;
-
 }
 
 
-function makeSnippet(page){
+function makeSnippet(page) {
 
     const text =
         page.description ||
+        page.content ||
         "";
 
-    return text.slice(0,180);
-
+    return text.slice(0, 180);
 }
 
 
-function escapeHtml(value){
+/* =========================
+   SECURITY
+========================= */
+
+function escapeHtml(value) {
 
     return String(value)
-        .replaceAll("&","&amp;")
-        .replaceAll("<","&lt;")
-        .replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;")
-        .replaceAll("'","&#039;");
 
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
 }
 
 
-function escapeAttribute(value){
+function escapeAttribute(value) {
 
     return escapeHtml(value);
-
 }
+
+
+/* =========================
+   ADDRESS BAR
+========================= */
+
 const addressInput =
-    document.getElementById("osAddressInput");
+    document.getElementById(
+        "osAddressInput"
+    );
 
 const addressGo =
-    document.getElementById("osAddressGo");
+    document.getElementById(
+        "osAddressGo"
+    );
 
 
 async function goAddress() {
@@ -486,19 +662,38 @@ async function goAddress() {
     let value =
         addressInput.value.trim();
 
+
     if (!value) {
         return;
     }
 
-    if (!/^https?:\/\//i.test(value)) {
-        value = "https://" + value;
+
+    /*
+       http:// 또는 https://가
+       없으면 https:// 추가
+    */
+
+    if (
+        !/^https?:\/\//i.test(value)
+    ) {
+
+        value =
+            "https://" + value;
     }
+
 
     try {
 
+        console.log(
+            "[OSCADIA] 주소 큐 등록:",
+            value
+        );
+
+
         const response =
             await fetch(
-                `${OSCADIA_API}/api/crawl/queue`,
+                OSCADIA_API +
+                "/api/crawl/queue",
                 {
                     method: "POST",
 
@@ -513,10 +708,44 @@ async function goAddress() {
                 }
             );
 
-        const data =
-            await response.json();
 
-        if (!data.ok) {
+        const text =
+            await response.text();
+
+
+        console.log(
+            "[OSCADIA] 서버 응답:",
+            response.status,
+            text
+        );
+
+
+        let data;
+
+
+        try {
+
+            data =
+                JSON.parse(text);
+
+        } catch {
+
+            alert(
+                "서버에서 올바른 응답을 받지 못했습니다.\n\n" +
+                "HTTP 상태: " +
+                response.status +
+                "\n\n" +
+                text
+            );
+
+            return;
+        }
+
+
+        if (
+            !response.ok ||
+            !data.ok
+        ) {
 
             alert(
                 data.error ||
@@ -526,18 +755,37 @@ async function goAddress() {
             return;
         }
 
-        window.location.href = value;
+
+        /*
+           큐 등록 성공.
+           이제 사용자가 입력한
+           실제 웹사이트로 이동.
+        */
+
+        window.location.href =
+            value;
+
 
     } catch (error) {
 
-        alert(
-            "주소를 처리하는 중 오류가 발생했습니다."
+        console.error(
+            "[OSCADIA] 주소 처리 오류:",
+            error
         );
 
-        console.error(error);
+
+        alert(
+            "주소를 처리하는 중 오류가 발생했습니다.\n\n" +
+            "오류: " +
+            error.message
+        );
     }
 }
 
+
+/* =========================
+   ADDRESS EVENTS
+========================= */
 
 addressGo.addEventListener(
     "click",
@@ -549,10 +797,7 @@ addressInput.addEventListener(
     "keydown",
     event => {
 
-        if (
-            event.key === "Enter"
-        ) {
-
+        if (event.key === "Enter") {
             goAddress();
         }
 
