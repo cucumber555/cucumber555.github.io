@@ -1,5 +1,4 @@
 import "dotenv/config";
-
 import express from "express";
 import cors from "cors";
 import pg from "pg";
@@ -7,6 +6,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import { crawl } from "./crawler.js";
+
 import {
     verifySMTP,
     getMyOSmail,
@@ -33,8 +33,7 @@ const app = express();
 const PORT = process.env.PORT || 10000;
 
 app.use(cors());
-app.use(express.json());
-
+app.use(express.json({ limit: "10mb" }));
 
 // ========================================
 // PostgreSQL
@@ -50,339 +49,96 @@ const pool = new Pool({
     max: 2
 });
 
-
 // ========================================
 // 서버 상태
 // ========================================
 
 let crawlerRunning = false;
-
 let lastCrawlerStart = null;
 let lastCrawlerFinish = null;
 let lastCrawlerError = null;
-
 
 // ========================================
 // 검색어 별칭
 // ========================================
 
 const SEARCH_ALIASES = {
+    "구글": ["google", "google.com"],
+    "google": ["google", "google.com"],
 
-    // Google
-    "구글": [
-        "google",
-        "google.com",
-        "www.google.com"
-    ],
+    "네이버": ["naver", "naver.com"],
+    "naver": ["naver", "naver.com"],
 
-    "google": [
-        "google",
-        "google.com",
-        "www.google.com"
-    ],
+    "다음": ["daum", "daum.net"],
+    "daum": ["daum", "daum.net"],
 
+    "유튜브": ["youtube", "youtube.com"],
+    "youtube": ["youtube", "youtube.com"],
 
-    // Naver
-    "네이버": [
-        "naver",
-        "naver.com",
-        "www.naver.com"
-    ],
+    "깃허브": ["github", "github.com"],
+    "github": ["github", "github.com"],
 
-    "naver": [
-        "naver",
-        "naver.com",
-        "www.naver.com"
-    ],
+    "위키백과": ["wikipedia", "wikipedia.org"],
+    "위키피디아": ["wikipedia", "wikipedia.org"],
+    "wikipedia": ["wikipedia", "wikipedia.org"],
 
+    "모질라": ["mozilla", "mozilla.org"],
+    "mozilla": ["mozilla", "mozilla.org"],
 
-    // Daum
-    "다음": [
-        "daum",
-        "daum.net",
-        "www.daum.net"
-    ],
+    "나사": ["nasa", "nasa.gov"],
+    "nasa": ["nasa", "nasa.gov"],
 
-    "daum": [
-        "daum",
-        "daum.net",
-        "www.daum.net"
-    ],
+    "아마존": ["amazon", "amazon.com"],
+    "amazon": ["amazon", "amazon.com"],
 
+    "비비씨": ["bbc", "bbc.com"],
+    "bbc": ["bbc", "bbc.com"],
 
-    // YouTube
-    "유튜브": [
-        "youtube",
-        "youtube.com",
-        "www.youtube.com"
-    ],
+    "씨엔엔": ["cnn", "cnn.com"],
+    "cnn": ["cnn", "cnn.com"],
 
-    "youtube": [
-        "youtube",
-        "youtube.com",
-        "www.youtube.com"
-    ],
+    "레딧": ["reddit", "reddit.com"],
+    "reddit": ["reddit", "reddit.com"],
 
+    "스택오버플로": ["stackoverflow", "stackoverflow.com"],
+    "스택오버플로우": ["stackoverflow", "stackoverflow.com"],
+    "stackoverflow": ["stackoverflow", "stackoverflow.com"],
 
-    // GitHub
-    "깃허브": [
-        "github",
-        "github.com",
-        "www.github.com"
-    ],
+    "뉴욕타임스": ["nytimes", "nytimes.com"],
+    "뉴욕 타임스": ["nytimes", "nytimes.com"],
+    "nytimes": ["nytimes", "nytimes.com"],
 
-    "github": [
-        "github",
-        "github.com",
-        "www.github.com"
-    ],
+    "가디언": ["guardian", "theguardian.com"],
+    "guardian": ["guardian", "theguardian.com"],
 
+    "브리태니커": ["britannica", "britannica.com"],
+    "britannica": ["britannica", "britannica.com"],
 
-    // Wikipedia
-    "위키백과": [
-        "wikipedia",
-        "wikipedia.org",
-        "www.wikipedia.org"
-    ],
+    "인터넷 아카이브": ["archive", "archive.org"],
+    "인터넷아카이브": ["archive", "archive.org"],
+    "archive": ["archive", "archive.org"],
 
-    "위키피디아": [
-        "wikipedia",
-        "wikipedia.org",
-        "www.wikipedia.org"
-    ],
+    "w3c": ["w3c", "w3.org"],
+    "월드와이드웹컨소시엄": ["w3c", "w3.org"],
 
-    "wikipedia": [
-        "wikipedia",
-        "wikipedia.org",
-        "www.wikipedia.org"
-    ],
+    "파이썬": ["python", "python.org"],
+    "python": ["python", "python.org"],
 
-
-    // Mozilla
-    "모질라": [
-        "mozilla",
-        "mozilla.org",
-        "www.mozilla.org"
-    ],
-
-    "mozilla": [
-        "mozilla",
-        "mozilla.org",
-        "www.mozilla.org"
-    ],
-
-
-    // NASA
-    "나사": [
-        "nasa",
-        "nasa.gov",
-        "www.nasa.gov"
-    ],
-
-    "nasa": [
-        "nasa",
-        "nasa.gov",
-        "www.nasa.gov"
-    ],
-
-
-    // Amazon
-    "아마존": [
-        "amazon",
-        "amazon.com",
-        "www.amazon.com"
-    ],
-
-    "amazon": [
-        "amazon",
-        "amazon.com",
-        "www.amazon.com"
-    ],
-
-
-    // BBC
-    "비비씨": [
-        "bbc",
-        "bbc.com",
-        "www.bbc.com"
-    ],
-
-    "bbc": [
-        "bbc",
-        "bbc.com",
-        "www.bbc.com"
-    ],
-
-
-    // CNN
-    "씨엔엔": [
-        "cnn",
-        "cnn.com",
-        "www.cnn.com"
-    ],
-
-    "cnn": [
-        "cnn",
-        "cnn.com",
-        "www.cnn.com"
-    ],
-
-
-    // Reddit
-    "레딧": [
-        "reddit",
-        "reddit.com",
-        "www.reddit.com"
-    ],
-
-    "reddit": [
-        "reddit",
-        "reddit.com",
-        "www.reddit.com"
-    ],
-
-
-    // Stack Overflow
-    "스택오버플로": [
-        "stackoverflow",
-        "stackoverflow.com"
-    ],
-
-    "스택오버플로우": [
-        "stackoverflow",
-        "stackoverflow.com"
-    ],
-
-    "stackoverflow": [
-        "stackoverflow",
-        "stackoverflow.com"
-    ],
-
-
-    // New York Times
-    "뉴욕타임스": [
-        "nytimes",
-        "nytimes.com",
-        "www.nytimes.com"
-    ],
-
-    "뉴욕 타임스": [
-        "nytimes",
-        "nytimes.com",
-        "www.nytimes.com"
-    ],
-
-    "nytimes": [
-        "nytimes",
-        "nytimes.com",
-        "www.nytimes.com"
-    ],
-
-
-    // The Guardian
-    "가디언": [
-        "guardian",
-        "theguardian.com",
-        "www.theguardian.com"
-    ],
-
-    "guardian": [
-        "guardian",
-        "theguardian.com",
-        "www.theguardian.com"
-    ],
-
-
-    // Britannica
-    "브리태니커": [
-        "britannica",
-        "britannica.com",
-        "www.britannica.com"
-    ],
-
-    "britannica": [
-        "britannica",
-        "britannica.com",
-        "www.britannica.com"
-    ],
-
-
-    // Internet Archive
-    "인터넷 아카이브": [
-        "archive",
-        "archive.org",
-        "www.archive.org"
-    ],
-
-    "인터넷아카이브": [
-        "archive",
-        "archive.org",
-        "www.archive.org"
-    ],
-
-    "archive": [
-        "archive",
-        "archive.org",
-        "www.archive.org"
-    ],
-
-
-    // W3C
-    "w3c": [
-        "w3c",
-        "w3.org",
-        "www.w3.org"
-    ],
-
-    "월드와이드웹컨소시엄": [
-        "w3c",
-        "w3.org",
-        "www.w3.org"
-    ],
-
-
-    // Python
-    "파이썬": [
-        "python",
-        "python.org",
-        "www.python.org"
-    ],
-
-    "python": [
-        "python",
-        "python.org",
-        "www.python.org"
-    ],
-
-
-    // NamuWiki
-    "나무위키": [
-        "namu",
-        "namu.wiki",
-        "www.namu.wiki"
-    ],
-
-    "namuwiki": [
-        "namu",
-        "namu.wiki",
-        "www.namu.wiki"
-    ]
+    "나무위키": ["namu", "namu.wiki"],
+    "namuwiki": ["namu", "namu.wiki"]
 };
 
-
 // ========================================
-// 일반적인 관련 검색어
+// 관련 검색어
 // ========================================
 
 const RELATED_TERMS = {
-
     "검색": [
         "search",
         "검색엔진",
         "search engine",
         "웹검색",
-        "web search",
-        "find information"
+        "web search"
     ],
 
     "검색엔진": [
@@ -408,8 +164,7 @@ const RELATED_TERMS = {
     "뉴스": [
         "news",
         "breaking news",
-        "신문",
-        "뉴스"
+        "신문"
     ],
 
     "쇼핑": [
@@ -490,41 +245,26 @@ const RELATED_TERMS = {
     ]
 };
 
-
 // ========================================
-// 검색어 정리
+// 검색 함수
 // ========================================
 
 function normalizeSearchQuery(query) {
-
     return String(query || "")
         .trim()
         .toLowerCase()
         .replace(/\s+/g, " ");
 }
 
-
-// ========================================
-// 검색어 분리
-// ========================================
-
 function tokenizeQuery(query) {
-
     return normalizeSearchQuery(query)
         .split(/[\s,./!?()[\]{}:;|]+/)
         .map(word => word.trim())
-        .filter(word => word.length >= 1);
+        .filter(Boolean);
 }
 
-
-// ========================================
-// 검색용 키워드 만들기
-// ========================================
-
 function getSearchTerms(query) {
-
-    const normalized =
-        normalizeSearchQuery(query);
+    const normalized = normalizeSearchQuery(query);
 
     const terms = new Set();
 
@@ -532,1283 +272,542 @@ function getSearchTerms(query) {
         terms.add(normalized);
     }
 
-
-    // 개별 단어
-
     for (const token of tokenizeQuery(normalized)) {
-
         terms.add(token);
-
     }
 
-
-    // 별칭
-
-    const aliases =
-        SEARCH_ALIASES[normalized];
+    const aliases = SEARCH_ALIASES[normalized];
 
     if (aliases) {
-
         for (const alias of aliases) {
-
-            terms.add(
-                alias.toLowerCase()
-            );
-
+            terms.add(alias.toLowerCase());
         }
-
     }
 
-
-    // 관련 검색어
-
-    const related =
-        RELATED_TERMS[normalized];
+    const related = RELATED_TERMS[normalized];
 
     if (related) {
-
         for (const term of related) {
-
-            terms.add(
-                term.toLowerCase()
-            );
-
+            terms.add(term.toLowerCase());
         }
-
     }
-
 
     return [...terms];
 }
 
-
-// ========================================
-// URL에서 도메인 추출
-// ========================================
-
 function getDomainFromUrl(url) {
-
     try {
-
         return new URL(url)
             .hostname
             .toLowerCase()
             .replace(/^www\./, "");
-
     } catch {
-
         return "";
-
     }
 }
-
-
-// ========================================
-// PostgreSQL 검색어 안전 처리
-// ========================================
-
-function safeTsQuery(term) {
-
-    return String(term || "")
-        .replace(/[^\p{L}\p{N}\s_-]/gu, " ")
-        .trim();
-}
-
 
 // ========================================
 // 검색 API
 // ========================================
 
-app.get(
-    "/api/search",
-    async (req, res) => {
+app.get("/api/search", async (req, res) => {
+    const originalQuery = String(req.query.q || "").trim();
 
-        const originalQuery =
-            String(req.query.q || "")
-                .trim();
+    if (!originalQuery) {
+        return res.json({
+            ok: true,
+            count: 0,
+            results: []
+        });
+    }
 
+    const query = normalizeSearchQuery(originalQuery);
+    const terms = getSearchTerms(query).slice(0, 30);
 
-        if (!originalQuery) {
+    try {
+        const conditions = [];
+        const values = [];
 
-            return res.json({
+        for (let i = 0; i < terms.length; i++) {
+            const p = `$${i + 1}`;
+            values.push(terms[i]);
 
-                ok: true,
-
-                count: 0,
-
-                results: []
-
-            });
-
+            conditions.push(`
+                (
+                    LOWER(COALESCE(title, '')) LIKE '%' || LOWER(${p}) || '%'
+                    OR LOWER(COALESCE(description, '')) LIKE '%' || LOWER(${p}) || '%'
+                    OR LOWER(COALESCE(keywords, '')) LIKE '%' || LOWER(${p}) || '%'
+                    OR LOWER(COALESCE(content, '')) LIKE '%' || LOWER(${p}) || '%'
+                    OR LOWER(COALESCE(url, '')) LIKE '%' || LOWER(${p}) || '%'
+                    OR LOWER(COALESCE(domain, '')) LIKE '%' || LOWER(${p}) || '%'
+                )
+            `);
         }
 
-
-        const query =
-            normalizeSearchQuery(
-                originalQuery
-            );
-
-
-        const terms =
-            getSearchTerms(query);
-
-
-        try {
-
-            // 검색어가 너무 많아지는 것 방지
-
-            const limitedTerms =
-                terms.slice(0, 30);
-
-
-            // 검색 조건
-
-            const searchConditions =
-                limitedTerms.map(
-                    (term, index) => {
-
-                        const parameter =
-                            `$${index + 1}`;
-
-                        return `
-                            (
-                                LOWER(COALESCE(title, ''))
-                                    LIKE '%' || LOWER(${parameter}) || '%'
-
-                                OR
-
-                                LOWER(COALESCE(description, ''))
-                                    LIKE '%' || LOWER(${parameter}) || '%'
-
-                                OR
-
-                                LOWER(COALESCE(keywords, ''))
-                                    LIKE '%' || LOWER(${parameter}) || '%'
-
-                                OR
-
-                                LOWER(COALESCE(content, ''))
-                                    LIKE '%' || LOWER(${parameter}) || '%'
-
-                                OR
-
-                                LOWER(COALESCE(url, ''))
-                                    LIKE '%' || LOWER(${parameter}) || '%'
-
-                                OR
-
-                                LOWER(COALESCE(domain, ''))
-                                    LIKE '%' || LOWER(${parameter}) || '%'
-                            )
-                        `;
-                    }
-                );
-
-
-            const values =
-                limitedTerms;
-
-
-            // 점수 계산
-
-            const scoreParts =
-                limitedTerms.map(
-                    (term, index) => {
-
-                        const parameter =
-                            `$${index + 1}`;
-
-                        return `
-                            (
-                                CASE
-                                    WHEN LOWER(COALESCE(title, ''))
-                                        LIKE '%' || LOWER(${parameter}) || '%'
-                                    THEN 100
-                                    ELSE 0
-                                END
-
-                                +
-
-                                CASE
-                                    WHEN LOWER(COALESCE(keywords, ''))
-                                        LIKE '%' || LOWER(${parameter}) || '%'
-                                    THEN 60
-                                    ELSE 0
-                                END
-
-                                +
-
-                                CASE
-                                    WHEN LOWER(COALESCE(description, ''))
-                                        LIKE '%' || LOWER(${parameter}) || '%'
-                                    THEN 45
-                                    ELSE 0
-                                END
-
-                                +
-
-                                CASE
-                                    WHEN LOWER(COALESCE(domain, ''))
-                                        LIKE '%' || LOWER(${parameter}) || '%'
-                                    THEN 40
-                                    ELSE 0
-                                END
-
-                                +
-
-                                CASE
-                                    WHEN LOWER(COALESCE(url, ''))
-                                        LIKE '%' || LOWER(${parameter}) || '%'
-                                    THEN 30
-                                    ELSE 0
-                                END
-
-                                +
-
-                                CASE
-                                    WHEN LOWER(COALESCE(content, ''))
-                                        LIKE '%' || LOWER(${parameter}) || '%'
-                                    THEN 10
-                                    ELSE 0
-                                END
-                            )
-                        `;
-                    }
-                );
-
-
-            // PostgreSQL Full Text Search
-
-            const tsRankParts =
-                limitedTerms.map(
-                    (term, index) => {
-
-                        const parameter =
-                            `$${index + 1}`;
-
-                        const tsTerm =
-                            safeTsQuery(term);
-
-                        if (!tsTerm) {
-
-                            return "0";
-
-                        }
-
-                        return `
-                            ts_rank_cd(
-                                to_tsvector(
-                                    'simple',
-
-                                    COALESCE(title, '') || ' ' ||
-                                    COALESCE(description, '') || ' ' ||
-                                    COALESCE(keywords, '') || ' ' ||
-                                    COALESCE(content, '')
-                                ),
-
-                                plainto_tsquery(
-                                    'simple',
-                                    ${parameter}
-                                )
-                            ) * 100
-                        `;
-                    }
-                );
-
-
-            const sql = `
-
-                SELECT
-
-                    id,
-
-                    url,
-
-                    title,
-
-                    description,
-
-                    domain,
-
-                    keywords,
-
-                    last_crawled,
-
-                    (
-                        ${scoreParts.join(" + ")}
-
-                        +
-
-                        (${tsRankParts.join(" + ")})
-                    ) AS relevance_score
-
-                FROM pages
-
-                WHERE
-
-                    ${searchConditions.join(" OR ")}
-
-                ORDER BY
-
-                    relevance_score DESC,
-
-                    last_crawled DESC
-
-                LIMIT 50
-
+        if (!conditions.length) {
+            return res.json({
+                ok: true,
+                query: originalQuery,
+                count: 0,
+                results: []
+            });
+        }
+
+        const scoreParts = terms.map((term, i) => {
+            const p = `$${i + 1}`;
+
+            return `
+                (
+                    CASE
+                        WHEN LOWER(COALESCE(title, ''))
+                            LIKE '%' || LOWER(${p}) || '%'
+                        THEN 100
+                        ELSE 0
+                    END
+                    +
+                    CASE
+                        WHEN LOWER(COALESCE(keywords, ''))
+                            LIKE '%' || LOWER(${p}) || '%'
+                        THEN 60
+                        ELSE 0
+                    END
+                    +
+                    CASE
+                        WHEN LOWER(COALESCE(description, ''))
+                            LIKE '%' || LOWER(${p}) || '%'
+                        THEN 45
+                        ELSE 0
+                    END
+                    +
+                    CASE
+                        WHEN LOWER(COALESCE(domain, ''))
+                            LIKE '%' || LOWER(${p}) || '%'
+                        THEN 40
+                        ELSE 0
+                    END
+                    +
+                    CASE
+                        WHEN LOWER(COALESCE(url, ''))
+                            LIKE '%' || LOWER(${p}) || '%'
+                        THEN 30
+                        ELSE 0
+                    END
+                    +
+                    CASE
+                        WHEN LOWER(COALESCE(content, ''))
+                            LIKE '%' || LOWER(${p}) || '%'
+                        THEN 10
+                        ELSE 0
+                    END
+                )
             `;
-
-
-            const result =
-                await pool.query(
-                    sql,
-                    values
-                );
-
-
-            // 추가 점수 보정
-
-            const results =
-                result.rows.map(row => {
-
-                    const domain =
-                        String(row.domain || "")
-                            .toLowerCase();
-
-                    const url =
-                        String(row.url || "")
-                            .toLowerCase();
-
-                    const title =
-                        String(row.title || "")
-                            .toLowerCase();
-
-                    const description =
-                        String(row.description || "")
-                            .toLowerCase();
-
-                    const keywords =
-                        String(row.keywords || "")
-                            .toLowerCase();
-
-                    const content =
-                        String(row.content || "")
-                            .toLowerCase();
-
-
-                    let score =
-                        Number(
-                            row.relevance_score || 0
-                        );
-
-
-                    // 제목 정확 일치
-
-                    if (
-                        title.includes(query)
-                    ) {
-
-                        score += 250;
-
-                    }
-
-
-                    // keywords 정확 일치
-
-                    if (
-                        keywords.includes(query)
-                    ) {
-
-                        score += 150;
-
-                    }
-
-
-                    // 설명 일치
-
-                    if (
-                        description.includes(query)
-                    ) {
-
-                        score += 100;
-
-                    }
-
-
-                    // 별칭 일치
-
-                    let aliasMatch = false;
-
-                    const aliases =
-                        SEARCH_ALIASES[query];
-
-
-                    if (aliases) {
-
-                        aliasMatch =
-                            aliases.some(
-                                alias => {
-
-                                    const a =
-                                        alias.toLowerCase();
-
-                                    return (
-
-                                        domain.includes(a) ||
-
-                                        url.includes(a) ||
-
-                                        title.includes(a) ||
-
-                                        keywords.includes(a)
-
-                                    );
-
-                                }
-                            );
-
-
-                        if (aliasMatch) {
-
-                            score += 500;
-
-                        }
-
-                    }
-
-
-                    // 관련 검색어 일치
-
-                    const related =
-                        RELATED_TERMS[query];
-
-                    let relatedMatch = false;
-
-
-                    if (related) {
-
-                        relatedMatch =
-                            related.some(
-                                term => {
-
-                                    const t =
-                                        term.toLowerCase();
-
-                                    return (
-
-                                        keywords.includes(t) ||
-
-                                        title.includes(t) ||
-
-                                        description.includes(t) ||
-
-                                        content.includes(t)
-
-                                    );
-
-                                }
-                            );
-
-
-                        if (relatedMatch) {
-
-                            score += 180;
-
-                        }
-
-                    }
-
-
-                    return {
-
-                        id: row.id,
-
-                        url: row.url,
-
-                        title:
-                            row.title ||
-                            "제목 없음",
-
-                        description:
-                            row.description ||
-                            "",
-
-                        domain:
-                            row.domain ||
-                            getDomainFromUrl(
-                                row.url
-                            ),
-
-                        keywords:
-                            row.keywords ||
-                            "",
-
-                        last_crawled:
-                            row.last_crawled,
-
-                        rank:
-                            score,
-
-                        alias_match:
-                            aliasMatch,
-
-                        related_match:
-                            relatedMatch
-
-                    };
-
-                });
-
-
-            // 최종 정렬
-
-            results.sort(
-                (a, b) => {
-
-                    if (
-                        a.alias_match &&
-                        !b.alias_match
-                    ) {
-
-                        return -1;
-
-                    }
-
-
-                    if (
-                        !a.alias_match &&
-                        b.alias_match
-                    ) {
-
-                        return 1;
-
-                    }
-
-
-                    if (
-                        a.related_match &&
-                        !b.related_match
-                    ) {
-
-                        return -1;
-
-                    }
-
-
-                    if (
-                        !a.related_match &&
-                        b.related_match
-                    ) {
-
-                        return 1;
-
-                    }
-
+        });
+
+        const sql = `
+            SELECT
+                id,
+                url,
+                title,
+                description,
+                domain,
+                keywords,
+                last_crawled,
+                (${scoreParts.join(" + ")}) AS relevance_score
+            FROM pages
+            WHERE ${conditions.join(" OR ")}
+            ORDER BY relevance_score DESC, last_crawled DESC
+            LIMIT 50
+        `;
+
+        const result = await pool.query(sql, values);
+
+        const results = result.rows.map(row => {
+            const title = String(row.title || "").toLowerCase();
+            const description = String(row.description || "").toLowerCase();
+            const keywords = String(row.keywords || "").toLowerCase();
+            const content = String(row.content || "").toLowerCase();
+            const domain = String(row.domain || "").toLowerCase();
+            const url = String(row.url || "").toLowerCase();
+
+            let score = Number(row.relevance_score || 0);
+
+            if (title.includes(query)) score += 250;
+            if (keywords.includes(query)) score += 150;
+            if (description.includes(query)) score += 100;
+
+            let aliasMatch = false;
+
+            const aliases = SEARCH_ALIASES[query];
+
+            if (aliases) {
+                aliasMatch = aliases.some(alias => {
+                    const a = alias.toLowerCase();
 
                     return (
-                        Number(b.rank || 0) -
-                        Number(a.rank || 0)
+                        domain.includes(a) ||
+                        url.includes(a) ||
+                        title.includes(a) ||
+                        keywords.includes(a)
                     );
+                });
 
+                if (aliasMatch) {
+                    score += 500;
                 }
-            );
-
-
-            // 중복 URL 제거
-
-            const uniqueResults = [];
-
-            const seenUrls =
-                new Set();
-
-
-            for (
-                const result
-                of results
-            ) {
-
-                const normalizedUrl =
-                    String(result.url || "")
-                        .toLowerCase()
-                        .replace(/\/+$/, "");
-
-
-                if (
-                    seenUrls.has(
-                        normalizedUrl
-                    )
-                ) {
-
-                    continue;
-
-                }
-
-
-                seenUrls.add(
-                    normalizedUrl
-                );
-
-
-                uniqueResults.push(
-                    result
-                );
-
-
-                if (
-                    uniqueResults.length >= 50
-                ) {
-
-                    break;
-
-                }
-
             }
 
+            let relatedMatch = false;
 
-            return res.json({
+            const related = RELATED_TERMS[query];
 
-                ok: true,
+            if (related) {
+                relatedMatch = related.some(term => {
+                    const t = term.toLowerCase();
 
-                query:
-                    originalQuery,
+                    return (
+                        keywords.includes(t) ||
+                        title.includes(t) ||
+                        description.includes(t) ||
+                        content.includes(t)
+                    );
+                });
 
-                searchTerms:
-                    limitedTerms,
+                if (relatedMatch) {
+                    score += 180;
+                }
+            }
 
-                count:
-                    uniqueResults.length,
+            return {
+                id: row.id,
+                url: row.url,
+                title: row.title || "제목 없음",
+                description: row.description || "",
+                domain:
+                    row.domain ||
+                    getDomainFromUrl(row.url),
+                keywords: row.keywords || "",
+                last_crawled: row.last_crawled,
+                rank: score,
+                alias_match: aliasMatch,
+                related_match: relatedMatch
+            };
+        });
 
-                results:
-                    uniqueResults
+        results.sort((a, b) => {
+            if (a.alias_match !== b.alias_match) {
+                return a.alias_match ? -1 : 1;
+            }
 
-            });
+            if (a.related_match !== b.related_match) {
+                return a.related_match ? -1 : 1;
+            }
 
+            return Number(b.rank) - Number(a.rank);
+        });
 
-        } catch (error) {
+        const uniqueResults = [];
+        const seenUrls = new Set();
 
-            console.error(
-                "SEARCH ERROR"
-            );
+        for (const result of results) {
+            const normalizedUrl = String(result.url || "")
+                .toLowerCase()
+                .replace(/\/+$/, "");
 
-            console.error(
-                "message:",
-                error.message
-            );
+            if (seenUrls.has(normalizedUrl)) {
+                continue;
+            }
 
-            console.error(
-                "code:",
-                error.code
-            );
+            seenUrls.add(normalizedUrl);
+            uniqueResults.push(result);
 
-            console.error(
-                "detail:",
-                error.detail
-            );
-
-            console.error(
-                "hint:",
-                error.hint
-            );
-
-
-            return res.status(500).json({
-
-                ok: false,
-
-                error:
-                    "검색 중 오류가 발생했습니다."
-
-            });
-
+            if (uniqueResults.length >= 50) {
+                break;
+            }
         }
 
-    }
-);
+        return res.json({
+            ok: true,
+            query: originalQuery,
+            searchTerms: terms,
+            count: uniqueResults.length,
+            results: uniqueResults
+        });
 
+    } catch (error) {
+        console.error("[SEARCH ERROR]", error);
+
+        return res.status(500).json({
+            ok: false,
+            error: "검색 중 오류가 발생했습니다."
+        });
+    }
+});
 
 // ========================================
 // Health Check
 // ========================================
 
-app.get(
-    "/api/health",
-    async (req, res) => {
+app.get("/api/health", async (req, res) => {
+    try {
+        await pool.query("SELECT 1");
 
-        try {
+        res.json({
+            ok: true,
+            database: "connected",
+            crawler: "enabled",
+            service: "OSCADIA"
+        });
 
-            await pool.query(
-                "SELECT 1"
-            );
+    } catch (error) {
+        console.error("[HEALTH ERROR]", error);
 
-
-            res.json({
-
-                ok: true,
-
-                database:
-                    "connected",
-
-                crawler:
-                    "enabled"
-
-            });
-
-
-        } catch (error) {
-
-            res.status(500).json({
-
-                ok: false,
-
-                database:
-                    "disconnected",
-
-                error:
-                    error.message
-
-            });
-
-        }
-
+        res.status(500).json({
+            ok: false,
+            database: "disconnected",
+            error: error.message
+        });
     }
-);
-
+});
 
 // ========================================
-// Crawler 실행
+// Crawler
 // ========================================
 
 async function runCrawler() {
-
     if (crawlerRunning) {
-
-        console.log(
-            "[CRAWLER] Already running. Skip."
-        );
-
+        console.log("[CRAWLER] Already running. Skip.");
         return;
-
     }
-
 
     crawlerRunning = true;
-
-    lastCrawlerStart =
-        new Date().toISOString();
-
+    lastCrawlerStart = new Date().toISOString();
     lastCrawlerError = null;
 
-
-    console.log(
-        "[CRAWLER] Automatic crawl started."
-    );
-
+    console.log("[CRAWLER] Automatic crawl started.");
 
     try {
-
         await crawl();
 
+        lastCrawlerFinish = new Date().toISOString();
 
-        lastCrawlerFinish =
-            new Date().toISOString();
-
-
-        console.log(
-            "[CRAWLER] Automatic crawl finished."
-        );
-
+        console.log("[CRAWLER] Automatic crawl finished.");
 
     } catch (error) {
+        lastCrawlerError = error.message;
 
-        lastCrawlerError =
-            error.message;
-
-
-        console.error(
-            "[CRAWLER ERROR]",
-            error
-        );
-
+        console.error("[CRAWLER ERROR]", error);
 
     } finally {
-
         crawlerRunning = false;
-
     }
-
 }
 
-
-// ========================================
-// Crawler 상태
-// ========================================
-
-app.get(
-    "/api/crawler",
-    (req, res) => {
-
-        res.json({
-
-            enabled: true,
-
-            running:
-                crawlerRunning,
-
-            lastStart:
-                lastCrawlerStart,
-
-            lastFinish:
-                lastCrawlerFinish,
-
-            lastError:
-                lastCrawlerError
-
-        });
-
-    }
-);
-
+app.get("/api/crawler", (req, res) => {
+    res.json({
+        enabled: true,
+        running: crawlerRunning,
+        lastStart: lastCrawlerStart,
+        lastFinish: lastCrawlerFinish,
+        lastError: lastCrawlerError
+    });
+});
 
 // ========================================
 // 사용자 URL 크롤링 큐
 // ========================================
 
-app.post(
-    "/api/crawl/queue",
-    async (req, res) => {
-
-        try {
-
-            let { url } = req.body;
-
-
-            // URL 입력 확인
-
-            if (
-                !url ||
-                typeof url !== "string"
-            ) {
-
-                return res.status(400).json({
-
-                    ok: false,
-
-                    error:
-                        "URL을 입력하세요."
-
-                });
-
-            }
-
-
-            url = url.trim();
-
-
-            // https:// 자동 추가
-
-            if (
-                !/^https?:\/\//i.test(url)
-            ) {
-
-                url =
-                    "https://" + url;
-
-            }
-
-
-            // URL 파싱
-
-            let parsed;
-
-            try {
-
-                parsed =
-                    new URL(url);
-
-            } catch {
-
-                return res.status(400).json({
-
-                    ok: false,
-
-                    error:
-                        "올바른 URL이 아닙니다."
-
-                });
-
-            }
-
-
-            // HTTP / HTTPS만 허용
-
-            if (
-                parsed.protocol !== "http:" &&
-                parsed.protocol !== "https:"
-            ) {
-
-                return res.status(400).json({
-
-                    ok: false,
-
-                    error:
-                        "HTTP 또는 HTTPS 주소만 사용할 수 있습니다."
-
-                });
-
-            }
-
-
-            // 사용자명 / 비밀번호가 있는 주소 차단
-
-            if (
-                parsed.username ||
-                parsed.password
-            ) {
-
-                return res.status(400).json({
-
-                    ok: false,
-
-                    error:
-                        "사용자명 또는 비밀번호가 포함된 URL은 사용할 수 없습니다."
-
-                });
-
-            }
-
-
-            // fragment 제거
-
-            parsed.hash = "";
-
-
-            // 기본 포트 제거
-
-            if (
-                (
-                    parsed.protocol === "http:" &&
-                    parsed.port === "80"
-                ) ||
-                (
-                    parsed.protocol === "https:" &&
-                    parsed.port === "443"
-                )
-            ) {
-
-                parsed.port = "";
-
-            }
-
-
-            url =
-                parsed.href;
-
-
-            // ====================================
-            // 이미 색인된 페이지인지 확인
-            // ====================================
-
-            const existing =
-                await pool.query(
-                    `
-                    SELECT url
-
-                    FROM pages
-
-                    WHERE url = $1
-
-                    LIMIT 1
-                    `,
-                    [url]
-                );
-
-
-            if (
-                existing.rows.length > 0
-            ) {
-
-                return res.json({
-
-                    ok: true,
-
-                    queued: false,
-
-                    alreadyIndexed: true,
-
-                    url
-
-                });
-
-            }
-
-
-            // ====================================
-            // 크롤링 큐에 추가
-            // ====================================
-
-            const result =
-                await pool.query(
-                    `
-                    INSERT INTO crawl_queue (
-                        url,
-                        status
-                    )
-
-                    VALUES (
-                        $1,
-                        'pending'
-                    )
-
-                    ON CONFLICT (url)
-
-                    DO UPDATE SET
-
-                        status = 'pending',
-
-                        last_error = NULL,
-
-                        finished_at = NULL
-
-                    RETURNING *
-                    `,
-                    [url]
-                );
-
-
-            console.log(
-                "[CRAWL QUEUE] Added:",
-                url
-            );
-
-
-            // ====================================
-            // 크롤러 실행
-            // ====================================
-
-            setTimeout(
-                () => {
-
-                    runCrawler()
-                        .catch(error => {
-
-                            console.error(
-                                "[QUEUE CRAWLER ERROR]",
-                                error
-                            );
-
-                        });
-
-                },
-                100
-            );
-
-
-            return res.json({
-
-                ok: true,
-
-                queued: true,
-
-                url,
-
-                queue:
-                    result.rows[0]
-
-            });
-
-
-        } catch (error) {
-
-            console.error(
-                "[CRAWL QUEUE ERROR]",
-                error
-            );
-
-
-            return res.status(500).json({
-
-                ok: false,
-
-                error:
-                    error.message
-
-            });
-
-        }
-
-    }
-);
-
-
-// ========================================
-// 사용자 URL 큐 상태 조회
-// ========================================
-
-app.get(
-    "/api/crawl/queue",
-    async (req, res) => {
-
-        try {
-
-            const result =
-                await pool.query(
-                    `
-                    SELECT
-
-                        id,
-
-                        url,
-
-                        status,
-
-                        attempts,
-
-                        added_at,
-
-                        started_at,
-
-                        finished_at,
-
-                        last_error
-
-                    FROM crawl_queue
-
-                    ORDER BY added_at DESC
-
-                    LIMIT 100
-                    `
-                );
-
-
-            res.json({
-
-                ok: true,
-
-                count:
-                    result.rows.length,
-
-                queue:
-                    result.rows
-
-            });
-
-
-        } catch (error) {
-
-            console.error(
-                "[CRAWL QUEUE GET ERROR]",
-                error
-            );
-
-
-            res.status(500).json({
-
-                ok: false,
-
-                error:
-                    error.message
-
-            });
-
-        }
-
-    }
-);
-
-
-// ========================================
-// OSCADIA 홈페이지
-// ========================================
-
-// public 폴더의 CSS / JS / 이미지 제공
-
-app.use(
-    express.static(
-        path.join(
-            __dirname,
-            "../public"
-        )
-    )
-);
-
-
-// ========================================
-// 기본 주소
-// ========================================
-
-app.get(
-    "/",
-    (req, res) => {
-
-        res.sendFile(
-            path.join(
-                __dirname,
-                "../public/oscadia.html"
-            )
-        );
-
-    }
-);
-
-
-// ========================================
-// 서버 시작
-// ========================================
-verifySMTP();
-app.listen(
-    PORT,
-    () => {
-
-        console.log(
-            `OSCADIA running on port ${PORT}`
-        );
-
-
-        // 서버 시작 5초 후 첫 크롤링
-
-        setTimeout(
-            () => {
-
-                runCrawler();
-
-            },
-            5000
-        );
-
-
-        // 30분마다 자동 크롤링
-
-        setInterval(
-            () => {
-
-                runCrawler();
-
-            },
-            30 * 60 * 1000
-        );
-
-    }
-);
-// =========================================
-// OSmail
-// =========================================
-
-app.get("/api/osmail/me", async (req, res) => {
+app.post("/api/crawl/queue", async (req, res) => {
     try {
-        const result = await getMyOSmail(req);
+        let { url } = req.body;
 
-        res.json({
+        if (!url || typeof url !== "string") {
+            return res.status(400).json({
+                ok: false,
+                error: "URL을 입력하세요."
+            });
+        }
+
+        url = url.trim();
+
+        if (!/^https?:\/\//i.test(url)) {
+            url = "https://" + url;
+        }
+
+        let parsed;
+
+        try {
+            parsed = new URL(url);
+        } catch {
+            return res.status(400).json({
+                ok: false,
+                error: "올바른 URL이 아닙니다."
+            });
+        }
+
+        if (
+            parsed.protocol !== "http:" &&
+            parsed.protocol !== "https:"
+        ) {
+            return res.status(400).json({
+                ok: false,
+                error: "HTTP 또는 HTTPS 주소만 사용할 수 있습니다."
+            });
+        }
+
+        if (parsed.username || parsed.password) {
+            return res.status(400).json({
+                ok: false,
+                error: "사용자명 또는 비밀번호가 포함된 URL은 사용할 수 없습니다."
+            });
+        }
+
+        parsed.hash = "";
+
+        if (
+            (parsed.protocol === "http:" && parsed.port === "80") ||
+            (parsed.protocol === "https:" && parsed.port === "443")
+        ) {
+            parsed.port = "";
+        }
+
+        url = parsed.href;
+
+        const existing = await pool.query(
+            `
+            SELECT url
+            FROM pages
+            WHERE url = $1
+            LIMIT 1
+            `,
+            [url]
+        );
+
+        if (existing.rows.length > 0) {
+            return res.json({
+                ok: true,
+                queued: false,
+                alreadyIndexed: true,
+                url
+            });
+        }
+
+        const result = await pool.query(
+            `
+            INSERT INTO crawl_queue (
+                url,
+                status
+            )
+            VALUES (
+                $1,
+                'pending'
+            )
+            ON CONFLICT (url)
+            DO UPDATE SET
+                status = 'pending',
+                last_error = NULL,
+                finished_at = NULL
+            RETURNING *
+            `,
+            [url]
+        );
+
+        console.log("[CRAWL QUEUE] Added:", url);
+
+        setTimeout(() => {
+            runCrawler().catch(error => {
+                console.error(
+                    "[QUEUE CRAWLER ERROR]",
+                    error
+                );
+            });
+        }, 100);
+
+        return res.json({
             ok: true,
-            ...result
+            queued: true,
+            url,
+            queue: result.rows[0]
         });
+
     } catch (error) {
-        res.status(401).json({
+        console.error("[CRAWL QUEUE ERROR]", error);
+
+        return res.status(500).json({
             ok: false,
             error: error.message
         });
     }
 });
 
+app.get("/api/crawl/queue", async (req, res) => {
+    try {
+        const result = await pool.query(
+            `
+            SELECT
+                id,
+                url,
+                status,
+                attempts,
+                added_at,
+                started_at,
+                finished_at,
+                last_error
+            FROM crawl_queue
+            ORDER BY added_at DESC
+            LIMIT 100
+            `
+        );
+
+        res.json({
+            ok: true,
+            count: result.rows.length,
+            queue: result.rows
+        });
+
+    } catch (error) {
+        console.error(
+            "[CRAWL QUEUE GET ERROR]",
+            error
+        );
+
+        res.status(500).json({
+            ok: false,
+            error: error.message
+        });
+    }
+});
+
+// ========================================
+// OSmail API
+// 반드시 app.listen()보다 먼저 등록
+// ========================================
+
+// ----------------------------------------
+// 현재 로그인한 사용자의 OSmail 정보
+// ----------------------------------------
+
+app.get("/api/osmail/me", async (req, res) => {
+    try {
+        const result = await getMyOSmail(req);
+
+        return res.json({
+            ok: true,
+            ...result
+        });
+
+    } catch (error) {
+        console.error("[OSMAIL ME ERROR]", error);
+
+        return res.status(401).json({
+            ok: false,
+            error: error.message || "로그인이 필요합니다."
+        });
+    }
+});
+
+// ----------------------------------------
+// OSmail ID 생성
+// ----------------------------------------
 
 app.post("/api/osmail/profile", async (req, res) => {
     try {
@@ -1817,162 +816,363 @@ app.post("/api/osmail/profile", async (req, res) => {
             displayName
         } = req.body;
 
-        const result =
-            await createOSmailProfile(
-                req,
-                osmailId,
-                displayName
-            );
+        if (!osmailId) {
+            return res.status(400).json({
+                ok: false,
+                error: "OSmail ID를 입력하세요."
+            });
+        }
 
-        res.json({
+        const result = await createOSmailProfile(
+            req,
+            osmailId,
+            displayName
+        );
+
+        return res.json({
             ok: true,
             ...result
         });
 
     } catch (error) {
-        res.status(400).json({
+        console.error(
+            "[OSMAIL PROFILE ERROR]",
+            error
+        );
+
+        return res.status(400).json({
             ok: false,
             error: error.message
         });
     }
 });
 
+// ----------------------------------------
+// 메일 목록
+// ----------------------------------------
 
 app.get("/api/osmail/emails", async (req, res) => {
     try {
         const emails = await getEmails(req);
 
-        res.json({
+        return res.json({
             ok: true,
             emails
         });
 
     } catch (error) {
-        res.status(401).json({
+        console.error(
+            "[OSMAIL EMAILS ERROR]",
+            error
+        );
+
+        return res.status(401).json({
             ok: false,
             error: error.message
         });
     }
 });
 
+// ----------------------------------------
+// OSmail 내부 메일
+// ----------------------------------------
 
 app.post("/api/osmail/send-internal", async (req, res) => {
     try {
-        const email =
-            await sendInternalMail(req, {
-                to: req.body.to,
-                subject: req.body.subject,
-                body: req.body.body
-            });
+        const {
+            to,
+            subject,
+            body
+        } = req.body;
 
-        res.json({
+        if (!to) {
+            return res.status(400).json({
+                ok: false,
+                error: "받는 사람을 입력하세요."
+            });
+        }
+
+        const email = await sendInternalMail(req, {
+            to,
+            subject: subject || "",
+            body: body || ""
+        });
+
+        return res.json({
             ok: true,
             email
         });
 
     } catch (error) {
-        res.status(400).json({
+        console.error(
+            "[OSMAIL INTERNAL SEND ERROR]",
+            error
+        );
+
+        return res.status(400).json({
             ok: false,
             error: error.message
         });
     }
 });
 
+// ----------------------------------------
+// 외부 이메일
+// ----------------------------------------
 
 app.post("/api/osmail/send-external", async (req, res) => {
     try {
-        const result =
-            await sendExternalMail(req, {
-                to: req.body.to,
-                subject: req.body.subject,
-                body: req.body.body
-            });
+        const {
+            to,
+            subject,
+            body
+        } = req.body;
 
-        res.json({
+        if (!to) {
+            return res.status(400).json({
+                ok: false,
+                error: "받는 사람을 입력하세요."
+            });
+        }
+
+        const result = await sendExternalMail(req, {
+            to,
+            subject: subject || "",
+            body: body || ""
+        });
+
+        return res.json({
             ok: true,
             ...result
         });
 
     } catch (error) {
-        res.status(400).json({
+        console.error(
+            "[OSMAIL EXTERNAL SEND ERROR]",
+            error
+        );
+
+        return res.status(400).json({
             ok: false,
             error: error.message
         });
     }
 });
 
+// ----------------------------------------
+// 읽음 처리
+// ----------------------------------------
 
 app.post("/api/osmail/read", async (req, res) => {
     try {
-        const email =
-            await markAsRead(
-                req,
-                req.body.id
-            );
+        if (!req.body.id) {
+            return res.status(400).json({
+                ok: false,
+                error: "메일 ID가 필요합니다."
+            });
+        }
 
-        res.json({
+        const email = await markAsRead(
+            req,
+            req.body.id
+        );
+
+        return res.json({
             ok: true,
             email
         });
 
     } catch (error) {
-        res.status(400).json({
+        console.error(
+            "[OSMAIL READ ERROR]",
+            error
+        );
+
+        return res.status(400).json({
             ok: false,
             error: error.message
         });
     }
 });
 
+// ----------------------------------------
+// 삭제
+// ----------------------------------------
 
 app.post("/api/osmail/delete", async (req, res) => {
     try {
-        const email =
-            await deleteEmail(
-                req,
-                req.body.id
-            );
+        if (!req.body.id) {
+            return res.status(400).json({
+                ok: false,
+                error: "메일 ID가 필요합니다."
+            });
+        }
 
-        res.json({
+        const email = await deleteEmail(
+            req,
+            req.body.id
+        );
+
+        return res.json({
             ok: true,
             email
         });
 
     } catch (error) {
-        res.status(400).json({
+        console.error(
+            "[OSMAIL DELETE ERROR]",
+            error
+        );
+
+        return res.status(400).json({
             ok: false,
             error: error.message
         });
     }
 });
 
+// ----------------------------------------
+// 복구
+// ----------------------------------------
 
 app.post("/api/osmail/restore", async (req, res) => {
     try {
-        const email =
-            await restoreEmail(
-                req,
-                req.body.id
-            );
+        if (!req.body.id) {
+            return res.status(400).json({
+                ok: false,
+                error: "메일 ID가 필요합니다."
+            });
+        }
 
-        res.json({
+        const email = await restoreEmail(
+            req,
+            req.body.id
+        );
+
+        return res.json({
             ok: true,
             email
         });
 
     } catch (error) {
-        res.status(400).json({
+        console.error(
+            "[OSMAIL RESTORE ERROR]",
+            error
+        );
+
+        return res.status(400).json({
             ok: false,
             error: error.message
         });
     }
 });
 
+// ----------------------------------------
+// SMTP 상태 확인
+// ----------------------------------------
 
 app.get("/api/osmail/test", async (req, res) => {
-    const ok = await verifySMTP();
+    try {
+        const ok = await verifySMTP();
 
-    res.json({
-        ok,
-        service: "OSmail SMTP"
+        return res.json({
+            ok,
+            service: "OSmail SMTP"
+        });
+
+    } catch (error) {
+        console.error(
+            "[OSMAIL SMTP TEST ERROR]",
+            error
+        );
+
+        return res.status(500).json({
+            ok: false,
+            service: "OSmail SMTP",
+            error: error.message
+        });
+    }
+});
+
+// ========================================
+// public 파일
+// ========================================
+
+app.use(
+    express.static(
+        path.join(__dirname, "../public")
+    )
+);
+
+// ========================================
+// 기본 페이지
+// ========================================
+
+app.get("/", (req, res) => {
+    res.sendFile(
+        path.join(
+            __dirname,
+            "../public/oscadia.html"
+        )
+    );
+});
+
+// ========================================
+// 존재하지 않는 API 처리
+// ========================================
+
+app.use("/api", (req, res) => {
+    res.status(404).json({
+        ok: false,
+        error: "API endpoint not found",
+        path: req.path
     });
 });
+
+// ========================================
+// 서버 시작
+// app.listen은 반드시 마지막
+// ========================================
+
+async function startServer() {
+    try {
+        await verifySMTP();
+    } catch (error) {
+        console.error(
+            "[SMTP STARTUP ERROR]",
+            error
+        );
+    }
+
+    app.listen(PORT, () => {
+        console.log(
+            `OSCADIA running on port ${PORT}`
+        );
+
+        console.log(
+            `OSmail API: /api/osmail/me`
+        );
+
+        // 서버 시작 5초 후 크롤링
+        setTimeout(() => {
+            runCrawler().catch(error => {
+                console.error(
+                    "[STARTUP CRAWLER ERROR]",
+                    error
+                );
+            });
+        }, 5000);
+
+        // 30분마다 자동 크롤링
+        setInterval(() => {
+            runCrawler().catch(error => {
+                console.error(
+                    "[INTERVAL CRAWLER ERROR]",
+                    error
+                );
+            });
+        }, 30 * 60 * 1000);
+    });
+}
+
+startServer();
