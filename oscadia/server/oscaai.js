@@ -186,7 +186,37 @@ export async function verifyLoginCode(
     };
 }
 
+/* =========================================
+   OSmail ID로 프로필 조회
+========================================= */
 
+async function findOSmailProfile(
+    osmailId
+) {
+
+    requireAdmin();
+
+    const {
+        data,
+        error
+    } =
+        await adminSupabase
+            .from("osmail_profiles")
+            .select("*")
+            .eq(
+                "osmail_id",
+                normalizeOSmailId(osmailId)
+            )
+            .maybeSingle();
+
+    if (error) {
+        throw new Error(
+            error.message
+        );
+    }
+
+    return data;
+}
 /* =========================================
    사용자 ID로 OSmail 프로필 조회
 ========================================= */
