@@ -20,6 +20,18 @@ import {
     restoreEmail
 } from "./osmail.js";
 
+import {
+    requestLoginCode,
+    verifyLoginCode,
+    setPassword,
+    logout as oscaaiLogout,
+    chat as oscaaiChat,
+    getHistory as getOscaAIHistory,
+    getConversation as getOscaAIConversation,
+    getHealth as getOscaAIHealth
+} from "./oscaai.js";
+
+
 // ========================================
 // 기본 설정
 // ========================================
@@ -37,7 +49,9 @@ const app = express();
 const PORT =
     process.env.PORT || 10000;
 
+
 app.use(cors());
+
 
 app.use(
     express.json({
@@ -45,11 +59,13 @@ app.use(
     })
 );
 
+
 // ========================================
 // PostgreSQL
 // ========================================
 
 const pool = new Pool({
+
     connectionString:
         process.env.DATABASE_URL,
 
@@ -59,6 +75,20 @@ const pool = new Pool({
 
     max: 2
 });
+
+
+pool.on(
+    "error",
+    error => {
+
+        console.error(
+            "[POSTGRES POOL ERROR]",
+            error
+        );
+
+    }
+);
+
 
 // ========================================
 // 서버 상태
@@ -71,6 +101,7 @@ let lastCrawlerStart = null;
 let lastCrawlerFinish = null;
 
 let lastCrawlerError = null;
+
 
 // ========================================
 // 검색어 별칭
@@ -297,7 +328,9 @@ const SEARCH_ALIASES = {
         "namu",
         "namu.wiki"
     ]
+
 };
+
 
 // ========================================
 // 관련 검색어
@@ -415,7 +448,9 @@ const RELATED_TERMS = {
         "discussion",
         "social"
     ]
+
 };
+
 
 // ========================================
 // 검색 함수
@@ -427,17 +462,22 @@ function normalizeSearchQuery(query) {
         .trim()
         .toLowerCase()
         .replace(/\s+/g, " ");
+
 }
+
 
 function tokenizeQuery(query) {
 
     return normalizeSearchQuery(query)
         .split(/[\s,./!?()[\]{}:;|]+/)
-        .map(word =>
-            word.trim()
+        .map(
+            word =>
+                word.trim()
         )
         .filter(Boolean);
+
 }
+
 
 function getSearchTerms(query) {
 
@@ -447,9 +487,13 @@ function getSearchTerms(query) {
     const terms =
         new Set();
 
+
     if (normalized) {
+
         terms.add(normalized);
+
     }
+
 
     for (
         const token of
@@ -457,10 +501,13 @@ function getSearchTerms(query) {
     ) {
 
         terms.add(token);
+
     }
+
 
     const aliases =
         SEARCH_ALIASES[normalized];
+
 
     if (aliases) {
 
@@ -471,11 +518,15 @@ function getSearchTerms(query) {
             terms.add(
                 alias.toLowerCase()
             );
+
         }
+
     }
+
 
     const related =
         RELATED_TERMS[normalized];
+
 
     if (related) {
 
@@ -486,13 +537,18 @@ function getSearchTerms(query) {
             terms.add(
                 term.toLowerCase()
             );
+
         }
+
     }
+
 
     return [
         ...terms
     ];
+
 }
+
 
 function getDomainFromUrl(url) {
 
@@ -509,11 +565,14 @@ function getDomainFromUrl(url) {
     } catch {
 
         return "";
+
     }
+
 }
 
+
 // ========================================
-// 검색 API
+// OSCADIA 검색 API
 // ========================================
 
 app.get(
@@ -525,29 +584,39 @@ app.get(
                 req.query.q || ""
             ).trim();
 
+
         if (!originalQuery) {
 
             return res.json({
+
                 ok: true,
+
                 count: 0,
+
                 results: []
+
             });
+
         }
+
 
         const query =
             normalizeSearchQuery(
                 originalQuery
             );
 
+
         const terms =
             getSearchTerms(query)
                 .slice(0, 30);
+
 
         try {
 
             const conditions = [];
 
             const values = [];
+
 
             for (
                 let i = 0;
@@ -558,9 +627,11 @@ app.get(
                 const p =
                     `$${i + 1}`;
 
+
                 values.push(
                     terms[i]
                 );
+
 
                 conditions.push(`
                     (
@@ -583,17 +654,27 @@ app.get(
                             LIKE '%' || LOWER(${p}) || '%'
                     )
                 `);
+
             }
+
 
             if (!conditions.length) {
 
                 return res.json({
+
                     ok: true,
-                    query: originalQuery,
+
+                    query:
+                        originalQuery,
+
                     count: 0,
+
                     results: []
+
                 });
+
             }
+
 
             const scoreParts =
                 terms.map(
@@ -601,6 +682,7 @@ app.get(
 
                         const p =
                             `$${i + 1}`;
+
 
                         return `
                             (
@@ -657,8 +739,10 @@ app.get(
                                 END
                             )
                         `;
+
                     }
                 );
+
 
             const sql = `
                 SELECT
@@ -669,20 +753,30 @@ app.get(
                     domain,
                     keywords,
                     last_crawled,
+
                     (${scoreParts.join(" + ")})
+
                         AS relevance_score
+
                 FROM pages
-                WHERE ${conditions.join(" OR ")}
-                ORDER BY relevance_score DESC,
-                         last_crawled DESC
+
+                WHERE
+                    ${conditions.join(" OR ")}
+
+                ORDER BY
+                    relevance_score DESC,
+                    last_crawled DESC
+
                 LIMIT 50
             `;
+
 
             const result =
                 await pool.query(
                     sql,
                     values
                 );
+
 
             const results =
                 result.rows.map(
@@ -693,64 +787,79 @@ app.get(
                                 row.title || ""
                             ).toLowerCase();
 
+
                         const description =
                             String(
                                 row.description || ""
                             ).toLowerCase();
+
 
                         const keywords =
                             String(
                                 row.keywords || ""
                             ).toLowerCase();
 
+
                         const content =
                             String(
                                 row.content || ""
                             ).toLowerCase();
+
 
                         const domain =
                             String(
                                 row.domain || ""
                             ).toLowerCase();
 
+
                         const url =
                             String(
                                 row.url || ""
                             ).toLowerCase();
+
 
                         let score =
                             Number(
                                 row.relevance_score || 0
                             );
 
+
                         if (
                             title.includes(query)
                         ) {
 
                             score += 250;
+
                         }
+
 
                         if (
                             keywords.includes(query)
                         ) {
 
                             score += 150;
+
                         }
+
 
                         if (
                             description.includes(query)
                         ) {
 
                             score += 100;
+
                         }
+
 
                         let aliasMatch =
                             false;
+
 
                         const aliases =
                             SEARCH_ALIASES[
                                 query
                             ];
+
 
                         if (aliases) {
 
@@ -767,21 +876,29 @@ app.get(
                                             title.includes(a) ||
                                             keywords.includes(a)
                                         );
+
                                     }
                                 );
 
+
                             if (aliasMatch) {
+
                                 score += 500;
+
                             }
+
                         }
+
 
                         let relatedMatch =
                             false;
+
 
                         const related =
                             RELATED_TERMS[
                                 query
                             ];
+
 
                         if (related) {
 
@@ -798,13 +915,19 @@ app.get(
                                             description.includes(t) ||
                                             content.includes(t)
                                         );
+
                                     }
                                 );
 
+
                             if (relatedMatch) {
+
                                 score += 180;
+
                             }
+
                         }
+
 
                         return {
 
@@ -843,9 +966,12 @@ app.get(
 
                             related_match:
                                 relatedMatch
+
                         };
+
                     }
                 );
+
 
             results.sort(
                 (a, b) => {
@@ -858,7 +984,9 @@ app.get(
                         return a.alias_match
                             ? -1
                             : 1;
+
                     }
+
 
                     if (
                         a.related_match !==
@@ -868,24 +996,27 @@ app.get(
                         return a.related_match
                             ? -1
                             : 1;
+
                     }
+
 
                     return (
                         Number(b.rank) -
                         Number(a.rank)
                     );
+
                 }
             );
 
-            const uniqueResults =
-                [];
+
+            const uniqueResults = [];
 
             const seenUrls =
                 new Set();
 
+
             for (
-                const result of
-                results
+                const result of results
             ) {
 
                 const normalizedUrl =
@@ -898,6 +1029,7 @@ app.get(
                             ""
                         );
 
+
                 if (
                     seenUrls.has(
                         normalizedUrl
@@ -905,15 +1037,19 @@ app.get(
                 ) {
 
                     continue;
+
                 }
+
 
                 seenUrls.add(
                     normalizedUrl
                 );
 
+
                 uniqueResults.push(
                     result
                 );
+
 
                 if (
                     uniqueResults.length >=
@@ -921,8 +1057,11 @@ app.get(
                 ) {
 
                     break;
+
                 }
+
             }
+
 
             return res.json({
 
@@ -939,7 +1078,9 @@ app.get(
 
                 results:
                     uniqueResults
+
             });
+
 
         } catch (error) {
 
@@ -948,27 +1089,33 @@ app.get(
                 error
             );
 
+
             return res.status(500).json({
 
                 ok: false,
 
                 error:
                     "검색 중 오류가 발생했습니다."
+
             });
+
         }
+
     }
 );
 
+
 // ========================================
 // OscaTranslate
-// 무료 MyMemory + Google fallback
 // ========================================
 
 const TRANSLATE_API_URL =
     "https://api.mymemory.translated.net/get";
 
+
 const SUPPORTED_TRANSLATE_LANGUAGES =
     new Set([
+
         "auto",
         "ko",
         "en",
@@ -980,7 +1127,9 @@ const SUPPORTED_TRANSLATE_LANGUAGES =
         "it",
         "pt",
         "ru"
+
     ]);
+
 
 function isSupportedTranslateLanguage(
     language
@@ -990,7 +1139,9 @@ function isSupportedTranslateLanguage(
         String(language || "")
             .toLowerCase()
     );
+
 }
+
 
 // ========================================
 // 언어 자동 감지
@@ -1002,52 +1153,54 @@ function detectLanguage(text) {
         String(text || "")
             .trim();
 
+
     if (!value) {
+
         return "en";
+
     }
 
-    // 한국어
+
     if (
-        /[\uAC00-\uD7A3]/.test(
-            value
-        )
+        /[\uAC00-\uD7A3]/.test(value)
     ) {
 
         return "ko";
+
     }
 
-    // 일본어
+
     if (
-        /[\u3040-\u30FF]/.test(
-            value
-        )
+        /[\u3040-\u30FF]/.test(value)
     ) {
 
         return "ja";
+
     }
 
-    // 중국어
+
     if (
-        /[\u4E00-\u9FFF]/.test(
-            value
-        )
+        /[\u4E00-\u9FFF]/.test(value)
     ) {
 
         return "zh";
+
     }
 
-    // 러시아어
+
     if (
-        /[\u0400-\u04FF]/.test(
-            value
-        )
+        /[\u0400-\u04FF]/.test(value)
     ) {
 
         return "ru";
+
     }
 
+
     return "en";
+
 }
+
 
 // ========================================
 // 긴 문장 분할
@@ -1064,6 +1217,7 @@ function splitTextByBytes(
 
     let currentBytes = 0;
 
+
     for (
         const char of text
     ) {
@@ -1073,6 +1227,7 @@ function splitTextByBytes(
                 char,
                 "utf8"
             );
+
 
         if (
             current &&
@@ -1088,26 +1243,34 @@ function splitTextByBytes(
             current = "";
 
             currentBytes = 0;
+
         }
+
 
         current += char;
 
         currentBytes +=
             charBytes;
+
     }
+
 
     if (current) {
 
         chunks.push(
             current
         );
+
     }
 
+
     return chunks;
+
 }
 
+
 // ========================================
-// MyMemory 번역 1회
+// MyMemory 번역
 // ========================================
 
 async function translateChunk(
@@ -1119,29 +1282,36 @@ async function translateChunk(
     const params =
         new URLSearchParams();
 
+
     params.set(
         "q",
         text
     );
+
 
     params.set(
         "langpair",
         `${source}|${target}`
     );
 
+
     params.set(
         "mt",
         "1"
     );
 
+
     const url =
         `${TRANSLATE_API_URL}?${params.toString()}`;
+
 
     const response =
         await fetch(
             url,
             {
-                method: "GET",
+
+                method:
+                    "GET",
 
                 headers: {
 
@@ -1150,25 +1320,30 @@ async function translateChunk(
 
                     "User-Agent":
                         "OSCADIA-OscaTranslate/1.0"
+
                 },
 
                 signal:
                     AbortSignal.timeout(
                         30000
                     )
+
             }
         );
+
 
     if (!response.ok) {
 
         throw new Error(
             `번역 제공 서버 HTTP ${response.status}`
         );
+
     }
 
-    // UTF-8을 명시적으로 디코딩
+
     const rawBuffer =
         await response.arrayBuffer();
+
 
     const rawText =
         new TextDecoder(
@@ -1177,7 +1352,9 @@ async function translateChunk(
             rawBuffer
         );
 
+
     let data;
+
 
     try {
 
@@ -1191,7 +1368,9 @@ async function translateChunk(
         throw new Error(
             "번역 서버가 올바른 JSON을 반환하지 않았습니다."
         );
+
     }
+
 
     if (
         !data ||
@@ -1205,7 +1384,9 @@ async function translateChunk(
         throw new Error(
             "번역 결과가 올바르지 않습니다."
         );
+
     }
+
 
     const translated =
         String(
@@ -1234,10 +1415,10 @@ async function translateChunk(
             )
             .trim();
 
-    // ????? 같은 잘못된 결과를 정상 번역으로 취급하지 않음
+
     if (
         !translated ||
-        /^\?+$/.test(
+        /^\\?+$/.test(
             translated
         )
     ) {
@@ -1245,10 +1426,14 @@ async function translateChunk(
         throw new Error(
             "MyMemory가 정상적인 번역 결과를 반환하지 않았습니다."
         );
+
     }
 
+
     return translated;
+
 }
+
 
 // ========================================
 // 번역 서버 상태
@@ -1273,9 +1458,12 @@ app.get(
 
             free:
                 true
+
         });
+
     }
 );
+
 
 // ========================================
 // 지원 언어
@@ -1345,10 +1533,14 @@ app.get(
                     code: "ru",
                     name: "Русский"
                 }
+
             ]
+
         });
+
     }
 );
+
 
 // ========================================
 // 실제 번역
@@ -1366,11 +1558,12 @@ app.post(
                 target
             } = req.body || {};
 
+
             q =
                 String(
                     q || ""
-                )
-                    .trim();
+                ).trim();
+
 
             source =
                 String(
@@ -1379,6 +1572,7 @@ app.post(
                     .trim()
                     .toLowerCase();
 
+
             target =
                 String(
                     target || ""
@@ -1386,7 +1580,7 @@ app.post(
                     .trim()
                     .toLowerCase();
 
-            // 입력 검사
+
             if (!q) {
 
                 return res.status(400).json({
@@ -1395,12 +1589,14 @@ app.post(
 
                     error:
                         "번역할 텍스트를 입력하세요."
+
                 });
+
             }
 
+
             if (
-                q.length >
-                5000
+                q.length > 5000
             ) {
 
                 return res.status(400).json({
@@ -1409,8 +1605,11 @@ app.post(
 
                     error:
                         "번역할 텍스트는 5000자 이하로 입력하세요."
+
                 });
+
             }
+
 
             if (!target) {
 
@@ -1420,8 +1619,11 @@ app.post(
 
                     error:
                         "번역 대상 언어가 필요합니다."
+
                 });
+
             }
+
 
             if (
                 !isSupportedTranslateLanguage(
@@ -1435,8 +1637,11 @@ app.post(
 
                     error:
                         "지원하지 않는 원본 언어입니다."
+
                 });
+
             }
+
 
             if (
                 !isSupportedTranslateLanguage(
@@ -1450,8 +1655,11 @@ app.post(
 
                     error:
                         "지원하지 않는 번역 언어입니다."
+
                 });
+
             }
+
 
             if (
                 target === "auto"
@@ -1463,24 +1671,24 @@ app.post(
 
                     error:
                         "번역 대상 언어에는 자동 감지를 사용할 수 없습니다."
+
                 });
+
             }
 
-            // 자동 언어 감지
+
             if (
                 source === "auto"
             ) {
 
                 source =
-                    detectLanguage(
-                        q
-                    );
+                    detectLanguage(q);
+
             }
 
-            // 같은 언어
+
             if (
-                source ===
-                target
+                source === target
             ) {
 
                 return res.json({
@@ -1496,34 +1704,33 @@ app.post(
 
                     provider:
                         "same-language"
+
                 });
+
             }
+
 
             console.log(
                 `[TRANSLATE] ${source} -> ${target}, ${q.length} chars`
             );
 
-            // 긴 문장 분할
+
             const chunks =
                 splitTextByBytes(
                     q,
                     450
                 );
 
-            const translatedChunks =
-                [];
 
-            // 순서대로 번역
+            const translatedChunks = [];
+
+
             for (
-                const chunk of
-                chunks
+                const chunk of chunks
             ) {
 
                 let translated;
 
-                // ----------------------------
-                // 1차: MyMemory
-                // ----------------------------
 
                 try {
 
@@ -1543,10 +1750,6 @@ app.post(
                         myMemoryError.message
                     );
 
-                    // ----------------------------
-                    // 2차: Google 공개 엔드포인트
-                    // API 키 없음
-                    // ----------------------------
 
                     const googleUrl =
                         "https://translate.googleapis.com/translate_a/single?" +
@@ -1569,6 +1772,7 @@ app.post(
 
                         }).toString();
 
+
                     const googleResponse =
                         await fetch(
                             googleUrl,
@@ -1578,14 +1782,17 @@ app.post(
 
                                     "User-Agent":
                                         "OSCADIA-OscaTranslate/1.0"
+
                                 },
 
                                 signal:
                                     AbortSignal.timeout(
                                         30000
                                     )
+
                             }
                         );
+
 
                     if (
                         !googleResponse.ok
@@ -1594,10 +1801,13 @@ app.post(
                         throw new Error(
                             `번역 제공 서버 HTTP ${googleResponse.status}`
                         );
+
                     }
+
 
                     const googleData =
                         await googleResponse.json();
+
 
                     translated =
                         Array.isArray(
@@ -1612,29 +1822,30 @@ app.post(
                                 .join("")
                             : "";
 
-                    if (
-                        !translated
-                    ) {
+
+                    if (!translated) {
 
                         throw new Error(
                             "Google 번역 결과가 비어 있습니다."
                         );
+
                     }
+
                 }
+
 
                 translatedChunks.push(
                     translated
                 );
+
             }
 
-            const translatedText =
-                translatedChunks.join(
-                    ""
-                );
 
-            if (
-                !translatedText
-            ) {
+            const translatedText =
+                translatedChunks.join("");
+
+
+            if (!translatedText) {
 
                 return res.status(502).json({
 
@@ -1642,8 +1853,11 @@ app.post(
 
                     error:
                         "번역 결과가 비어 있습니다."
+
                 });
+
             }
+
 
             return res.json({
 
@@ -1657,7 +1871,9 @@ app.post(
 
                 provider:
                     "MyMemory / Google fallback"
+
             });
+
 
         } catch (error) {
 
@@ -1665,6 +1881,7 @@ app.post(
                 "[TRANSLATE ERROR]",
                 error
             );
+
 
             if (
                 error?.name ===
@@ -1677,8 +1894,11 @@ app.post(
 
                     error:
                         "번역 서버 응답 시간이 초과되었습니다."
+
                 });
+
             }
+
 
             return res.status(502).json({
 
@@ -1687,10 +1907,14 @@ app.post(
                 error:
                     error?.message ||
                     "번역 서버에 연결할 수 없습니다."
+
             });
+
         }
+
     }
 );
+
 
 // ========================================
 // Health Check
@@ -1706,7 +1930,8 @@ app.get(
                 "SELECT 1"
             );
 
-            res.json({
+
+            return res.json({
 
                 ok: true,
 
@@ -1719,9 +1944,14 @@ app.get(
                 translate:
                     "enabled",
 
+                oscaai:
+                    "enabled",
+
                 service:
                     "OSCADIA"
+
             });
+
 
         } catch (error) {
 
@@ -1730,7 +1960,8 @@ app.get(
                 error
             );
 
-            res.status(500).json({
+
+            return res.status(500).json({
 
                 ok: false,
 
@@ -1739,10 +1970,14 @@ app.get(
 
                 error:
                     error.message
+
             });
+
         }
+
     }
 );
+
 
 // ========================================
 // Crawler
@@ -1757,7 +1992,9 @@ async function runCrawler() {
         );
 
         return;
+
     }
+
 
     crawlerRunning = true;
 
@@ -1766,44 +2003,59 @@ async function runCrawler() {
 
     lastCrawlerError = null;
 
+
     console.log(
         "[CRAWLER] Automatic crawl started."
     );
+
 
     try {
 
         await crawl();
 
+
         lastCrawlerFinish =
             new Date().toISOString();
+
 
         console.log(
             "[CRAWLER] Automatic crawl finished."
         );
+
 
     } catch (error) {
 
         lastCrawlerError =
             error.message;
 
+
         console.error(
             "[CRAWLER ERROR]",
             error
         );
 
+
     } finally {
 
         crawlerRunning = false;
+
     }
+
 }
+
+
+// ========================================
+// Crawler 상태
+// ========================================
 
 app.get(
     "/api/crawler",
     (req, res) => {
 
-        res.json({
+        return res.json({
 
-            enabled: true,
+            enabled:
+                true,
 
             running:
                 crawlerRunning,
@@ -1816,9 +2068,12 @@ app.get(
 
             lastError:
                 lastCrawlerError
+
         });
+
     }
 );
+
 
 // ========================================
 // 사용자 URL 크롤링 큐
@@ -1832,8 +2087,8 @@ app.post(
 
             let {
                 url
-            } =
-                req.body;
+            } = req.body || {};
+
 
             if (
                 !url ||
@@ -1847,11 +2102,15 @@ app.post(
 
                     error:
                         "URL을 입력하세요."
+
                 });
+
             }
+
 
             url =
                 url.trim();
+
 
             if (
                 !/^https?:\/\//i.test(
@@ -1862,16 +2121,17 @@ app.post(
                 url =
                     "https://" +
                     url;
+
             }
 
+
             let parsed;
+
 
             try {
 
                 parsed =
-                    new URL(
-                        url
-                    );
+                    new URL(url);
 
             } catch {
 
@@ -1881,8 +2141,11 @@ app.post(
 
                     error:
                         "올바른 URL이 아닙니다."
+
                 });
+
             }
+
 
             if (
                 parsed.protocol !==
@@ -1897,8 +2160,11 @@ app.post(
 
                     error:
                         "HTTP 또는 HTTPS 주소만 사용할 수 있습니다."
+
                 });
+
             }
+
 
             if (
                 parsed.username ||
@@ -1911,10 +2177,14 @@ app.post(
 
                     error:
                         "사용자명 또는 비밀번호가 포함된 URL은 사용할 수 없습니다."
+
                 });
+
             }
 
+
             parsed.hash = "";
+
 
             if (
                 (
@@ -1932,10 +2202,13 @@ app.post(
             ) {
 
                 parsed.port = "";
+
             }
+
 
             url =
                 parsed.href;
+
 
             const existing =
                 await pool.query(
@@ -1947,6 +2220,7 @@ app.post(
                     `,
                     [url]
                 );
+
 
             if (
                 existing.rows.length >
@@ -1964,34 +2238,43 @@ app.post(
                         true,
 
                     url
+
                 });
+
             }
+
 
             const result =
                 await pool.query(
                     `
-                    INSERT INTO crawl_queue (
+                    INSERT INTO crawl_queue
+                    (
                         url,
                         status
                     )
-                    VALUES (
+                    VALUES
+                    (
                         $1,
                         'pending'
                     )
+
                     ON CONFLICT (url)
                     DO UPDATE SET
                         status = 'pending',
                         last_error = NULL,
                         finished_at = NULL
+
                     RETURNING *
                     `,
                     [url]
                 );
 
+
             console.log(
                 "[CRAWL QUEUE] Added:",
                 url
             );
+
 
             setTimeout(
                 () => {
@@ -2004,12 +2287,14 @@ app.post(
                                     "[QUEUE CRAWLER ERROR]",
                                     error
                                 );
+
                             }
                         );
 
                 },
                 100
             );
+
 
             return res.json({
 
@@ -2022,7 +2307,9 @@ app.post(
 
                 queue:
                     result.rows[0]
+
             });
+
 
         } catch (error) {
 
@@ -2031,16 +2318,25 @@ app.post(
                 error
             );
 
+
             return res.status(500).json({
 
                 ok: false,
 
                 error:
                     error.message
+
             });
+
         }
+
     }
 );
+
+
+// ========================================
+// Crawler 큐 목록
+// ========================================
 
 app.get(
     "/api/crawl/queue",
@@ -2066,7 +2362,8 @@ app.get(
                     `
                 );
 
-            res.json({
+
+            return res.json({
 
                 ok: true,
 
@@ -2075,7 +2372,9 @@ app.get(
 
                 queue:
                     result.rows
+
             });
+
 
         } catch (error) {
 
@@ -2084,22 +2383,25 @@ app.get(
                 error
             );
 
-            res.status(500).json({
+
+            return res.status(500).json({
 
                 ok: false,
 
                 error:
                     error.message
+
             });
+
         }
+
     }
 );
+
 
 // ========================================
 // OSmail API
 // ========================================
-
-// 현재 로그인한 사용자 정보
 
 app.get(
     "/api/osmail/me",
@@ -2108,16 +2410,17 @@ app.get(
         try {
 
             const result =
-                await getMyOSmail(
-                    req
-                );
+                await getMyOSmail(req);
+
 
             return res.json({
 
                 ok: true,
 
                 ...result
+
             });
+
 
         } catch (error) {
 
@@ -2126,6 +2429,7 @@ app.get(
                 error
             );
 
+
             return res.status(401).json({
 
                 ok: false,
@@ -2133,10 +2437,14 @@ app.get(
                 error:
                     error.message ||
                     "로그인이 필요합니다."
+
             });
+
         }
+
     }
 );
+
 
 // ========================================
 // OSmail ID 생성
@@ -2151,8 +2459,8 @@ app.post(
             const {
                 osmailId,
                 displayName
-            } =
-                req.body;
+            } = req.body || {};
+
 
             if (!osmailId) {
 
@@ -2162,8 +2470,11 @@ app.post(
 
                     error:
                         "OSmail ID를 입력하세요."
+
                 });
+
             }
+
 
             const result =
                 await createOSmailProfile(
@@ -2172,12 +2483,15 @@ app.post(
                     displayName
                 );
 
+
             return res.json({
 
                 ok: true,
 
                 ...result
+
             });
+
 
         } catch (error) {
 
@@ -2186,16 +2500,21 @@ app.post(
                 error
             );
 
+
             return res.status(400).json({
 
                 ok: false,
 
                 error:
                     error.message
+
             });
+
         }
+
     }
 );
+
 
 // ========================================
 // 메일 목록
@@ -2208,16 +2527,17 @@ app.get(
         try {
 
             const emails =
-                await getEmails(
-                    req
-                );
+                await getEmails(req);
+
 
             return res.json({
 
                 ok: true,
 
                 emails
+
             });
+
 
         } catch (error) {
 
@@ -2226,16 +2546,21 @@ app.get(
                 error
             );
 
+
             return res.status(401).json({
 
                 ok: false,
 
                 error:
                     error.message
+
             });
+
         }
+
     }
 );
+
 
 // ========================================
 // OSmail 내부 메일
@@ -2251,8 +2576,8 @@ app.post(
                 to,
                 subject,
                 body
-            } =
-                req.body;
+            } = req.body || {};
+
 
             if (!to) {
 
@@ -2262,13 +2587,17 @@ app.post(
 
                     error:
                         "받는 사람을 입력하세요."
+
                 });
+
             }
+
 
             const email =
                 await sendInternalMail(
                     req,
                     {
+
                         to,
 
                         subject:
@@ -2276,15 +2605,19 @@ app.post(
 
                         body:
                             body || ""
+
                     }
                 );
+
 
             return res.json({
 
                 ok: true,
 
                 email
+
             });
+
 
         } catch (error) {
 
@@ -2293,16 +2626,21 @@ app.post(
                 error
             );
 
+
             return res.status(400).json({
 
                 ok: false,
 
                 error:
                     error.message
+
             });
+
         }
+
     }
 );
+
 
 // ========================================
 // 외부 이메일
@@ -2318,8 +2656,8 @@ app.post(
                 to,
                 subject,
                 body
-            } =
-                req.body;
+            } = req.body || {};
+
 
             if (!to) {
 
@@ -2329,13 +2667,17 @@ app.post(
 
                     error:
                         "받는 사람을 입력하세요."
+
                 });
+
             }
+
 
             const result =
                 await sendExternalMail(
                     req,
                     {
+
                         to,
 
                         subject:
@@ -2343,15 +2685,19 @@ app.post(
 
                         body:
                             body || ""
+
                     }
                 );
+
 
             return res.json({
 
                 ok: true,
 
                 ...result
+
             });
+
 
         } catch (error) {
 
@@ -2360,16 +2706,21 @@ app.post(
                 error
             );
 
+
             return res.status(400).json({
 
                 ok: false,
 
                 error:
                     error.message
+
             });
+
         }
+
     }
 );
+
 
 // ========================================
 // 읽음 처리
@@ -2381,9 +2732,7 @@ app.post(
 
         try {
 
-            if (
-                !req.body.id
-            ) {
+            if (!req.body?.id) {
 
                 return res.status(400).json({
 
@@ -2391,8 +2740,11 @@ app.post(
 
                     error:
                         "메일 ID가 필요합니다."
+
                 });
+
             }
+
 
             const email =
                 await markAsRead(
@@ -2400,12 +2752,15 @@ app.post(
                     req.body.id
                 );
 
+
             return res.json({
 
                 ok: true,
 
                 email
+
             });
+
 
         } catch (error) {
 
@@ -2414,16 +2769,21 @@ app.post(
                 error
             );
 
+
             return res.status(400).json({
 
                 ok: false,
 
                 error:
                     error.message
+
             });
+
         }
+
     }
 );
+
 
 // ========================================
 // 삭제
@@ -2435,9 +2795,7 @@ app.post(
 
         try {
 
-            if (
-                !req.body.id
-            ) {
+            if (!req.body?.id) {
 
                 return res.status(400).json({
 
@@ -2445,8 +2803,11 @@ app.post(
 
                     error:
                         "메일 ID가 필요합니다."
+
                 });
+
             }
+
 
             const email =
                 await deleteEmail(
@@ -2454,12 +2815,15 @@ app.post(
                     req.body.id
                 );
 
+
             return res.json({
 
                 ok: true,
 
                 email
+
             });
+
 
         } catch (error) {
 
@@ -2468,16 +2832,21 @@ app.post(
                 error
             );
 
+
             return res.status(400).json({
 
                 ok: false,
 
                 error:
                     error.message
+
             });
+
         }
+
     }
 );
+
 
 // ========================================
 // 복구
@@ -2489,9 +2858,7 @@ app.post(
 
         try {
 
-            if (
-                !req.body.id
-            ) {
+            if (!req.body?.id) {
 
                 return res.status(400).json({
 
@@ -2499,8 +2866,11 @@ app.post(
 
                     error:
                         "메일 ID가 필요합니다."
+
                 });
+
             }
+
 
             const email =
                 await restoreEmail(
@@ -2508,12 +2878,15 @@ app.post(
                     req.body.id
                 );
 
+
             return res.json({
 
                 ok: true,
 
                 email
+
             });
+
 
         } catch (error) {
 
@@ -2522,16 +2895,21 @@ app.post(
                 error
             );
 
+
             return res.status(400).json({
 
                 ok: false,
 
                 error:
                     error.message
+
             });
+
         }
+
     }
 );
+
 
 // ========================================
 // SMTP 상태 확인
@@ -2546,13 +2924,16 @@ app.get(
             const ok =
                 await verifySMTP();
 
+
             return res.json({
 
                 ok,
 
                 service:
                     "OSmail SMTP"
+
             });
+
 
         } catch (error) {
 
@@ -2560,6 +2941,7 @@ app.get(
                 "[OSMAIL SMTP TEST ERROR]",
                 error
             );
+
 
             return res.status(500).json({
 
@@ -2570,10 +2952,350 @@ app.get(
 
                 error:
                     error.message
+
             });
+
         }
+
     }
 );
+
+
+// ========================================
+// OscaAI Health
+// ========================================
+
+app.get(
+    "/api/oscaai/health",
+    (req, res) => {
+
+        return res.json(
+            getOscaAIHealth()
+        );
+
+    }
+);
+
+
+// ========================================
+// OscaAI 비밀번호 설정
+// ========================================
+
+app.post(
+    "/api/oscaai/password/set",
+    async (req, res) => {
+
+        try {
+
+            const result =
+                await setPassword(
+                    req,
+                    req.body?.password
+                );
+
+
+            return res.json(
+                result
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "[OSCAAI PASSWORD ERROR]",
+                error
+            );
+
+
+            return res.status(400).json({
+
+                ok: false,
+
+                error:
+                    error.message
+
+            });
+
+        }
+
+    }
+);
+
+
+// ========================================
+// OscaAI 로그인 코드 요청
+// ========================================
+
+app.post(
+    "/api/oscaai/auth/request-code",
+    async (req, res) => {
+
+        try {
+
+            const result =
+                await requestLoginCode(
+                    req.body?.osmailId,
+                    req.body?.password
+                );
+
+
+            return res.json(
+                result
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "[OSCAAI REQUEST CODE ERROR]",
+                error
+            );
+
+
+            return res.status(400).json({
+
+                ok: false,
+
+                error:
+                    error.message
+
+            });
+
+        }
+
+    }
+);
+
+
+// ========================================
+// OscaAI 인증 코드 확인
+// ========================================
+
+app.post(
+    "/api/oscaai/auth/verify-code",
+    async (req, res) => {
+
+        try {
+
+            const result =
+                await verifyLoginCode(
+                    req.body?.requestId,
+                    req.body?.code
+                );
+
+
+            return res.json(
+                result
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "[OSCAAI VERIFY ERROR]",
+                error
+            );
+
+
+            return res.status(400).json({
+
+                ok: false,
+
+                error:
+                    error.message
+
+            });
+
+        }
+
+    }
+);
+
+
+// ========================================
+// OscaAI 로그아웃
+// ========================================
+
+app.post(
+    "/api/oscaai/auth/logout",
+    async (req, res) => {
+
+        try {
+
+            const result =
+                await oscaaiLogout(
+                    req
+                );
+
+
+            return res.json(
+                result
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "[OSCAAI LOGOUT ERROR]",
+                error
+            );
+
+
+            return res.status(400).json({
+
+                ok: false,
+
+                error:
+                    error.message
+
+            });
+
+        }
+
+    }
+);
+
+
+// ========================================
+// OscaAI 채팅
+// ========================================
+
+app.post(
+    "/api/oscaai/chat",
+    async (req, res) => {
+
+        try {
+
+            const result =
+                await oscaaiChat(
+                    req,
+                    {
+
+                        message:
+                            req.body?.message,
+
+                        conversationId:
+                            req.body?.conversationId,
+
+                        guestHistory:
+                            req.body?.guestHistory
+
+                    }
+                );
+
+
+            return res.json(
+                result
+            );
+
+
+        } catch (error) {
+
+            console.error(
+                "[OSCAAI CHAT ERROR]",
+                error
+            );
+
+
+            return res.status(500).json({
+
+                ok: false,
+
+                error:
+                    error.message
+
+            });
+
+        }
+
+    }
+);
+
+
+// ========================================
+// OscaAI 대화 목록
+// ========================================
+
+app.get(
+    "/api/oscaai/history",
+    async (req, res) => {
+
+        try {
+
+            const conversations =
+                await getOscaAIHistory(
+                    req
+                );
+
+
+            return res.json({
+
+                ok: true,
+
+                conversations
+
+            });
+
+
+        } catch (error) {
+
+            return res.status(401).json({
+
+                ok: false,
+
+                error:
+                    error.message
+
+            });
+
+        }
+
+    }
+);
+
+
+// ========================================
+// OscaAI 특정 대화
+// ========================================
+
+app.get(
+    "/api/oscaai/history/:id",
+    async (req, res) => {
+
+        try {
+
+            const result =
+                await getOscaAIConversation(
+                    req,
+                    req.params.id
+                );
+
+
+            return res.json({
+
+                ok: true,
+
+                ...result
+
+            });
+
+
+        } catch (error) {
+
+            return res.status(401).json({
+
+                ok: false,
+
+                error:
+                    error.message
+
+            });
+
+        }
+
+    }
+);
+
 
 // ========================================
 // public 파일
@@ -2588,6 +3310,7 @@ app.use(
     )
 );
 
+
 // ========================================
 // 기본 페이지
 // ========================================
@@ -2596,14 +3319,16 @@ app.get(
     "/",
     (req, res) => {
 
-        res.sendFile(
+        return res.sendFile(
             path.join(
                 __dirname,
                 "../public/oscadia.html"
             )
         );
+
     }
 );
+
 
 // ========================================
 // 존재하지 않는 API 처리
@@ -2613,7 +3338,7 @@ app.use(
     "/api",
     (req, res) => {
 
-        res.status(404).json({
+        return res.status(404).json({
 
             ok: false,
 
@@ -2622,20 +3347,45 @@ app.use(
 
             path:
                 req.path
+
         });
+
     }
 );
 
+
 // ========================================
 // 서버 시작
-// app.listen은 반드시 마지막
 // ========================================
 
 async function startServer() {
 
     try {
 
+        await pool.query(
+            "SELECT 1"
+        );
+
+
+        console.log(
+            "[DATABASE] PostgreSQL connected."
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "[DATABASE STARTUP ERROR]",
+            error.message
+        );
+
+    }
+
+
+    try {
+
         await verifySMTP();
+
 
     } catch (error) {
 
@@ -2643,7 +3393,9 @@ async function startServer() {
             "[SMTP STARTUP ERROR]",
             error
         );
+
     }
+
 
     app.listen(
         PORT,
@@ -2654,11 +3406,15 @@ async function startServer() {
             );
 
             console.log(
-                `OSmail API: /api/osmail/me`
+                "OSmail API: /api/osmail/me"
             );
 
             console.log(
-                `OscaTranslate API: /api/translate`
+                "OscaAI API: /api/oscaai/chat"
+            );
+
+            console.log(
+                "OscaTranslate API: /api/translate"
             );
 
             console.log(
@@ -2668,6 +3424,7 @@ async function startServer() {
             console.log(
                 "Translation API key: not required"
             );
+
 
             // 서버 시작 5초 후 크롤링
 
@@ -2682,12 +3439,14 @@ async function startServer() {
                                     "[STARTUP CRAWLER ERROR]",
                                     error
                                 );
+
                             }
                         );
 
                 },
                 5000
             );
+
 
             // 30분마다 자동 크롤링
 
@@ -2702,14 +3461,18 @@ async function startServer() {
                                     "[INTERVAL CRAWLER ERROR]",
                                     error
                                 );
+
                             }
                         );
 
                 },
                 30 * 60 * 1000
             );
+
         }
     );
+
 }
+
 
 startServer();
