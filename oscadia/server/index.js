@@ -1402,36 +1402,29 @@ async function translateChunk(
                 "'"
             )
             .replace(
-                /&amp;/g,
-                "&"
-            )
-            .replace(
-                /&lt;/g,
-                "<"
-            )
-            .replace(
-                /&gt;/g,
-                ">"
-            )
-            .trim();
+    /&amp;/g,
+    "&"
+)
+.replace(
+    /&lt;/g,
+    "<"
+)
+.replace(
+    /&gt;/g,
+    ">"
+)
+.trim();
 
+if (
+    !translated ||
+    /^\\+$/.test(translated)
+) {
+    throw new Error(
+        "MyMemory가 정상적인 번역 결과를 반환하지 않았습니다."
+    );
+}
 
-    if (
-        !translated ||
-        /^\\?+$/.test(
-            translated
-        )
-    ) {
-
-        throw new Error(
-            "MyMemory가 정상적인 번역 결과를 반환하지 않았습니다."
-        );
-
-    }
-
-
-    return translated;
-
+return translated;
 }
 
 
