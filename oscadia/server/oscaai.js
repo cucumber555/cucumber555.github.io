@@ -3,12 +3,13 @@ import bcrypt from "bcryptjs";
 import OpenAI from "openai";
 import pg from "pg";
 
+import { getMyOSmail } from "./osmail.js";
+
 const { Pool } = pg;
 
 
 /* =========================================
    환경변수
-   기존 OSCADIA의 DATABASE_URL만 사용
 ========================================= */
 
 const DATABASE_URL =
@@ -96,14 +97,6 @@ function makeCode() {
 }
 
 
-function normalizeOSmailId(id) {
-
-    return String(id || "")
-        .trim()
-        .toLowerCase();
-}
-
-
 function normalizeText(value) {
 
     return String(value || "")
@@ -111,15 +104,11 @@ function normalizeText(value) {
 }
 
 
-/* =========================================
-   OSmail ID 검증
-========================================= */
+function normalizeOSmailId(id) {
 
-function validateOSmailId(osmailId) {
-
-    return /^[a-z0-9_]{3,20}$/i.test(
-        osmailId
-    );
+    return String(id || "")
+        .trim()
+        .toLowerCase();
 }
 
 
@@ -138,7 +127,6 @@ async function findOSmailProfile(
             osmailId
         );
 
-
     const result =
         await pool.query(
             `
@@ -146,15 +134,13 @@ async function findOSmailProfile(
                 id,
                 osmail_id
             FROM osmail_profiles
-            WHERE LOWER(osmail_id)
-                = LOWER($1)
+            WHERE LOWER(osmail_id) = LOWER($1)
             LIMIT 1
             `,
             [
                 normalized
             ]
         );
-
 
     return (
         result.rows[0] ||
@@ -184,11 +170,74 @@ async function findProfileByUserId(
             ]
         );
 
-
     return (
         result.rows[0] ||
         null
     );
+}
+
+
+/* =========================================
+   현재 OSmail 로그인 사용자
+========================================= */
+
+/*
+   중요:
+
+   OscaAI는 OSmail의 로그인 세션을 사용한다.
+
+   osmail.js의 getMyOSmail(req)는
+
+       user.id
+       profile.osmail_id
+
+   를 이미 정확하게 반환한다.
+
+   따라서 프론트에서 osmailId를 받아
+   사용자를 찾지 않는다.
+*/
+
+async function getOSmailUser(
+    req
+) {
+
+    const result =
+        await getMyOSmail(req);
+
+    const user =
+        result?.user ||
+        null;
+
+    const profile =
+        result?.profile ||
+        null;
+
+    if (!user?.id) {
+
+        throw new Error(
+            "OSmail 로그인이 필요합니다."
+        );
+    }
+
+    if (!profile?.osmail_id) {
+
+        throw new Error(
+            "먼저 OSmail ID를 설정하세요."
+        );
+    }
+
+    return {
+
+        userId:
+            user.id,
+
+        osmailId:
+            profile.osmail_id,
+
+        user,
+
+        profile
+    };
 }
 
 
@@ -206,7 +255,6 @@ async function getSessionUser(
         req.headers.authorization ||
         "";
 
-
     if (
         !authorization.startsWith(
             "Bearer "
@@ -216,22 +264,18 @@ async function getSessionUser(
         return null;
     }
 
-
     const token =
         authorization
             .substring(7)
             .trim();
-
 
     if (!token) {
 
         return null;
     }
 
-
     const tokenHash =
         sha256(token);
-
 
     const result =
         await pool.query(
@@ -249,22 +293,18 @@ async function getSessionUser(
             ]
         );
 
-
     const row =
         result.rows[0];
-
 
     if (!row) {
 
         return null;
     }
 
-
     const expires =
         new Date(
             row.expires_at
         ).getTime();
-
 
     if (
         !Number.isFinite(expires) ||
@@ -281,10 +321,8 @@ async function getSessionUser(
             ]
         );
 
-
         return null;
     }
-
 
     return {
 
@@ -293,14 +331,9 @@ async function getSessionUser(
 
         userId:
             row.user_id
-
     };
 }
 
-
-/* =========================================
-   현재 세션 필수
-========================================= */
 
 async function requireSession(
     req
@@ -311,14 +344,12 @@ async function requireSession(
             req
         );
 
-
     if (!auth) {
 
         throw new Error(
             "OscaAI 로그인이 필요합니다."
         );
     }
-
 
     return auth;
 }
@@ -335,38 +366,10 @@ export async function setPassword(
 
     requireDatabase();
 
-
-    /*
-       현재 구조에서는 OSmail 페이지가
-       OSmail ID를 함께 전달한다.
-
-       단, 아무 OSmail ID나 지정할 수 없도록
-       먼저 해당 ID가 실제 존재하는지 확인한다.
-    */
-
-    const osmailId =
-        normalizeOSmailId(
-            req.body?.osmailId
-        );
-
-
     password =
         normalizeText(
             password
         );
-
-
-    if (
-        !validateOSmailId(
-            osmailId
-        )
-    ) {
-
-        throw new Error(
-            "올바른 OSmail ID가 아닙니다."
-        );
-    }
-
 
     if (
         password.length < 8 ||
@@ -378,27 +381,31 @@ export async function setPassword(
         );
     }
 
+    /*
+       여기서 osmailId를 req.body에서 받지 않는다.
 
-    const profile =
-        await findOSmailProfile(
-            osmailId
+       OSmail 로그인 토큰
+       ↓
+       Supabase user.id
+       ↓
+       osmail_profiles.id
+
+       로 현재 사용자를 정확하게 찾는다.
+    */
+
+    const {
+        userId,
+        osmailId
+    } =
+        await getOSmailUser(
+            req
         );
-
-
-    if (!profile) {
-
-        throw new Error(
-            "존재하지 않는 OSmail ID입니다."
-        );
-    }
-
 
     const hash =
         await bcrypt.hash(
             password,
             12
         );
-
 
     await pool.query(
         `
@@ -422,11 +429,10 @@ export async function setPassword(
                 NOW()
         `,
         [
-            profile.id,
+            userId,
             hash
         ]
     );
-
 
     return {
 
@@ -434,47 +440,40 @@ export async function setPassword(
             true,
 
         osmailId:
-            profile.osmail_id
+            osmailId
 
     };
 }
 
 
 /* =========================================
-   로그인 인증코드 요청
+   OscaAI 로그인 인증코드 요청
 ========================================= */
 
 export async function requestLoginCode(
     osmailId,
-    password
+    password,
+    req = null
 ) {
 
     requireDatabase();
-
 
     osmailId =
         normalizeOSmailId(
             osmailId
         );
 
-
     password =
         normalizeText(
             password
         );
 
-
-    if (
-        !validateOSmailId(
-            osmailId
-        )
-    ) {
+    if (!osmailId) {
 
         throw new Error(
-            "올바른 OSmail ID가 아닙니다."
+            "OSmail ID를 입력하세요."
         );
     }
-
 
     if (!password) {
 
@@ -483,12 +482,19 @@ export async function requestLoginCode(
         );
     }
 
+    /*
+       로그인 과정에서는 ID를 사용해
+       프로필을 찾을 수 있다.
+
+       다만 password는
+       oscaai_passwords에 저장된
+       해당 사용자 계정의 비밀번호와 비교한다.
+    */
 
     const profile =
         await findOSmailProfile(
             osmailId
         );
-
 
     if (!profile) {
 
@@ -496,11 +502,6 @@ export async function requestLoginCode(
             "OSmail ID 또는 비밀번호가 올바르지 않습니다."
         );
     }
-
-
-    /*
-       OscaAI 전용 비밀번호 확인
-    */
 
     const pw =
         await pool.query(
@@ -516,7 +517,6 @@ export async function requestLoginCode(
             ]
         );
 
-
     if (!pw.rows[0]) {
 
         throw new Error(
@@ -524,13 +524,11 @@ export async function requestLoginCode(
         );
     }
 
-
     const valid =
         await bcrypt.compare(
             password,
             pw.rows[0].password_hash
         );
-
 
     if (!valid) {
 
@@ -539,9 +537,8 @@ export async function requestLoginCode(
         );
     }
 
-
     /*
-       이전에 발급된 미사용 코드 폐기
+       이전 미사용 인증코드 폐기
     */
 
     await pool.query(
@@ -556,18 +553,15 @@ export async function requestLoginCode(
         ]
     );
 
-
     /*
-       새 인증코드 생성
+       새 인증코드
     */
 
     const code =
         makeCode();
 
-
     const requestId =
         crypto.randomUUID();
-
 
     const expiresAt =
         new Date(
@@ -575,18 +569,15 @@ export async function requestLoginCode(
             5 * 60 * 1000
         );
 
-
     const codeHash =
         await bcrypt.hash(
             code,
             10
         );
 
-
     await pool.query(
         `
-        INSERT INTO
-            oscaai_verification_codes
+        INSERT INTO oscaai_verification_codes
         (
             user_id,
             request_id,
@@ -613,18 +604,15 @@ export async function requestLoginCode(
         ]
     );
 
-
     /*
-       OSmail 받은편지함에 인증 메일 생성
+       OSmail 받은편지함에 인증 메일 저장
     */
 
     const address =
         `${profile.osmail_id}@osmail`;
 
-
     const subject =
         "OscaAI 로그인 인증 코드";
-
 
     const body =
 `OscaAI 로그인 인증 코드
@@ -638,7 +626,6 @@ export async function requestLoginCode(
 
 OSCADIA
 OscaAI`;
-
 
     await pool.query(
         `
@@ -679,7 +666,6 @@ OscaAI`;
         ]
     );
 
-
     return {
 
         ok:
@@ -706,18 +692,15 @@ export async function verifyLoginCode(
 
     requireDatabase();
 
-
     requestId =
         normalizeText(
             requestId
         );
 
-
     code =
         normalizeText(
             code
         );
-
 
     if (
         !requestId ||
@@ -728,7 +711,6 @@ export async function verifyLoginCode(
             "인증 코드가 올바르지 않습니다."
         );
     }
-
 
     const result =
         await pool.query(
@@ -745,10 +727,8 @@ export async function verifyLoginCode(
             ]
         );
 
-
     const row =
         result.rows[0];
-
 
     if (!row) {
 
@@ -757,12 +737,10 @@ export async function verifyLoginCode(
         );
     }
 
-
     const expires =
         new Date(
             row.expires_at
         ).getTime();
-
 
     if (
         !Number.isFinite(expires) ||
@@ -771,10 +749,8 @@ export async function verifyLoginCode(
 
         await pool.query(
             `
-            UPDATE
-                oscaai_verification_codes
-            SET
-                used = true
+            UPDATE oscaai_verification_codes
+            SET used = true
             WHERE id = $1
             `,
             [
@@ -782,12 +758,10 @@ export async function verifyLoginCode(
             ]
         );
 
-
         throw new Error(
             "인증 코드가 만료되었습니다."
         );
     }
-
 
     if (
         Number(row.attempts) >= 5
@@ -795,10 +769,8 @@ export async function verifyLoginCode(
 
         await pool.query(
             `
-            UPDATE
-                oscaai_verification_codes
-            SET
-                used = true
+            UPDATE oscaai_verification_codes
+            SET used = true
             WHERE id = $1
             `,
             [
@@ -806,12 +778,10 @@ export async function verifyLoginCode(
             ]
         );
 
-
         throw new Error(
             "인증 시도 횟수를 초과했습니다."
         );
     }
-
 
     const valid =
         await bcrypt.compare(
@@ -819,16 +789,12 @@ export async function verifyLoginCode(
             row.code_hash
         );
 
-
     if (!valid) {
 
         await pool.query(
             `
-            UPDATE
-                oscaai_verification_codes
-            SET
-                attempts =
-                    attempts + 1
+            UPDATE oscaai_verification_codes
+            SET attempts = attempts + 1
             WHERE id = $1
             `,
             [
@@ -836,12 +802,10 @@ export async function verifyLoginCode(
             ]
         );
 
-
         throw new Error(
             "인증 코드가 올바르지 않습니다."
         );
     }
-
 
     /*
        코드 사용 처리
@@ -849,10 +813,8 @@ export async function verifyLoginCode(
 
     await pool.query(
         `
-        UPDATE
-            oscaai_verification_codes
-        SET
-            used = true
+        UPDATE oscaai_verification_codes
+        SET used = true
         WHERE id = $1
         `,
         [
@@ -860,9 +822,8 @@ export async function verifyLoginCode(
         ]
     );
 
-
     /*
-       기존 세션 폐기
+       기존 OscaAI 세션 폐기
     */
 
     await pool.query(
@@ -875,25 +836,21 @@ export async function verifyLoginCode(
         ]
     );
 
-
     /*
-       새 세션 토큰
+       새 OscaAI 세션
     */
 
     const token =
         randomToken();
 
-
     const tokenHash =
         sha256(token);
-
 
     const expiresAt =
         new Date(
             Date.now() +
             30 * 24 * 60 * 60 * 1000
         );
-
 
     await pool.query(
         `
@@ -917,12 +874,10 @@ export async function verifyLoginCode(
         ]
     );
 
-
     const profile =
         await findProfileByUserId(
             row.user_id
         );
-
 
     return {
 
@@ -947,7 +902,7 @@ export async function verifyLoginCode(
 
 
 /* =========================================
-   로그아웃
+   OscaAI 로그아웃
 ========================================= */
 
 export async function logout(
@@ -956,12 +911,10 @@ export async function logout(
 
     requireDatabase();
 
-
     const auth =
         await getSessionUser(
             req
         );
-
 
     if (auth) {
 
@@ -976,12 +929,8 @@ export async function logout(
         );
     }
 
-
     return {
-
-        ok:
-            true
-
+        ok: true
     };
 }
 
@@ -999,40 +948,27 @@ async function searchOSCADIA(
             query
         );
 
-
     if (!query) {
-
         return [];
     }
-
 
     const terms =
         query
             .toLowerCase()
-            .split(
-                /\s+/
-            )
+            .split(/\s+/)
             .map(
                 value =>
                     value.trim()
             )
             .filter(Boolean)
-            .slice(
-                0,
-                8
-            );
-
+            .slice(0, 8);
 
     if (!terms.length) {
-
         return [];
     }
 
-
     const conditions = [];
-
     const values = [];
-
 
     for (
         let i = 0;
@@ -1043,57 +979,34 @@ async function searchOSCADIA(
         const parameter =
             `$${i + 1}`;
 
-
         values.push(
             terms[i]
         );
 
-
         conditions.push(
             `
             (
-                LOWER(
-                    COALESCE(
-                        title,
-                        ''
-                    )
-                )
+                LOWER(COALESCE(title, ''))
                 LIKE '%' || ${parameter} || '%'
 
                 OR
 
-                LOWER(
-                    COALESCE(
-                        description,
-                        ''
-                    )
-                )
+                LOWER(COALESCE(description, ''))
                 LIKE '%' || ${parameter} || '%'
 
                 OR
 
-                LOWER(
-                    COALESCE(
-                        content,
-                        ''
-                    )
-                )
+                LOWER(COALESCE(content, ''))
                 LIKE '%' || ${parameter} || '%'
 
                 OR
 
-                LOWER(
-                    COALESCE(
-                        url,
-                        ''
-                    )
-                )
+                LOWER(COALESCE(url, ''))
                 LIKE '%' || ${parameter} || '%'
             )
             `
         );
     }
-
 
     try {
 
@@ -1108,19 +1021,14 @@ async function searchOSCADIA(
                     content
                 FROM pages
                 WHERE
-                    ${conditions.join(
-                        " OR "
-                    )}
-                ORDER BY
-                    id DESC
+                    ${conditions.join(" OR ")}
+                ORDER BY id DESC
                 LIMIT 8
                 `,
                 values
             );
 
-
         return result.rows || [];
-
 
     } catch (error) {
 
@@ -1128,7 +1036,6 @@ async function searchOSCADIA(
             "[OSCAAI RAG SEARCH ERROR]",
             error.message
         );
-
 
         return [];
     }
@@ -1147,8 +1054,7 @@ async function createConversation(
     const result =
         await pool.query(
             `
-            INSERT INTO
-                oscaai_conversations
+            INSERT INTO oscaai_conversations
             (
                 user_id,
                 title
@@ -1171,13 +1077,12 @@ async function createConversation(
             ]
         );
 
-
     return result.rows[0];
 }
 
 
 /* =========================================
-   대화 메시지 가져오기
+   대화 메시지
 ========================================= */
 
 async function getConversationMessages(
@@ -1195,8 +1100,7 @@ async function getConversationMessages(
             FROM oscaai_messages
             WHERE conversation_id = $1
             AND user_id = $2
-            ORDER BY
-                created_at ASC
+            ORDER BY created_at ASC
             LIMIT 100
             `,
             [
@@ -1204,7 +1108,6 @@ async function getConversationMessages(
                 userId
             ]
         );
-
 
     return result.rows || [];
 }
@@ -1223,8 +1126,7 @@ async function saveMessage(
 
     await pool.query(
         `
-        INSERT INTO
-            oscaai_messages
+        INSERT INTO oscaai_messages
         (
             user_id,
             conversation_id,
@@ -1247,17 +1149,12 @@ async function saveMessage(
         ]
     );
 
-
     await pool.query(
         `
-        UPDATE
-            oscaai_conversations
-        SET
-            updated_at = NOW()
-        WHERE
-            id = $1
-        AND
-            user_id = $2
+        UPDATE oscaai_conversations
+        SET updated_at = NOW()
+        WHERE id = $1
+        AND user_id = $2
         `,
         [
             conversationId,
@@ -1277,12 +1174,10 @@ export async function getHistory(
 
     requireDatabase();
 
-
     const auth =
         await requireSession(
             req
         );
-
 
     const result =
         await pool.query(
@@ -1294,15 +1189,13 @@ export async function getHistory(
                 updated_at
             FROM oscaai_conversations
             WHERE user_id = $1
-            ORDER BY
-                updated_at DESC
+            ORDER BY updated_at DESC
             LIMIT 50
             `,
             [
                 auth.userId
             ]
         );
-
 
     return result.rows || [];
 }
@@ -1319,12 +1212,10 @@ export async function getConversation(
 
     requireDatabase();
 
-
     const auth =
         await requireSession(
             req
         );
-
 
     if (!conversationId) {
 
@@ -1332,7 +1223,6 @@ export async function getConversation(
             "대화 ID가 필요합니다."
         );
     }
-
 
     const conversation =
         await pool.query(
@@ -1353,14 +1243,12 @@ export async function getConversation(
             ]
         );
 
-
     if (!conversation.rows[0]) {
 
         throw new Error(
             "대화를 찾을 수 없습니다."
         );
     }
-
 
     return {
 
@@ -1392,12 +1280,10 @@ export async function chat(
 
     requireDatabase();
 
-
     message =
         normalizeText(
             message
         );
-
 
     if (!message) {
 
@@ -1405,7 +1291,6 @@ export async function chat(
             "메시지를 입력하세요."
         );
     }
-
 
     if (
         message.length > 12000
@@ -1416,7 +1301,6 @@ export async function chat(
         );
     }
 
-
     if (!openai) {
 
         throw new Error(
@@ -1424,16 +1308,13 @@ export async function chat(
         );
     }
 
-
     const auth =
         await getSessionUser(
             req
         );
 
-
     const loggedIn =
         Boolean(auth);
-
 
     let history = [];
 
@@ -1448,18 +1329,12 @@ export async function chat(
 
     if (loggedIn) {
 
-        /*
-           기존 conversationId가 있으면
-           반드시 현재 사용자 소유인지 확인한다.
-        */
-
         if (finalConversationId) {
 
             const ownership =
                 await pool.query(
                     `
-                    SELECT
-                        id
+                    SELECT id
                     FROM oscaai_conversations
                     WHERE id = $1
                     AND user_id = $2
@@ -1471,21 +1346,14 @@ export async function chat(
                     ]
                 );
 
-
             if (
                 !ownership.rows[0]
             ) {
 
                 finalConversationId =
                     null;
-
             }
         }
-
-
-        /*
-           대화가 없으면 새 대화 생성
-        */
 
         if (!finalConversationId) {
 
@@ -1498,18 +1366,15 @@ export async function chat(
                     )
                 );
 
-
             finalConversationId =
                 conversation.id;
         }
-
 
         history =
             await getConversationMessages(
                 auth.userId,
                 finalConversationId
             );
-
     }
 
 
@@ -1531,19 +1396,12 @@ export async function chat(
                         item =>
                             item &&
                             (
-                                item.role ===
-                                    "user" ||
-
-                                item.role ===
-                                    "assistant"
+                                item.role === "user" ||
+                                item.role === "assistant"
                             ) &&
-                            typeof
-                                item.content ===
-                                "string"
+                            typeof item.content === "string"
                     )
-                    .slice(
-                        -20
-                    );
+                    .slice(-20);
         }
     }
 
@@ -1557,9 +1415,7 @@ export async function chat(
             message
         );
 
-
     let sourceText;
-
 
     if (sources.length) {
 
@@ -1602,15 +1458,12 @@ ${String(
             .map(
                 item =>
                     `${
-                        item.role ===
-                        "user"
+                        item.role === "user"
                             ? "사용자"
                             : "OscaAI"
                     }: ${item.content}`
             )
-            .join(
-                "\n"
-            );
+            .join("\n");
 
 
     /* =====================================
@@ -1670,13 +1523,11 @@ ${previousText || "이전 대화 없음"}`;
 
         });
 
-
     const answer =
         String(
             response.output_text ||
             ""
         ).trim();
-
 
     if (!answer) {
 
@@ -1687,7 +1538,7 @@ ${previousText || "이전 대화 없음"}`;
 
 
     /* =====================================
-       로그인 사용자만 DB 저장
+       로그인 사용자 메시지 저장
     ===================================== */
 
     if (loggedIn) {
@@ -1698,7 +1549,6 @@ ${previousText || "이전 대화 없음"}`;
             "user",
             message
         );
-
 
         await saveMessage(
             auth.userId,
@@ -1719,7 +1569,6 @@ ${previousText || "이전 대화 없음"}`;
 
                 let domain = "";
 
-
                 if (source.url) {
 
                     try {
@@ -1736,7 +1585,6 @@ ${previousText || "이전 대화 없음"}`;
                     }
                 }
 
-
                 return {
 
                     title:
@@ -1751,9 +1599,7 @@ ${previousText || "이전 대화 없음"}`;
 
                     score:
                         null
-
                 };
-
             }
         );
 
@@ -1776,7 +1622,6 @@ ${previousText || "이전 대화 없음"}`;
 
         sources:
             responseSources
-
     };
 }
 
@@ -1817,6 +1662,5 @@ export function getHealth() {
             Boolean(
                 DATABASE_URL
             )
-
     };
 }
