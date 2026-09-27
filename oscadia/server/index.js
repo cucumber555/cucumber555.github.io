@@ -36,22 +36,16 @@ import {
 // 기본 설정
 // ========================================
 
-const __filename =
-    fileURLToPath(import.meta.url);
-
-const __dirname =
-    path.dirname(__filename);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const { Pool } = pg;
 
 const app = express();
 
-const PORT =
-    process.env.PORT || 10000;
-
+const PORT = process.env.PORT || 10000;
 
 app.use(cors());
-
 
 app.use(
     express.json({
@@ -65,29 +59,19 @@ app.use(
 // ========================================
 
 const pool = new Pool({
-
-    connectionString:
-        process.env.DATABASE_URL,
-
+    connectionString: process.env.DATABASE_URL,
     ssl: {
         rejectUnauthorized: false
     },
-
     max: 2
 });
 
-
-pool.on(
-    "error",
-    error => {
-
-        console.error(
-            "[POSTGRES POOL ERROR]",
-            error
-        );
-
-    }
-);
+pool.on("error", error => {
+    console.error(
+        "[POSTGRES POOL ERROR]",
+        error
+    );
+});
 
 
 // ========================================
@@ -95,11 +79,8 @@ pool.on(
 // ========================================
 
 let crawlerRunning = false;
-
 let lastCrawlerStart = null;
-
 let lastCrawlerFinish = null;
-
 let lastCrawlerError = null;
 
 
@@ -108,131 +89,42 @@ let lastCrawlerError = null;
 // ========================================
 
 const SEARCH_ALIASES = {
+    "구글": ["google", "google.com"],
+    "google": ["google", "google.com"],
 
-    "구글": [
-        "google",
-        "google.com"
-    ],
+    "네이버": ["naver", "naver.com"],
+    "naver": ["naver", "naver.com"],
 
-    "google": [
-        "google",
-        "google.com"
-    ],
+    "다음": ["daum", "daum.net"],
+    "daum": ["daum", "daum.net"],
 
-    "네이버": [
-        "naver",
-        "naver.com"
-    ],
+    "유튜브": ["youtube", "youtube.com"],
+    "youtube": ["youtube", "youtube.com"],
 
-    "naver": [
-        "naver",
-        "naver.com"
-    ],
+    "깃허브": ["github", "github.com"],
+    "github": ["github", "github.com"],
 
-    "다음": [
-        "daum",
-        "daum.net"
-    ],
+    "위키백과": ["wikipedia", "wikipedia.org"],
+    "위키피디아": ["wikipedia", "wikipedia.org"],
+    "wikipedia": ["wikipedia", "wikipedia.org"],
 
-    "daum": [
-        "daum",
-        "daum.net"
-    ],
+    "모질라": ["mozilla", "mozilla.org"],
+    "mozilla": ["mozilla", "mozilla.org"],
 
-    "유튜브": [
-        "youtube",
-        "youtube.com"
-    ],
+    "나사": ["nasa", "nasa.gov"],
+    "nasa": ["nasa", "nasa.gov"],
 
-    "youtube": [
-        "youtube",
-        "youtube.com"
-    ],
+    "아마존": ["amazon", "amazon.com"],
+    "amazon": ["amazon", "amazon.com"],
 
-    "깃허브": [
-        "github",
-        "github.com"
-    ],
+    "비비씨": ["bbc", "bbc.com"],
+    "bbc": ["bbc", "bbc.com"],
 
-    "github": [
-        "github",
-        "github.com"
-    ],
+    "씨엔엔": ["cnn", "cnn.com"],
+    "cnn": ["cnn", "cnn.com"],
 
-    "위키백과": [
-        "wikipedia",
-        "wikipedia.org"
-    ],
-
-    "위키피디아": [
-        "wikipedia",
-        "wikipedia.org"
-    ],
-
-    "wikipedia": [
-        "wikipedia",
-        "wikipedia.org"
-    ],
-
-    "모질라": [
-        "mozilla",
-        "mozilla.org"
-    ],
-
-    "mozilla": [
-        "mozilla",
-        "mozilla.org"
-    ],
-
-    "나사": [
-        "nasa",
-        "nasa.gov"
-    ],
-
-    "nasa": [
-        "nasa",
-        "nasa.gov"
-    ],
-
-    "아마존": [
-        "amazon",
-        "amazon.com"
-    ],
-
-    "amazon": [
-        "amazon",
-        "amazon.com"
-    ],
-
-    "비비씨": [
-        "bbc",
-        "bbc.com"
-    ],
-
-    "bbc": [
-        "bbc",
-        "bbc.com"
-    ],
-
-    "씨엔엔": [
-        "cnn",
-        "cnn.com"
-    ],
-
-    "cnn": [
-        "cnn",
-        "cnn.com"
-    ],
-
-    "레딧": [
-        "reddit",
-        "reddit.com"
-    ],
-
-    "reddit": [
-        "reddit",
-        "reddit.com"
-    ],
+    "레딧": ["reddit", "reddit.com"],
+    "reddit": ["reddit", "reddit.com"],
 
     "스택오버플로": [
         "stackoverflow",
@@ -328,7 +220,6 @@ const SEARCH_ALIASES = {
         "namu",
         "namu.wiki"
     ]
-
 };
 
 
@@ -337,7 +228,6 @@ const SEARCH_ALIASES = {
 // ========================================
 
 const RELATED_TERMS = {
-
     "검색": [
         "search",
         "검색엔진",
@@ -448,7 +338,6 @@ const RELATED_TERMS = {
         "discussion",
         "social"
     ]
-
 };
 
 
@@ -457,117 +346,63 @@ const RELATED_TERMS = {
 // ========================================
 
 function normalizeSearchQuery(query) {
-
     return String(query || "")
         .trim()
         .toLowerCase()
         .replace(/\s+/g, " ");
-
 }
 
 
 function tokenizeQuery(query) {
-
     return normalizeSearchQuery(query)
         .split(/[\s,./!?()[\]{}:;|]+/)
-        .map(
-            word =>
-                word.trim()
-        )
+        .map(word => word.trim())
         .filter(Boolean);
-
 }
 
 
 function getSearchTerms(query) {
+    const normalized = normalizeSearchQuery(query);
 
-    const normalized =
-        normalizeSearchQuery(query);
-
-    const terms =
-        new Set();
-
+    const terms = new Set();
 
     if (normalized) {
-
         terms.add(normalized);
-
     }
 
-
-    for (
-        const token of
-        tokenizeQuery(normalized)
-    ) {
-
+    for (const token of tokenizeQuery(normalized)) {
         terms.add(token);
-
     }
 
-
-    const aliases =
-        SEARCH_ALIASES[normalized];
-
+    const aliases = SEARCH_ALIASES[normalized];
 
     if (aliases) {
-
-        for (
-            const alias of aliases
-        ) {
-
-            terms.add(
-                alias.toLowerCase()
-            );
-
+        for (const alias of aliases) {
+            terms.add(alias.toLowerCase());
         }
-
     }
 
-
-    const related =
-        RELATED_TERMS[normalized];
-
+    const related = RELATED_TERMS[normalized];
 
     if (related) {
-
-        for (
-            const term of related
-        ) {
-
-            terms.add(
-                term.toLowerCase()
-            );
-
+        for (const term of related) {
+            terms.add(term.toLowerCase());
         }
-
     }
 
-
-    return [
-        ...terms
-    ];
-
+    return [...terms];
 }
 
 
 function getDomainFromUrl(url) {
-
     try {
-
         return new URL(url)
             .hostname
             .toLowerCase()
-            .replace(
-                /^www\./,
-                ""
-            );
-
+            .replace(/^www\./, "");
     } catch {
-
         return "";
-
     }
-
 }
 
 
@@ -575,534 +410,370 @@ function getDomainFromUrl(url) {
 // OSCADIA 검색 API
 // ========================================
 
-app.get(
-    "/api/search",
-    async (req, res) => {
+app.get("/api/search", async (req, res) => {
+    const originalQuery = String(
+        req.query.q || ""
+    ).trim();
 
-        const originalQuery =
-            String(
-                req.query.q || ""
-            ).trim();
+    if (!originalQuery) {
+        return res.json({
+            ok: true,
+            count: 0,
+            results: []
+        });
+    }
 
+    const query = normalizeSearchQuery(
+        originalQuery
+    );
 
-        if (!originalQuery) {
+    const terms = getSearchTerms(query).slice(
+        0,
+        30
+    );
 
-            return res.json({
+    try {
+        const conditions = [];
+        const values = [];
 
-                ok: true,
+        for (
+            let i = 0;
+            i < terms.length;
+            i++
+        ) {
+            const p = `$${i + 1}`;
 
-                count: 0,
+            values.push(terms[i]);
 
-                results: []
+            conditions.push(`
+                (
+                    LOWER(COALESCE(title, ''))
+                        LIKE '%' || LOWER(${p}) || '%'
 
-            });
+                    OR LOWER(COALESCE(description, ''))
+                        LIKE '%' || LOWER(${p}) || '%'
 
+                    OR LOWER(COALESCE(keywords, ''))
+                        LIKE '%' || LOWER(${p}) || '%'
+
+                    OR LOWER(COALESCE(content, ''))
+                        LIKE '%' || LOWER(${p}) || '%'
+
+                    OR LOWER(COALESCE(url, ''))
+                        LIKE '%' || LOWER(${p}) || '%'
+
+                    OR LOWER(COALESCE(domain, ''))
+                        LIKE '%' || LOWER(${p}) || '%'
+                )
+            `);
         }
 
+        if (!conditions.length) {
+            return res.json({
+                ok: true,
+                query: originalQuery,
+                count: 0,
+                results: []
+            });
+        }
 
-        const query =
-            normalizeSearchQuery(
-                originalQuery
-            );
+        const scoreParts = terms.map(
+            (term, i) => {
+                const p = `$${i + 1}`;
 
-
-        const terms =
-            getSearchTerms(query)
-                .slice(0, 30);
-
-
-        try {
-
-            const conditions = [];
-
-            const values = [];
-
-
-            for (
-                let i = 0;
-                i < terms.length;
-                i++
-            ) {
-
-                const p =
-                    `$${i + 1}`;
-
-
-                values.push(
-                    terms[i]
-                );
-
-
-                conditions.push(`
+                return `
                     (
-                        LOWER(COALESCE(title, ''))
-                            LIKE '%' || LOWER(${p}) || '%'
+                        CASE
+                            WHEN LOWER(COALESCE(title, ''))
+                                LIKE '%' || LOWER(${p}) || '%'
+                            THEN 100
+                            ELSE 0
+                        END
 
-                        OR LOWER(COALESCE(description, ''))
-                            LIKE '%' || LOWER(${p}) || '%'
+                        +
 
-                        OR LOWER(COALESCE(keywords, ''))
-                            LIKE '%' || LOWER(${p}) || '%'
+                        CASE
+                            WHEN LOWER(COALESCE(keywords, ''))
+                                LIKE '%' || LOWER(${p}) || '%'
+                            THEN 60
+                            ELSE 0
+                        END
 
-                        OR LOWER(COALESCE(content, ''))
-                            LIKE '%' || LOWER(${p}) || '%'
+                        +
 
-                        OR LOWER(COALESCE(url, ''))
-                            LIKE '%' || LOWER(${p}) || '%'
+                        CASE
+                            WHEN LOWER(COALESCE(description, ''))
+                                LIKE '%' || LOWER(${p}) || '%'
+                            THEN 45
+                            ELSE 0
+                        END
 
-                        OR LOWER(COALESCE(domain, ''))
-                            LIKE '%' || LOWER(${p}) || '%'
+                        +
+
+                        CASE
+                            WHEN LOWER(COALESCE(domain, ''))
+                                LIKE '%' || LOWER(${p}) || '%'
+                            THEN 40
+                            ELSE 0
+                        END
+
+                        +
+
+                        CASE
+                            WHEN LOWER(COALESCE(url, ''))
+                                LIKE '%' || LOWER(${p}) || '%'
+                            THEN 30
+                            ELSE 0
+                        END
+
+                        +
+
+                        CASE
+                            WHEN LOWER(COALESCE(content, ''))
+                                LIKE '%' || LOWER(${p}) || '%'
+                            THEN 10
+                            ELSE 0
+                        END
                     )
-                `);
-
+                `;
             }
+        );
 
+        const sql = `
+            SELECT
+                id,
+                url,
+                title,
+                description,
+                domain,
+                keywords,
+                last_crawled,
 
-            if (!conditions.length) {
+                (${scoreParts.join(" + ")})
 
-                return res.json({
+                    AS relevance_score
 
-                    ok: true,
+            FROM pages
 
-                    query:
-                        originalQuery,
+            WHERE
+                ${conditions.join(" OR ")}
 
-                    count: 0,
+            ORDER BY
+                relevance_score DESC,
+                last_crawled DESC
 
-                    results: []
+            LIMIT 50
+        `;
 
-                });
+        const result = await pool.query(
+            sql,
+            values
+        );
 
-            }
+        const results = result.rows.map(
+            row => {
+                const title = String(
+                    row.title || ""
+                ).toLowerCase();
 
+                const description = String(
+                    row.description || ""
+                ).toLowerCase();
 
-            const scoreParts =
-                terms.map(
-                    (term, i) => {
+                const keywords = String(
+                    row.keywords || ""
+                ).toLowerCase();
 
-                        const p =
-                            `$${i + 1}`;
+                const content = String(
+                    row.content || ""
+                ).toLowerCase();
 
+                const domain = String(
+                    row.domain || ""
+                ).toLowerCase();
 
-                        return `
-                            (
-                                CASE
-                                    WHEN LOWER(COALESCE(title, ''))
-                                        LIKE '%' || LOWER(${p}) || '%'
-                                    THEN 100
-                                    ELSE 0
-                                END
+                const url = String(
+                    row.url || ""
+                ).toLowerCase();
 
-                                +
-
-                                CASE
-                                    WHEN LOWER(COALESCE(keywords, ''))
-                                        LIKE '%' || LOWER(${p}) || '%'
-                                    THEN 60
-                                    ELSE 0
-                                END
-
-                                +
-
-                                CASE
-                                    WHEN LOWER(COALESCE(description, ''))
-                                        LIKE '%' || LOWER(${p}) || '%'
-                                    THEN 45
-                                    ELSE 0
-                                END
-
-                                +
-
-                                CASE
-                                    WHEN LOWER(COALESCE(domain, ''))
-                                        LIKE '%' || LOWER(${p}) || '%'
-                                    THEN 40
-                                    ELSE 0
-                                END
-
-                                +
-
-                                CASE
-                                    WHEN LOWER(COALESCE(url, ''))
-                                        LIKE '%' || LOWER(${p}) || '%'
-                                    THEN 30
-                                    ELSE 0
-                                END
-
-                                +
-
-                                CASE
-                                    WHEN LOWER(COALESCE(content, ''))
-                                        LIKE '%' || LOWER(${p}) || '%'
-                                    THEN 10
-                                    ELSE 0
-                                END
-                            )
-                        `;
-
-                    }
+                let score = Number(
+                    row.relevance_score || 0
                 );
 
+                if (title.includes(query)) {
+                    score += 250;
+                }
 
-            const sql = `
-                SELECT
-                    id,
-                    url,
-                    title,
-                    description,
-                    domain,
-                    keywords,
-                    last_crawled,
+                if (keywords.includes(query)) {
+                    score += 150;
+                }
 
-                    (${scoreParts.join(" + ")})
+                if (description.includes(query)) {
+                    score += 100;
+                }
 
-                        AS relevance_score
+                let aliasMatch = false;
 
-                FROM pages
+                const aliases =
+                    SEARCH_ALIASES[query];
 
-                WHERE
-                    ${conditions.join(" OR ")}
+                if (aliases) {
+                    aliasMatch = aliases.some(
+                        alias => {
+                            const a =
+                                alias.toLowerCase();
 
-                ORDER BY
-                    relevance_score DESC,
-                    last_crawled DESC
-
-                LIMIT 50
-            `;
-
-
-            const result =
-                await pool.query(
-                    sql,
-                    values
-                );
-
-
-            const results =
-                result.rows.map(
-                    row => {
-
-                        const title =
-                            String(
-                                row.title || ""
-                            ).toLowerCase();
-
-
-                        const description =
-                            String(
-                                row.description || ""
-                            ).toLowerCase();
-
-
-                        const keywords =
-                            String(
-                                row.keywords || ""
-                            ).toLowerCase();
-
-
-                        const content =
-                            String(
-                                row.content || ""
-                            ).toLowerCase();
-
-
-                        const domain =
-                            String(
-                                row.domain || ""
-                            ).toLowerCase();
-
-
-                        const url =
-                            String(
-                                row.url || ""
-                            ).toLowerCase();
-
-
-                        let score =
-                            Number(
-                                row.relevance_score || 0
+                            return (
+                                domain.includes(a) ||
+                                url.includes(a) ||
+                                title.includes(a) ||
+                                keywords.includes(a)
                             );
-
-
-                        if (
-                            title.includes(query)
-                        ) {
-
-                            score += 250;
-
                         }
-
-
-                        if (
-                            keywords.includes(query)
-                        ) {
-
-                            score += 150;
-
-                        }
-
-
-                        if (
-                            description.includes(query)
-                        ) {
-
-                            score += 100;
-
-                        }
-
-
-                        let aliasMatch =
-                            false;
-
-
-                        const aliases =
-                            SEARCH_ALIASES[
-                                query
-                            ];
-
-
-                        if (aliases) {
-
-                            aliasMatch =
-                                aliases.some(
-                                    alias => {
-
-                                        const a =
-                                            alias.toLowerCase();
-
-                                        return (
-                                            domain.includes(a) ||
-                                            url.includes(a) ||
-                                            title.includes(a) ||
-                                            keywords.includes(a)
-                                        );
-
-                                    }
-                                );
-
-
-                            if (aliasMatch) {
-
-                                score += 500;
-
-                            }
-
-                        }
-
-
-                        let relatedMatch =
-                            false;
-
-
-                        const related =
-                            RELATED_TERMS[
-                                query
-                            ];
-
-
-                        if (related) {
-
-                            relatedMatch =
-                                related.some(
-                                    term => {
-
-                                        const t =
-                                            term.toLowerCase();
-
-                                        return (
-                                            keywords.includes(t) ||
-                                            title.includes(t) ||
-                                            description.includes(t) ||
-                                            content.includes(t)
-                                        );
-
-                                    }
-                                );
-
-
-                            if (relatedMatch) {
-
-                                score += 180;
-
-                            }
-
-                        }
-
-
-                        return {
-
-                            id:
-                                row.id,
-
-                            url:
-                                row.url,
-
-                            title:
-                                row.title ||
-                                "제목 없음",
-
-                            description:
-                                row.description ||
-                                "",
-
-                            domain:
-                                row.domain ||
-                                getDomainFromUrl(
-                                    row.url
-                                ),
-
-                            keywords:
-                                row.keywords ||
-                                "",
-
-                            last_crawled:
-                                row.last_crawled,
-
-                            rank:
-                                score,
-
-                            alias_match:
-                                aliasMatch,
-
-                            related_match:
-                                relatedMatch
-
-                        };
-
-                    }
-                );
-
-
-            results.sort(
-                (a, b) => {
-
-                    if (
-                        a.alias_match !==
-                        b.alias_match
-                    ) {
-
-                        return a.alias_match
-                            ? -1
-                            : 1;
-
-                    }
-
-
-                    if (
-                        a.related_match !==
-                        b.related_match
-                    ) {
-
-                        return a.related_match
-                            ? -1
-                            : 1;
-
-                    }
-
-
-                    return (
-                        Number(b.rank) -
-                        Number(a.rank)
                     );
 
+                    if (aliasMatch) {
+                        score += 500;
+                    }
                 }
-            );
 
+                let relatedMatch = false;
 
-            const uniqueResults = [];
+                const related =
+                    RELATED_TERMS[query];
 
-            const seenUrls =
-                new Set();
+                if (related) {
+                    relatedMatch = related.some(
+                        term => {
+                            const t =
+                                term.toLowerCase();
 
+                            return (
+                                keywords.includes(t) ||
+                                title.includes(t) ||
+                                description.includes(t) ||
+                                content.includes(t)
+                            );
+                        }
+                    );
 
-            for (
-                const result of results
+                    if (relatedMatch) {
+                        score += 180;
+                    }
+                }
+
+                return {
+                    id: row.id,
+
+                    url: row.url,
+
+                    title:
+                        row.title ||
+                        "제목 없음",
+
+                    description:
+                        row.description ||
+                        "",
+
+                    domain:
+                        row.domain ||
+                        getDomainFromUrl(row.url),
+
+                    keywords:
+                        row.keywords ||
+                        "",
+
+                    last_crawled:
+                        row.last_crawled,
+
+                    rank: score,
+
+                    alias_match:
+                        aliasMatch,
+
+                    related_match:
+                        relatedMatch
+                };
+            }
+        );
+
+        results.sort((a, b) => {
+            if (
+                a.alias_match !==
+                b.alias_match
             ) {
-
-                const normalizedUrl =
-                    String(
-                        result.url || ""
-                    )
-                        .toLowerCase()
-                        .replace(
-                            /\/+$/,
-                            ""
-                        );
-
-
-                if (
-                    seenUrls.has(
-                        normalizedUrl
-                    )
-                ) {
-
-                    continue;
-
-                }
-
-
-                seenUrls.add(
-                    normalizedUrl
-                );
-
-
-                uniqueResults.push(
-                    result
-                );
-
-
-                if (
-                    uniqueResults.length >=
-                    50
-                ) {
-
-                    break;
-
-                }
-
+                return a.alias_match
+                    ? -1
+                    : 1;
             }
 
+            if (
+                a.related_match !==
+                b.related_match
+            ) {
+                return a.related_match
+                    ? -1
+                    : 1;
+            }
 
-            return res.json({
+            return (
+                Number(b.rank) -
+                Number(a.rank)
+            );
+        });
 
-                ok: true,
+        const uniqueResults = [];
+        const seenUrls = new Set();
 
-                query:
-                    originalQuery,
+        for (const result of results) {
+            const normalizedUrl = String(
+                result.url || ""
+            )
+                .toLowerCase()
+                .replace(/\/+$/, "");
 
-                searchTerms:
-                    terms,
+            if (
+                seenUrls.has(
+                    normalizedUrl
+                )
+            ) {
+                continue;
+            }
 
-                count:
-                    uniqueResults.length,
-
-                results:
-                    uniqueResults
-
-            });
-
-
-        } catch (error) {
-
-            console.error(
-                "[SEARCH ERROR]",
-                error
+            seenUrls.add(
+                normalizedUrl
             );
 
+            uniqueResults.push(result);
 
-            return res.status(500).json({
-
-                ok: false,
-
-                error:
-                    "검색 중 오류가 발생했습니다."
-
-            });
-
+            if (
+                uniqueResults.length >= 50
+            ) {
+                break;
+            }
         }
 
+        return res.json({
+            ok: true,
+            query: originalQuery,
+            searchTerms: terms,
+            count: uniqueResults.length,
+            results: uniqueResults
+        });
+
+    } catch (error) {
+        console.error(
+            "[SEARCH ERROR]",
+            error
+        );
+
+        return res.status(500).json({
+            ok: false,
+            error:
+                "검색 중 오류가 발생했습니다."
+        });
     }
-);
+});
 
 
 // ========================================
@@ -1112,10 +783,11 @@ app.get(
 const TRANSLATE_API_URL =
     "https://api.mymemory.translated.net/get";
 
+const GOOGLE_TRANSLATE_API_URL =
+    "https://translate.googleapis.com/translate_a/single";
 
 const SUPPORTED_TRANSLATE_LANGUAGES =
     new Set([
-
         "auto",
         "ko",
         "en",
@@ -1127,19 +799,16 @@ const SUPPORTED_TRANSLATE_LANGUAGES =
         "it",
         "pt",
         "ru"
-
     ]);
 
 
 function isSupportedTranslateLanguage(
     language
 ) {
-
     return SUPPORTED_TRANSLATE_LANGUAGES.has(
         String(language || "")
             .toLowerCase()
     );
-
 }
 
 
@@ -1148,57 +817,30 @@ function isSupportedTranslateLanguage(
 // ========================================
 
 function detectLanguage(text) {
-
-    const value =
-        String(text || "")
-            .trim();
-
+    const value = String(text || "")
+        .trim();
 
     if (!value) {
-
         return "en";
-
     }
 
-
-    if (
-        /[\uAC00-\uD7A3]/.test(value)
-    ) {
-
+    if (/[\uAC00-\uD7A3]/.test(value)) {
         return "ko";
-
     }
 
-
-    if (
-        /[\u3040-\u30FF]/.test(value)
-    ) {
-
+    if (/[\u3040-\u30FF]/.test(value)) {
         return "ja";
-
     }
 
-
-    if (
-        /[\u4E00-\u9FFF]/.test(value)
-    ) {
-
+    if (/[\u4E00-\u9FFF]/.test(value)) {
         return "zh";
-
     }
 
-
-    if (
-        /[\u0400-\u04FF]/.test(value)
-    ) {
-
+    if (/[\u0400-\u04FF]/.test(value)) {
         return "ru";
-
     }
-
 
     return "en";
-
 }
 
 
@@ -1210,62 +852,52 @@ function splitTextByBytes(
     text,
     maxBytes = 450
 ) {
-
     const chunks = [];
 
     let current = "";
-
     let currentBytes = 0;
 
-
-    for (
-        const char of text
-    ) {
-
+    for (const char of text) {
         const charBytes =
             Buffer.byteLength(
                 char,
                 "utf8"
             );
 
-
         if (
             current &&
-            currentBytes +
-                charBytes >
-                maxBytes
+            currentBytes + charBytes >
+            maxBytes
         ) {
-
-            chunks.push(
-                current
-            );
+            chunks.push(current);
 
             current = "";
-
             currentBytes = 0;
-
         }
 
-
         current += char;
-
-        currentBytes +=
-            charBytes;
-
+        currentBytes += charBytes;
     }
-
 
     if (current) {
-
-        chunks.push(
-            current
-        );
-
+        chunks.push(current);
     }
 
-
     return chunks;
+}
 
+
+// ========================================
+// HTML entity 디코딩
+// ========================================
+
+function decodeHtmlEntities(text) {
+    return String(text || "")
+        .replace(/&quot;/g, '"')
+        .replace(/&#39;/g, "'")
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">");
 }
 
 
@@ -1278,153 +910,156 @@ async function translateChunk(
     source,
     target
 ) {
-
     const params =
         new URLSearchParams();
 
-
-    params.set(
-        "q",
-        text
-    );
-
+    params.set("q", text);
 
     params.set(
         "langpair",
         `${source}|${target}`
     );
 
-
-    params.set(
-        "mt",
-        "1"
-    );
-
+    params.set("mt", "1");
 
     const url =
         `${TRANSLATE_API_URL}?${params.toString()}`;
 
+    const response = await fetch(
+        url,
+        {
+            method: "GET",
 
-    const response =
+            headers: {
+                Accept:
+                    "application/json",
+
+                "User-Agent":
+                    "OSCADIA-OscaTranslate/1.0"
+            },
+
+            signal:
+                AbortSignal.timeout(
+                    30000
+                )
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error(
+            `번역 제공 서버 HTTP ${response.status}`
+        );
+    }
+
+    const rawBuffer =
+        await response.arrayBuffer();
+
+    const rawText =
+        new TextDecoder("utf-8").decode(
+            rawBuffer
+        );
+
+    let data;
+
+    try {
+        data = JSON.parse(rawText);
+    } catch {
+        throw new Error(
+            "번역 서버가 올바른 JSON을 반환하지 않았습니다."
+        );
+    }
+
+    if (
+        !data ||
+        !data.responseData ||
+        typeof data.responseData
+            .translatedText !==
+            "string"
+    ) {
+        throw new Error(
+            "번역 결과가 올바르지 않습니다."
+        );
+    }
+
+    const translated =
+        decodeHtmlEntities(
+            data.responseData
+                .translatedText
+        ).trim();
+
+    if (!translated) {
+        throw new Error(
+            "MyMemory가 정상적인 번역 결과를 반환하지 않았습니다."
+        );
+    }
+
+    return translated;
+}
+
+
+// ========================================
+// Google 공개 번역 fallback
+// ========================================
+
+async function translateWithGoogle(
+    text,
+    source,
+    target
+) {
+    const googleUrl =
+        `${GOOGLE_TRANSLATE_API_URL}?` +
+        new URLSearchParams({
+            client: "gtx",
+            sl: source,
+            tl: target,
+            dt: "t",
+            q: text
+        }).toString();
+
+    const googleResponse =
         await fetch(
-            url,
+            googleUrl,
             {
-
-                method:
-                    "GET",
+                method: "GET",
 
                 headers: {
-
-                    "Accept":
-                        "application/json",
-
                     "User-Agent":
                         "OSCADIA-OscaTranslate/1.0"
-
                 },
 
                 signal:
                     AbortSignal.timeout(
                         30000
                     )
-
             }
         );
 
-
-    if (!response.ok) {
-
+    if (!googleResponse.ok) {
         throw new Error(
-            `번역 제공 서버 HTTP ${response.status}`
+            `번역 제공 서버 HTTP ${googleResponse.status}`
         );
-
     }
 
-
-    const rawBuffer =
-        await response.arrayBuffer();
-
-
-    const rawText =
-        new TextDecoder(
-            "utf-8"
-        ).decode(
-            rawBuffer
-        );
-
-
-    let data;
-
-
-    try {
-
-        data =
-            JSON.parse(
-                rawText
-            );
-
-    } catch {
-
-        throw new Error(
-            "번역 서버가 올바른 JSON을 반환하지 않았습니다."
-        );
-
-    }
-
-
-    if (
-        !data ||
-        !data.responseData ||
-        typeof
-            data.responseData
-                .translatedText !==
-            "string"
-    ) {
-
-        throw new Error(
-            "번역 결과가 올바르지 않습니다."
-        );
-
-    }
-
+    const googleData =
+        await googleResponse.json();
 
     const translated =
-        String(
-            data.responseData
-                .translatedText
-        )
-            .replace(
-                /&quot;/g,
-                '"'
-            )
-            .replace(
-                /&#39;/g,
-                "'"
-            )
-            .replace(
-    /&amp;/g,
-    "&"
-)
-.replace(
-    /&lt;/g,
-    "<"
-)
-.replace(
-    /&gt;/g,
-    ">"
-)
-.trim();
+        Array.isArray(googleData?.[0])
+            ? googleData[0]
+                .map(
+                    part =>
+                        part?.[0] || ""
+                )
+                .join("")
+            : "";
 
-if (
-    !translated ||
-    /^\\+$/.test(translated)
-) {
-    throw new Error(
-        "MyMemory가 정상적인 번역 결과를 반환하지 않았습니다."
-    );
-}
+    if (!translated) {
+        throw new Error(
+            "Google 번역 결과가 비어 있습니다."
+        );
+    }
 
-return translated;
+    return translated;
 }
 
 
@@ -1435,25 +1070,14 @@ return translated;
 app.get(
     "/api/translate/health",
     (req, res) => {
-
         return res.json({
-
             ok: true,
-
-            service:
-                "OscaTranslate",
-
+            service: "OscaTranslate",
             provider:
                 "MyMemory / Google fallback",
-
-            configured:
-                true,
-
-            free:
-                true
-
+            configured: true,
+            free: true
         });
-
     }
 );
 
@@ -1465,72 +1089,56 @@ app.get(
 app.get(
     "/api/translate/languages",
     (req, res) => {
-
         return res.json({
-
             ok: true,
 
             languages: [
-
                 {
                     code: "auto",
                     name: "자동 감지"
                 },
-
                 {
                     code: "ko",
                     name: "한국어"
                 },
-
                 {
                     code: "en",
                     name: "English"
                 },
-
                 {
                     code: "ja",
                     name: "日本語"
                 },
-
                 {
                     code: "zh",
                     name: "中文"
                 },
-
                 {
                     code: "de",
                     name: "Deutsch"
                 },
-
                 {
                     code: "fr",
                     name: "Français"
                 },
-
                 {
                     code: "es",
                     name: "Español"
                 },
-
                 {
                     code: "it",
                     name: "Italiano"
                 },
-
                 {
                     code: "pt",
                     name: "Português"
                 },
-
                 {
                     code: "ru",
                     name: "Русский"
                 }
-
             ]
-
         });
-
     }
 );
 
@@ -1542,21 +1150,14 @@ app.get(
 app.post(
     "/api/translate",
     async (req, res) => {
-
         try {
-
             let {
                 q,
                 source,
                 target
             } = req.body || {};
 
-
-            q =
-                String(
-                    q || ""
-                ).trim();
-
+            q = String(q || "").trim();
 
             source =
                 String(
@@ -1565,148 +1166,85 @@ app.post(
                     .trim()
                     .toLowerCase();
 
-
             target =
-                String(
-                    target || ""
-                )
+                String(target || "")
                     .trim()
                     .toLowerCase();
 
-
             if (!q) {
-
                 return res.status(400).json({
-
                     ok: false,
-
                     error:
                         "번역할 텍스트를 입력하세요."
-
                 });
-
             }
 
-
-            if (
-                q.length > 5000
-            ) {
-
+            if (q.length > 5000) {
                 return res.status(400).json({
-
                     ok: false,
-
                     error:
                         "번역할 텍스트는 5000자 이하로 입력하세요."
-
                 });
-
             }
-
 
             if (!target) {
-
                 return res.status(400).json({
-
                     ok: false,
-
                     error:
                         "번역 대상 언어가 필요합니다."
-
                 });
-
             }
-
 
             if (
                 !isSupportedTranslateLanguage(
                     source
                 )
             ) {
-
                 return res.status(400).json({
-
                     ok: false,
-
                     error:
                         "지원하지 않는 원본 언어입니다."
-
                 });
-
             }
-
 
             if (
                 !isSupportedTranslateLanguage(
                     target
                 )
             ) {
-
                 return res.status(400).json({
-
                     ok: false,
-
                     error:
                         "지원하지 않는 번역 언어입니다."
-
                 });
-
             }
 
-
-            if (
-                target === "auto"
-            ) {
-
+            if (target === "auto") {
                 return res.status(400).json({
-
                     ok: false,
-
                     error:
                         "번역 대상 언어에는 자동 감지를 사용할 수 없습니다."
-
                 });
-
             }
 
-
-            if (
-                source === "auto"
-            ) {
-
-                source =
-                    detectLanguage(q);
-
+            if (source === "auto") {
+                source = detectLanguage(q);
             }
 
-
-            if (
-                source === target
-            ) {
-
+            if (source === target) {
                 return res.json({
-
                     ok: true,
-
-                    translatedText:
-                        q,
-
+                    translatedText: q,
                     source,
-
                     target,
-
                     provider:
                         "same-language"
-
                 });
-
             }
-
 
             console.log(
                 `[TRANSLATE] ${source} -> ${target}, ${q.length} chars`
             );
-
 
             const chunks =
                 splitTextByBytes(
@@ -1714,19 +1252,12 @@ app.post(
                     450
                 );
 
-
             const translatedChunks = [];
 
-
-            for (
-                const chunk of chunks
-            ) {
-
+            for (const chunk of chunks) {
                 let translated;
 
-
                 try {
-
                     translated =
                         await translateChunk(
                             chunk,
@@ -1737,174 +1268,68 @@ app.post(
                 } catch (
                     myMemoryError
                 ) {
-
                     console.warn(
                         "[TRANSLATE] MyMemory 실패, Google 공개 엔드포인트로 재시도:",
                         myMemoryError.message
                     );
 
-
-                    const googleUrl =
-                        "https://translate.googleapis.com/translate_a/single?" +
-                        new URLSearchParams({
-
-                            client:
-                                "gtx",
-
-                            sl:
-                                source,
-
-                            tl:
-                                target,
-
-                            dt:
-                                "t",
-
-                            q:
-                                chunk
-
-                        }).toString();
-
-
-                    const googleResponse =
-                        await fetch(
-                            googleUrl,
-                            {
-
-                                headers: {
-
-                                    "User-Agent":
-                                        "OSCADIA-OscaTranslate/1.0"
-
-                                },
-
-                                signal:
-                                    AbortSignal.timeout(
-                                        30000
-                                    )
-
-                            }
-                        );
-
-
-                    if (
-                        !googleResponse.ok
-                    ) {
-
-                        throw new Error(
-                            `번역 제공 서버 HTTP ${googleResponse.status}`
-                        );
-
-                    }
-
-
-                    const googleData =
-                        await googleResponse.json();
-
-
                     translated =
-                        Array.isArray(
-                            googleData?.[0]
-                        )
-                            ? googleData[0]
-                                .map(
-                                    part =>
-                                        part?.[0] ||
-                                        ""
-                                )
-                                .join("")
-                            : "";
-
-
-                    if (!translated) {
-
-                        throw new Error(
-                            "Google 번역 결과가 비어 있습니다."
+                        await translateWithGoogle(
+                            chunk,
+                            source,
+                            target
                         );
-
-                    }
-
                 }
-
 
                 translatedChunks.push(
                     translated
                 );
-
             }
-
 
             const translatedText =
                 translatedChunks.join("");
 
-
             if (!translatedText) {
-
                 return res.status(502).json({
-
                     ok: false,
-
                     error:
                         "번역 결과가 비어 있습니다."
-
                 });
-
             }
 
-
             return res.json({
-
                 ok: true,
-
                 translatedText,
-
                 source,
-
                 target,
-
                 provider:
                     "MyMemory / Google fallback"
-
             });
 
-
         } catch (error) {
-
             console.error(
                 "[TRANSLATE ERROR]",
                 error
             );
 
-
             if (
                 error?.name ===
                 "TimeoutError"
             ) {
-
                 return res.status(504).json({
-
                     ok: false,
-
                     error:
                         "번역 서버 응답 시간이 초과되었습니다."
-
                 });
-
             }
 
-
             return res.status(502).json({
-
                 ok: false,
-
                 error:
                     error?.message ||
                     "번역 서버에 연결할 수 없습니다."
-
             });
-
         }
-
     }
 );
 
@@ -1916,58 +1341,31 @@ app.post(
 app.get(
     "/api/health",
     async (req, res) => {
-
         try {
-
-            await pool.query(
-                "SELECT 1"
-            );
-
+            await pool.query("SELECT 1");
 
             return res.json({
-
                 ok: true,
-
-                database:
-                    "connected",
-
-                crawler:
-                    "enabled",
-
-                translate:
-                    "enabled",
-
-                oscaai:
-                    "enabled",
-
-                service:
-                    "OSCADIA"
-
+                database: "connected",
+                crawler: "enabled",
+                translate: "enabled",
+                oscaai: "enabled",
+                osmail: "enabled",
+                service: "OSCADIA"
             });
 
-
         } catch (error) {
-
             console.error(
                 "[HEALTH ERROR]",
                 error
             );
 
-
             return res.status(500).json({
-
                 ok: false,
-
-                database:
-                    "disconnected",
-
-                error:
-                    error.message
-
+                database: "disconnected",
+                error: error.message
             });
-
         }
-
     }
 );
 
@@ -1977,17 +1375,13 @@ app.get(
 // ========================================
 
 async function runCrawler() {
-
     if (crawlerRunning) {
-
         console.log(
             "[CRAWLER] Already running. Skip."
         );
 
         return;
-
     }
-
 
     crawlerRunning = true;
 
@@ -1996,44 +1390,33 @@ async function runCrawler() {
 
     lastCrawlerError = null;
 
-
     console.log(
         "[CRAWLER] Automatic crawl started."
     );
 
-
     try {
-
         await crawl();
-
 
         lastCrawlerFinish =
             new Date().toISOString();
-
 
         console.log(
             "[CRAWLER] Automatic crawl finished."
         );
 
-
     } catch (error) {
-
         lastCrawlerError =
-            error.message;
-
+            error?.message ||
+            String(error);
 
         console.error(
             "[CRAWLER ERROR]",
             error
         );
 
-
     } finally {
-
         crawlerRunning = false;
-
     }
-
 }
 
 
@@ -2044,26 +1427,16 @@ async function runCrawler() {
 app.get(
     "/api/crawler",
     (req, res) => {
-
         return res.json({
-
-            enabled:
-                true,
-
-            running:
-                crawlerRunning,
-
+            enabled: true,
+            running: crawlerRunning,
             lastStart:
                 lastCrawlerStart,
-
             lastFinish:
                 lastCrawlerFinish,
-
             lastError:
                 lastCrawlerError
-
         });
-
     }
 );
 
@@ -2075,70 +1448,43 @@ app.get(
 app.post(
     "/api/crawl/queue",
     async (req, res) => {
-
         try {
-
-            let {
-                url
-            } = req.body || {};
-
+            let { url } =
+                req.body || {};
 
             if (
                 !url ||
                 typeof url !==
                     "string"
             ) {
-
                 return res.status(400).json({
-
                     ok: false,
-
                     error:
                         "URL을 입력하세요."
-
                 });
-
             }
 
-
-            url =
-                url.trim();
-
+            url = url.trim();
 
             if (
                 !/^https?:\/\//i.test(
                     url
                 )
             ) {
-
-                url =
-                    "https://" +
-                    url;
-
+                url = `https://${url}`;
             }
-
 
             let parsed;
 
-
             try {
-
-                parsed =
-                    new URL(url);
-
+                parsed = new URL(url);
             } catch {
-
                 return res.status(400).json({
-
                     ok: false,
-
                     error:
                         "올바른 URL이 아닙니다."
-
                 });
-
             }
-
 
             if (
                 parsed.protocol !==
@@ -2146,38 +1492,25 @@ app.post(
                 parsed.protocol !==
                     "https:"
             ) {
-
                 return res.status(400).json({
-
                     ok: false,
-
                     error:
                         "HTTP 또는 HTTPS 주소만 사용할 수 있습니다."
-
                 });
-
             }
-
 
             if (
                 parsed.username ||
                 parsed.password
             ) {
-
                 return res.status(400).json({
-
                     ok: false,
-
                     error:
                         "사용자명 또는 비밀번호가 포함된 URL은 사용할 수 없습니다."
-
                 });
-
             }
 
-
             parsed.hash = "";
-
 
             if (
                 (
@@ -2193,15 +1526,10 @@ app.post(
                         "443"
                 )
             ) {
-
                 parsed.port = "";
-
             }
 
-
-            url =
-                parsed.href;
-
+            url = parsed.href;
 
             const existing =
                 await pool.query(
@@ -2214,28 +1542,18 @@ app.post(
                     [url]
                 );
 
-
             if (
                 existing.rows.length >
                 0
             ) {
-
                 return res.json({
-
                     ok: true,
-
-                    queued:
-                        false,
-
+                    queued: false,
                     alreadyIndexed:
                         true,
-
                     url
-
                 });
-
             }
-
 
             const result =
                 await pool.query(
@@ -2250,79 +1568,51 @@ app.post(
                         $1,
                         'pending'
                     )
-
                     ON CONFLICT (url)
                     DO UPDATE SET
                         status = 'pending',
                         last_error = NULL,
                         finished_at = NULL
-
                     RETURNING *
                     `,
                     [url]
                 );
-
 
             console.log(
                 "[CRAWL QUEUE] Added:",
                 url
             );
 
-
-            setTimeout(
-                () => {
-
-                    runCrawler()
-                        .catch(
-                            error => {
-
-                                console.error(
-                                    "[QUEUE CRAWLER ERROR]",
-                                    error
-                                );
-
-                            }
+            setTimeout(() => {
+                runCrawler()
+                    .catch(error => {
+                        console.error(
+                            "[QUEUE CRAWLER ERROR]",
+                            error
                         );
-
-                },
-                100
-            );
-
+                    });
+            }, 100);
 
             return res.json({
-
                 ok: true,
-
-                queued:
-                    true,
-
+                queued: true,
                 url,
-
                 queue:
                     result.rows[0]
-
             });
 
-
         } catch (error) {
-
             console.error(
                 "[CRAWL QUEUE ERROR]",
                 error
             );
 
-
             return res.status(500).json({
-
                 ok: false,
-
                 error:
                     error.message
-
             });
-
         }
-
     }
 );
 
@@ -2334,9 +1624,7 @@ app.post(
 app.get(
     "/api/crawl/queue",
     async (req, res) => {
-
         try {
-
             const result =
                 await pool.query(
                     `
@@ -2355,39 +1643,26 @@ app.get(
                     `
                 );
 
-
             return res.json({
-
                 ok: true,
-
                 count:
                     result.rows.length,
-
                 queue:
                     result.rows
-
             });
 
-
         } catch (error) {
-
             console.error(
                 "[CRAWL QUEUE GET ERROR]",
                 error
             );
 
-
             return res.status(500).json({
-
                 ok: false,
-
                 error:
                     error.message
-
             });
-
         }
-
     }
 );
 
@@ -2399,42 +1674,28 @@ app.get(
 app.get(
     "/api/osmail/me",
     async (req, res) => {
-
         try {
-
             const result =
                 await getMyOSmail(req);
 
-
             return res.json({
-
                 ok: true,
-
                 ...result
-
             });
 
-
         } catch (error) {
-
             console.error(
                 "[OSMAIL ME ERROR]",
                 error
             );
 
-
             return res.status(401).json({
-
                 ok: false,
-
                 error:
                     error.message ||
                     "로그인이 필요합니다."
-
             });
-
         }
-
     }
 );
 
@@ -2446,28 +1707,19 @@ app.get(
 app.post(
     "/api/osmail/profile",
     async (req, res) => {
-
         try {
-
             const {
                 osmailId,
                 displayName
             } = req.body || {};
 
-
             if (!osmailId) {
-
                 return res.status(400).json({
-
                     ok: false,
-
                     error:
                         "OSmail ID를 입력하세요."
-
                 });
-
             }
-
 
             const result =
                 await createOSmailProfile(
@@ -2476,35 +1728,23 @@ app.post(
                     displayName
                 );
 
-
             return res.json({
-
                 ok: true,
-
                 ...result
-
             });
 
-
         } catch (error) {
-
             console.error(
                 "[OSMAIL PROFILE ERROR]",
                 error
             );
 
-
             return res.status(400).json({
-
                 ok: false,
-
                 error:
                     error.message
-
             });
-
         }
-
     }
 );
 
@@ -2516,41 +1756,27 @@ app.post(
 app.get(
     "/api/osmail/emails",
     async (req, res) => {
-
         try {
-
             const emails =
                 await getEmails(req);
 
-
             return res.json({
-
                 ok: true,
-
                 emails
-
             });
 
-
         } catch (error) {
-
             console.error(
                 "[OSMAIL EMAILS ERROR]",
                 error
             );
 
-
             return res.status(401).json({
-
                 ok: false,
-
                 error:
                     error.message
-
             });
-
         }
-
     }
 );
 
@@ -2562,75 +1788,50 @@ app.get(
 app.post(
     "/api/osmail/send-internal",
     async (req, res) => {
-
         try {
-
             const {
                 to,
                 subject,
                 body
             } = req.body || {};
 
-
             if (!to) {
-
                 return res.status(400).json({
-
                     ok: false,
-
                     error:
                         "받는 사람을 입력하세요."
-
                 });
-
             }
-
 
             const email =
                 await sendInternalMail(
                     req,
                     {
-
                         to,
-
                         subject:
                             subject || "",
-
                         body:
                             body || ""
-
                     }
                 );
 
-
             return res.json({
-
                 ok: true,
-
                 email
-
             });
 
-
         } catch (error) {
-
             console.error(
                 "[OSMAIL INTERNAL SEND ERROR]",
                 error
             );
 
-
             return res.status(400).json({
-
                 ok: false,
-
                 error:
                     error.message
-
             });
-
         }
-
     }
 );
 
@@ -2642,75 +1843,50 @@ app.post(
 app.post(
     "/api/osmail/send-external",
     async (req, res) => {
-
         try {
-
             const {
                 to,
                 subject,
                 body
             } = req.body || {};
 
-
             if (!to) {
-
                 return res.status(400).json({
-
                     ok: false,
-
                     error:
                         "받는 사람을 입력하세요."
-
                 });
-
             }
-
 
             const result =
                 await sendExternalMail(
                     req,
                     {
-
                         to,
-
                         subject:
                             subject || "",
-
                         body:
                             body || ""
-
                     }
                 );
 
-
             return res.json({
-
                 ok: true,
-
                 ...result
-
             });
 
-
         } catch (error) {
-
             console.error(
                 "[OSMAIL EXTERNAL SEND ERROR]",
                 error
             );
 
-
             return res.status(400).json({
-
                 ok: false,
-
                 error:
                     error.message
-
             });
-
         }
-
     }
 );
 
@@ -2722,22 +1898,14 @@ app.post(
 app.post(
     "/api/osmail/read",
     async (req, res) => {
-
         try {
-
             if (!req.body?.id) {
-
                 return res.status(400).json({
-
                     ok: false,
-
                     error:
                         "메일 ID가 필요합니다."
-
                 });
-
             }
-
 
             const email =
                 await markAsRead(
@@ -2745,35 +1913,23 @@ app.post(
                     req.body.id
                 );
 
-
             return res.json({
-
                 ok: true,
-
                 email
-
             });
 
-
         } catch (error) {
-
             console.error(
                 "[OSMAIL READ ERROR]",
                 error
             );
 
-
             return res.status(400).json({
-
                 ok: false,
-
                 error:
                     error.message
-
             });
-
         }
-
     }
 );
 
@@ -2785,22 +1941,14 @@ app.post(
 app.post(
     "/api/osmail/delete",
     async (req, res) => {
-
         try {
-
             if (!req.body?.id) {
-
                 return res.status(400).json({
-
                     ok: false,
-
                     error:
                         "메일 ID가 필요합니다."
-
                 });
-
             }
-
 
             const email =
                 await deleteEmail(
@@ -2808,35 +1956,23 @@ app.post(
                     req.body.id
                 );
 
-
             return res.json({
-
                 ok: true,
-
                 email
-
             });
 
-
         } catch (error) {
-
             console.error(
                 "[OSMAIL DELETE ERROR]",
                 error
             );
 
-
             return res.status(400).json({
-
                 ok: false,
-
                 error:
                     error.message
-
             });
-
         }
-
     }
 );
 
@@ -2848,22 +1984,14 @@ app.post(
 app.post(
     "/api/osmail/restore",
     async (req, res) => {
-
         try {
-
             if (!req.body?.id) {
-
                 return res.status(400).json({
-
                     ok: false,
-
                     error:
                         "메일 ID가 필요합니다."
-
                 });
-
             }
-
 
             const email =
                 await restoreEmail(
@@ -2871,35 +1999,23 @@ app.post(
                     req.body.id
                 );
 
-
             return res.json({
-
                 ok: true,
-
                 email
-
             });
 
-
         } catch (error) {
-
             console.error(
                 "[OSMAIL RESTORE ERROR]",
                 error
             );
 
-
             return res.status(400).json({
-
                 ok: false,
-
                 error:
                     error.message
-
             });
-
         }
-
     }
 );
 
@@ -2911,45 +2027,30 @@ app.post(
 app.get(
     "/api/osmail/test",
     async (req, res) => {
-
         try {
-
             const ok =
                 await verifySMTP();
 
-
             return res.json({
-
                 ok,
-
                 service:
                     "OSmail SMTP"
-
             });
 
-
         } catch (error) {
-
             console.error(
                 "[OSMAIL SMTP TEST ERROR]",
                 error
             );
 
-
             return res.status(500).json({
-
                 ok: false,
-
                 service:
                     "OSmail SMTP",
-
                 error:
                     error.message
-
             });
-
         }
-
     }
 );
 
@@ -2961,11 +2062,9 @@ app.get(
 app.get(
     "/api/oscaai/health",
     (req, res) => {
-
         return res.json(
             getOscaAIHealth()
         );
-
     }
 );
 
@@ -2977,40 +2076,27 @@ app.get(
 app.post(
     "/api/oscaai/password/set",
     async (req, res) => {
-
         try {
-
             const result =
                 await setPassword(
                     req,
                     req.body?.password
                 );
 
-
-            return res.json(
-                result
-            );
-
+            return res.json(result);
 
         } catch (error) {
-
             console.error(
                 "[OSCAAI PASSWORD ERROR]",
                 error
             );
 
-
             return res.status(400).json({
-
                 ok: false,
-
                 error:
                     error.message
-
             });
-
         }
-
     }
 );
 
@@ -3022,40 +2108,27 @@ app.post(
 app.post(
     "/api/oscaai/auth/request-code",
     async (req, res) => {
-
         try {
-
             const result =
                 await requestLoginCode(
                     req.body?.osmailId,
                     req.body?.password
                 );
 
-
-            return res.json(
-                result
-            );
-
+            return res.json(result);
 
         } catch (error) {
-
             console.error(
                 "[OSCAAI REQUEST CODE ERROR]",
                 error
             );
 
-
             return res.status(400).json({
-
                 ok: false,
-
                 error:
                     error.message
-
             });
-
         }
-
     }
 );
 
@@ -3067,40 +2140,27 @@ app.post(
 app.post(
     "/api/oscaai/auth/verify-code",
     async (req, res) => {
-
         try {
-
             const result =
                 await verifyLoginCode(
                     req.body?.requestId,
                     req.body?.code
                 );
 
-
-            return res.json(
-                result
-            );
-
+            return res.json(result);
 
         } catch (error) {
-
             console.error(
                 "[OSCAAI VERIFY ERROR]",
                 error
             );
 
-
             return res.status(400).json({
-
                 ok: false,
-
                 error:
                     error.message
-
             });
-
         }
-
     }
 );
 
@@ -3112,39 +2172,24 @@ app.post(
 app.post(
     "/api/oscaai/auth/logout",
     async (req, res) => {
-
         try {
-
             const result =
-                await oscaaiLogout(
-                    req
-                );
+                await oscaaiLogout(req);
 
-
-            return res.json(
-                result
-            );
-
+            return res.json(result);
 
         } catch (error) {
-
             console.error(
                 "[OSCAAI LOGOUT ERROR]",
                 error
             );
 
-
             return res.status(400).json({
-
                 ok: false,
-
                 error:
                     error.message
-
             });
-
         }
-
     }
 );
 
@@ -3156,14 +2201,11 @@ app.post(
 app.post(
     "/api/oscaai/chat",
     async (req, res) => {
-
         try {
-
             const result =
                 await oscaaiChat(
                     req,
                     {
-
                         message:
                             req.body?.message,
 
@@ -3172,35 +2214,23 @@ app.post(
 
                         guestHistory:
                             req.body?.guestHistory
-
                     }
                 );
 
-
-            return res.json(
-                result
-            );
-
+            return res.json(result);
 
         } catch (error) {
-
             console.error(
                 "[OSCAAI CHAT ERROR]",
                 error
             );
 
-
             return res.status(500).json({
-
                 ok: false,
-
                 error:
                     error.message
-
             });
-
         }
-
     }
 );
 
@@ -3212,37 +2242,27 @@ app.post(
 app.get(
     "/api/oscaai/history",
     async (req, res) => {
-
         try {
-
             const conversations =
-                await getOscaAIHistory(
-                    req
-                );
-
+                await getOscaAIHistory(req);
 
             return res.json({
-
                 ok: true,
-
                 conversations
-
             });
-
 
         } catch (error) {
+            console.error(
+                "[OSCAAI HISTORY ERROR]",
+                error
+            );
 
             return res.status(401).json({
-
                 ok: false,
-
                 error:
                     error.message
-
             });
-
         }
-
     }
 );
 
@@ -3254,38 +2274,30 @@ app.get(
 app.get(
     "/api/oscaai/history/:id",
     async (req, res) => {
-
         try {
-
             const result =
                 await getOscaAIConversation(
                     req,
                     req.params.id
                 );
 
-
             return res.json({
-
                 ok: true,
-
                 ...result
-
             });
-
 
         } catch (error) {
+            console.error(
+                "[OSCAAI CONVERSATION ERROR]",
+                error
+            );
 
             return res.status(401).json({
-
                 ok: false,
-
                 error:
                     error.message
-
             });
-
         }
-
     }
 );
 
@@ -3311,14 +2323,12 @@ app.use(
 app.get(
     "/",
     (req, res) => {
-
         return res.sendFile(
             path.join(
                 __dirname,
                 "../public/oscadia.html"
             )
         );
-
     }
 );
 
@@ -3330,19 +2340,13 @@ app.get(
 app.use(
     "/api",
     (req, res) => {
-
         return res.status(404).json({
-
             ok: false,
-
             error:
                 "API endpoint not found",
-
             path:
                 req.path
-
         });
-
     }
 );
 
@@ -3352,48 +2356,39 @@ app.use(
 // ========================================
 
 async function startServer() {
-
     try {
-
         await pool.query(
             "SELECT 1"
         );
-
 
         console.log(
             "[DATABASE] PostgreSQL connected."
         );
 
-
     } catch (error) {
-
         console.error(
             "[DATABASE STARTUP ERROR]",
             error.message
         );
-
     }
-
 
     try {
-
         await verifySMTP();
 
-
-    } catch (error) {
-
-        console.error(
-            "[SMTP STARTUP ERROR]",
-            error
+        console.log(
+            "[SMTP] SMTP connection verified."
         );
 
+    } catch (error) {
+        console.error(
+            "[SMTP STARTUP ERROR]",
+            error.message
+        );
     }
-
 
     app.listen(
         PORT,
         () => {
-
             console.log(
                 `OSCADIA running on port ${PORT}`
             );
@@ -3419,52 +2414,36 @@ async function startServer() {
             );
 
 
+            // ========================================
             // 서버 시작 5초 후 크롤링
+            // ========================================
 
-            setTimeout(
-                () => {
-
-                    runCrawler()
-                        .catch(
-                            error => {
-
-                                console.error(
-                                    "[STARTUP CRAWLER ERROR]",
-                                    error
-                                );
-
-                            }
+            setTimeout(() => {
+                runCrawler()
+                    .catch(error => {
+                        console.error(
+                            "[STARTUP CRAWLER ERROR]",
+                            error
                         );
-
-                },
-                5000
-            );
+                    });
+            }, 5000);
 
 
+            // ========================================
             // 30분마다 자동 크롤링
+            // ========================================
 
-            setInterval(
-                () => {
-
-                    runCrawler()
-                        .catch(
-                            error => {
-
-                                console.error(
-                                    "[INTERVAL CRAWLER ERROR]",
-                                    error
-                                );
-
-                            }
+            setInterval(() => {
+                runCrawler()
+                    .catch(error => {
+                        console.error(
+                            "[INTERVAL CRAWLER ERROR]",
+                            error
                         );
-
-                },
-                30 * 60 * 1000
-            );
-
+                    });
+            }, 30 * 60 * 1000);
         }
     );
-
 }
 
 
