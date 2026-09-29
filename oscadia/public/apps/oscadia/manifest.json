@@ -1,23 +1,22 @@
 {
-  "id": "/apps/oscadia/",
+  "id": "/oscadia/public/oscadia.html",
   "name": "OSCADIA",
   "short_name": "OSCADIA",
   "description": "OSCADIA 검색 서비스",
   "lang": "ko",
-  "start_url": "/oscadia.html",
-  "scope": "/",
+  "start_url": "/oscadia/public/oscadia.html",
+  "scope": "/oscadia/public/",
   "display": "standalone",
-  "orientation": "portrait-primary",
   "background_color": "#ffffff",
   "theme_color": "#0b4fd8",
   "icons": [
     {
-      "src": "/icons/oscadia-192.png",
+      "src": "/oscadia/public/icons/oscadia-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/icons/oscadia-512.png",
+      "src": "/oscadia/public/icons/oscadia-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }

@@ -1,15 +1,15 @@
-const CACHE_NAME = "oscadia-pwa-v1";
+const CACHE_NAME = "oscadia-v1";
 
-const APP_FILES = [
-  "/oscadia.html",
-  "/planapp.html",
-  "/icons/oscadia-192.png",
-  "/icons/oscadia-512.png"
+const FILES = [
+  "/oscadia/public/oscadia.html",
+  "/oscadia/public/planapp.html",
+  "/oscadia/public/icons/oscadia-192.png",
+  "/oscadia/public/icons/oscadia-512.png"
 ];
 
 self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(APP_FILES))
+    caches.open(CACHE_NAME).then(cache => cache.addAll(FILES))
   );
 
   self.skipWaiting();
@@ -32,7 +32,7 @@ self.addEventListener("activate", event => {
 self.addEventListener("fetch", event => {
   const url = new URL(event.request.url);
 
-  if (url.pathname.startsWith("/api/")) {
+  if (url.pathname.startsWith("/oscadia/api/")) {
     return;
   }
 
