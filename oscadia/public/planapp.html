@@ -2,622 +2,213 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
 <title>OSCADIA Apps</title>
 
-<meta name="description" content="OSCADIA 공식 앱 다운로드 센터">
-<meta name="theme-color" content="#0b4fd8">
-
 <style>
 *{
-    box-sizing:border-box;
-}
-
-html{
-    scroll-behavior:smooth;
+  box-sizing:border-box;
 }
 
 body{
-    margin:0;
-    background:#f6f8fb;
-    color:#101828;
-    font-family:
-        Inter,
-        "Noto Sans KR",
-        Arial,
-        sans-serif;
+  margin:0;
+  font-family:Arial,"Noto Sans KR",sans-serif;
+  background:#f5f8fc;
+  color:#101828;
 }
-
-button,
-a{
-    font:inherit;
-}
-
-button{
-    cursor:pointer;
-}
-
-a{
-    text-decoration:none;
-    color:inherit;
-}
-
-/* =========================
-   HEADER
-========================= */
 
 header{
-    position:sticky;
-    top:0;
-    z-index:1000;
-
-    height:72px;
-
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-
-    padding:0 6vw;
-
-    background:rgba(255,255,255,.90);
-    backdrop-filter:blur(18px);
-
-    border-bottom:1px solid #e6eaf0;
+  position:sticky;
+  top:0;
+  z-index:20;
+  height:64px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 28px;
+  background:rgba(255,255,255,.88);
+  backdrop-filter:blur(18px);
+  border-bottom:1px solid #e4eaf2;
 }
 
 .logo{
-    display:flex;
-    align-items:center;
-    gap:11px;
-
-    font-size:20px;
-    font-weight:800;
-    letter-spacing:-.5px;
+  font-size:22px;
+  font-weight:800;
+  color:#0b4fd8;
+  cursor:pointer;
 }
 
-.logo-icon{
-    width:35px;
-    height:35px;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    border-radius:10px;
-
-    background:#0b4fd8;
-    color:#fff;
-
-    font-size:17px;
-    font-weight:900;
+.header-link{
+  text-decoration:none;
+  color:#475467;
+  font-size:14px;
 }
-
-nav{
-    display:flex;
-    gap:28px;
-
-    color:#667085;
-    font-size:14px;
-}
-
-nav a:hover{
-    color:#0b4fd8;
-}
-
-/* =========================
-   HERO
-========================= */
 
 .hero{
-    padding:
-        105px 6vw
-        80px;
-
-    background:
-        radial-gradient(
-            circle at 80% 15%,
-            rgba(11,79,216,.13),
-            transparent 35%
-        ),
-        linear-gradient(
-            180deg,
-            #fff,
-            #f7f9fc
-        );
+  max-width:1100px;
+  margin:0 auto;
+  padding:80px 24px 45px;
 }
 
-.hero-inner{
-    max-width:1100px;
-    margin:auto;
-}
-
-.badge{
-    display:inline-flex;
-
-    padding:8px 13px;
-
-    border:1px solid #dbe4f2;
-    border-radius:999px;
-
-    background:#f8faff;
-
-    color:#0b4fd8;
-
-    font-size:12px;
-    font-weight:800;
+.hero small{
+  color:#0b4fd8;
+  font-weight:700;
+  letter-spacing:.08em;
 }
 
 .hero h1{
-    margin:23px 0 17px;
-
-    font-size:
-        clamp(45px,7vw,76px);
-
-    line-height:1.03;
-
-    letter-spacing:-3px;
-}
-
-.hero h1 span{
-    color:#0b4fd8;
+  margin:12px 0;
+  font-size:52px;
+  letter-spacing:-.04em;
 }
 
 .hero p{
-    max-width:670px;
-
-    margin:0;
-
-    color:#667085;
-
-    font-size:17px;
-    line-height:1.75;
+  margin:0;
+  color:#667085;
+  font-size:18px;
 }
-
-/* =========================
-   APPS
-========================= */
 
 .apps{
-    padding:75px 6vw 110px;
-
-    background:#fff;
+  max-width:1100px;
+  margin:0 auto;
+  padding:10px 24px 80px;
 }
-
-.apps-inner{
-    max-width:1100px;
-    margin:auto;
-}
-
-.heading{
-    margin-bottom:30px;
-}
-
-.heading h2{
-    margin:0;
-
-    font-size:32px;
-    letter-spacing:-1px;
-}
-
-.heading p{
-    margin:9px 0 0;
-
-    color:#667085;
-
-    font-size:14px;
-}
-
-.app-list{
-    display:flex;
-    flex-direction:column;
-
-    gap:14px;
-}
-
-/* =========================
-   APP CARD
-========================= */
 
 .app-card{
-    width:100%;
-
-    display:flex;
-    align-items:center;
-
-    padding:23px 25px;
-
-    border:1px solid #e1e6ed;
-    border-radius:19px;
-
-    background:#fff;
-
-    cursor:pointer;
-
-    transition:
-        transform .18s,
-        box-shadow .18s,
-        border-color .18s;
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:20px;
+  padding:24px;
+  margin-bottom:14px;
+  background:#fff;
+  border:1px solid #e4eaf2;
+  border-radius:20px;
+  cursor:pointer;
+  transition:.2s;
 }
 
 .app-card:hover{
-    transform:translateY(-2px);
-
-    border-color:#c7d5eb;
-
-    box-shadow:
-        0 15px 38px rgba(16,24,40,.08);
+  transform:translateY(-2px);
+  border-color:#b8c9e8;
+  box-shadow:0 12px 35px rgba(16,24,40,.08);
 }
 
 .app-icon{
-    width:58px;
-    height:58px;
-
-    flex:none;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    border-radius:15px;
-
-    background:#eef4ff;
-
-    color:#0b4fd8;
-
-    font-size:17px;
-    font-weight:900;
+  width:64px;
+  height:64px;
+  flex:0 0 64px;
+  display:grid;
+  place-items:center;
+  border-radius:17px;
+  background:#edf4ff;
+  color:#0b4fd8;
+  font-weight:800;
+  font-size:20px;
 }
 
 .app-info{
-    min-width:0;
-
-    flex:1;
-
-    margin-left:18px;
+  flex:1;
 }
 
-.app-info h3{
-    margin:0 0 5px;
-
-    font-size:18px;
+.app-name{
+  font-size:20px;
+  font-weight:750;
 }
 
-.app-info p{
-    margin:0;
-
-    color:#667085;
-
-    font-size:13px;
+.app-description{
+  margin-top:5px;
+  color:#667085;
+  font-size:14px;
 }
 
-.app-arrow{
-    margin-left:20px;
-
-    color:#98a2b3;
-
-    font-size:24px;
-
-    transition:.18s;
-}
-
-.app-card:hover .app-arrow{
-    color:#0b4fd8;
-    transform:translateX(3px);
-}
-
-/* =========================
-   MODAL
-========================= */
-
-.modal-bg{
-    position:fixed;
-    inset:0;
-
-    z-index:5000;
-
-    display:none;
-    align-items:center;
-    justify-content:center;
-
-    padding:20px;
-
-    background:rgba(15,23,42,.58);
-
-    backdrop-filter:blur(7px);
-}
-
-.modal-bg.show{
-    display:flex;
+.arrow{
+  color:#98a2b3;
+  font-size:25px;
 }
 
 .modal{
-    width:100%;
-    max-width:500px;
-
-    padding:30px;
-
-    border-radius:24px;
-
-    background:#fff;
-
-    box-shadow:
-        0 30px 80px rgba(0,0,0,.25);
-
-    animation:
-        modalIn .18s ease;
+  position:fixed;
+  inset:0;
+  z-index:50;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:rgba(15,23,42,.48);
 }
 
-@keyframes modalIn{
-
-    from{
-        opacity:0;
-        transform:translateY(12px) scale(.98);
-    }
-
-    to{
-        opacity:1;
-        transform:none;
-    }
+.modal.show{
+  display:flex;
 }
 
-.modal-header{
-    display:flex;
-    align-items:center;
-
-    margin-bottom:27px;
-}
-
-.modal-icon{
-    width:58px;
-    height:58px;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    border-radius:15px;
-
-    background:#eef4ff;
-    color:#0b4fd8;
-
-    font-size:18px;
-    font-weight:900;
+.modal-box{
+  width:min(460px,100%);
+  background:#fff;
+  border-radius:24px;
+  padding:28px;
+  box-shadow:0 25px 80px rgba(0,0,0,.2);
 }
 
 .modal-title{
-    margin-left:15px;
+  font-size:26px;
+  font-weight:800;
 }
 
-.modal-title h2{
-    margin:0 0 4px;
-
-    font-size:22px;
-}
-
-.modal-title p{
-    margin:0;
-
-    color:#667085;
-
-    font-size:13px;
-}
-
-.close{
-    width:38px;
-    height:38px;
-
-    margin-left:auto;
-
-    border:0;
-    border-radius:10px;
-
-    background:#f2f4f7;
-
-    color:#667085;
-
-    font-size:21px;
-}
-
-.close:hover{
-    background:#e7ebf0;
-}
-
-/* =========================
-   PLATFORM
-========================= */
-
-.choose-title{
-    margin:0 0 13px;
-
-    font-size:14px;
-    font-weight:800;
-}
-
-.platform-list{
-    display:flex;
-    flex-direction:column;
-
-    gap:10px;
+.modal-description{
+  margin:8px 0 25px;
+  color:#667085;
 }
 
 .platform{
-    width:100%;
-
-    min-height:70px;
-
-    display:flex;
-    align-items:center;
-
-    padding:12px 15px;
-
-    border:1px solid #dfe5ec;
-    border-radius:14px;
-
-    background:#fff;
-
-    text-align:left;
-
-    transition:.18s;
+  width:100%;
+  padding:17px;
+  margin-top:10px;
+  border:1px solid #d9e2ef;
+  border-radius:14px;
+  background:#fff;
+  text-align:left;
+  cursor:pointer;
+  font-size:16px;
+  font-weight:700;
 }
 
 .platform:hover{
-    border-color:#b9c9e4;
-    background:#f8faff;
+  background:#f5f8ff;
+  border-color:#8fb0e5;
 }
 
-.platform-icon{
-    width:42px;
-    height:42px;
-
-    flex:none;
-
-    display:flex;
-    align-items:center;
-    justify-content:center;
-
-    border-radius:10px;
-
-    background:#f1f4f8;
-
-    color:#344054;
-
-    font-size:10px;
-    font-weight:900;
+.platform span{
+  display:block;
+  margin-top:4px;
+  color:#667085;
+  font-size:12px;
+  font-weight:400;
 }
 
-.platform-info{
-    margin-left:13px;
+.close{
+  width:100%;
+  margin-top:18px;
+  padding:14px;
+  border:0;
+  border-radius:13px;
+  background:#eef2f6;
+  cursor:pointer;
 }
 
-.platform-info strong{
-    display:block;
+@media(max-width:600px){
+  .hero h1{
+    font-size:38px;
+  }
 
-    font-size:14px;
-}
+  .hero{
+    padding-top:55px;
+  }
 
-.platform-info span{
-    display:block;
-
-    margin-top:3px;
-
-    color:#667085;
-
-    font-size:12px;
-}
-
-.platform-arrow{
-    margin-left:auto;
-
-    color:#98a2b3;
-
-    font-size:20px;
-}
-
-/* =========================
-   FOOTER
-========================= */
-
-footer{
-    padding:40px 6vw;
-
-    background:#101828;
-
-    color:#98a2b3;
-}
-
-.footer-inner{
-    max-width:1100px;
-    margin:auto;
-
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-}
-
-footer strong{
-    color:#fff;
-}
-
-footer a:hover{
-    color:#fff;
-}
-
-/* =========================
-   MOBILE
-========================= */
-
-@media(max-width:700px){
-
-    header{
-        height:64px;
-
-        padding:0 20px;
-    }
-
-    nav{
-        display:none;
-    }
-
-    .hero{
-        padding:
-            75px 22px
-            60px;
-    }
-
-    .hero h1{
-        letter-spacing:-2px;
-    }
-
-    .hero p{
-        font-size:15px;
-    }
-
-    .apps{
-        padding:
-            55px 20px
-            80px;
-    }
-
-    .app-card{
-        padding:18px;
-    }
-
-    .app-icon{
-        width:50px;
-        height:50px;
-    }
-
-    .app-info{
-        margin-left:14px;
-    }
-
-    .app-info h3{
-        font-size:16px;
-    }
-
-    .app-info p{
-        font-size:12px;
-    }
-
-    .app-arrow{
-        margin-left:10px;
-    }
-
-    .modal{
-        padding:23px;
-        border-radius:20px;
-    }
-
-    footer{
-        padding:30px 20px;
-    }
-
-    .footer-inner{
-        flex-direction:column;
-        align-items:flex-start;
-        gap:15px;
-    }
+  .app-card{
+    padding:18px;
+  }
 }
 </style>
 </head>
@@ -625,596 +216,243 @@ footer a:hover{
 <body>
 
 <header>
+  <div class="logo" onclick="location.href='oscadia.html'">
+    OSCADIA
+  </div>
 
-    <a href="oscadia.html" class="logo">
-
-        <div class="logo-icon">
-            O
-        </div>
-
-        OSCADIA
-
-    </a>
-
-    <nav>
-        <a href="oscadia.html">OSCADIA</a>
-        <a href="about.html">About</a>
-        <a href="planapp.html">Apps</a>
-    </nav>
-
+  <a class="header-link" href="oscadia.html">
+    웹으로 돌아가기
+  </a>
 </header>
 
-
 <section class="hero">
+  <small>OSCADIA APPS</small>
 
-    <div class="hero-inner">
+  <h1>Your apps.<br>Everywhere.</h1>
 
-        <div class="badge">
-            OSCADIA APP CENTER
-        </div>
-
-        <h1>
-            Your apps.<br>
-            <span>Everywhere.</span>
-        </h1>
-
-        <p>
-            OSCADIA의 서비스를 원하는 기기에 설치하세요.
-            앱을 선택하고 Android, Windows 또는 Web을 선택하면
-            해당 방식으로 바로 사용할 수 있습니다.
-        </p>
-
-    </div>
-
+  <p>
+    OSCADIA의 서비스를 Android, Windows, Web에서 이용하세요.
+  </p>
 </section>
-
 
 <section class="apps">
 
-    <div class="apps-inner">
-
-        <div class="heading">
-
-            <h2>
-                OSCADIA Apps
-            </h2>
-
-            <p>
-                사용할 앱을 선택하세요.
-            </p>
-
-        </div>
-
-
-        <div class="app-list">
-
-            <article
-                class="app-card"
-                onclick="openApp('oscadia')"
-            >
-
-                <div class="app-icon">O</div>
-
-                <div class="app-info">
-
-                    <h3>OSCADIA</h3>
-
-                    <p>
-                        Search, AI, communication and language.
-                    </p>
-
-                </div>
-
-                <div class="app-arrow">›</div>
-
-            </article>
-
-
-            <article
-                class="app-card"
-                onclick="openApp('osmail')"
-            >
-
-                <div class="app-icon">M</div>
-
-                <div class="app-info">
-
-                    <h3>OSmail</h3>
-
-                    <p>
-                        OSCADIA의 이메일 서비스.
-                    </p>
-
-                </div>
-
-                <div class="app-arrow">›</div>
-
-            </article>
-
-
-            <article
-                class="app-card"
-                onclick="openApp('oscaai')"
-            >
-
-                <div class="app-icon">AI</div>
-
-                <div class="app-info">
-
-                    <h3>OscaAI</h3>
-
-                    <p>
-                        OSCADIA의 AI 서비스.
-                    </p>
-
-                </div>
-
-                <div class="app-arrow">›</div>
-
-            </article>
-
-
-            <article
-                class="app-card"
-                onclick="openApp('translate')"
-            >
-
-                <div class="app-icon">T</div>
-
-                <div class="app-info">
-
-                    <h3>Osca Translate</h3>
-
-                    <p>
-                        빠르고 간편한 언어 번역 서비스.
-                    </p>
-
-                </div>
-
-                <div class="app-arrow">›</div>
-
-            </article>
-
-
-            <article
-                class="app-card"
-                onclick="openApp('meteor')"
-            >
-
-                <div class="app-icon">MS</div>
-
-                <div class="app-info">
-
-                    <h3>운석 서바이버</h3>
-
-                    <p>
-                        운석을 피하며 살아남는 서바이벌 게임.
-                    </p>
-
-                </div>
-
-                <div class="app-arrow">›</div>
-
-            </article>
-
-
-            <article
-                class="app-card"
-                onclick="openApp('mathmeteor')"
-            >
-
-                <div class="app-icon">M</div>
-
-                <div class="app-info">
-
-                    <h3>운석수학서바이버</h3>
-
-                    <p>
-                        수학 문제와 서바이벌을 결합한 게임.
-                    </p>
-
-                </div>
-
-                <div class="app-arrow">›</div>
-
-            </article>
-
-        </div>
-
+  <div class="app-card" onclick="openApp('oscadia')">
+    <div class="app-icon">O</div>
+    <div class="app-info">
+      <div class="app-name">OSCADIA</div>
+      <div class="app-description">
+        검색과 OSCADIA 서비스를 한곳에서
+      </div>
     </div>
+    <div class="arrow">›</div>
+  </div>
 
-</section>
-
-
-<!-- 다운로드 선택 창 -->
-
-<div
-    class="modal-bg"
-    id="modalBg"
-    onclick="backgroundClose(event)"
->
-
-    <div
-        class="modal"
-        onclick="event.stopPropagation()"
-    >
-
-        <div class="modal-header">
-
-            <div
-                class="modal-icon"
-                id="modalIcon"
-            >
-                O
-            </div>
-
-            <div class="modal-title">
-
-                <h2 id="modalName">
-                    OSCADIA
-                </h2>
-
-                <p id="modalDescription">
-                    OSCADIA
-                </p>
-
-            </div>
-
-            <button
-                class="close"
-                onclick="closeModal()"
-            >
-                ×
-            </button>
-
-        </div>
-
-
-        <h3 class="choose-title">
-            다운로드할 곳을 선택하세요.
-        </h3>
-
-
-        <div class="platform-list">
-
-            <button
-                class="platform"
-                onclick="downloadApp('android')"
-            >
-
-                <div class="platform-icon">
-                    AND
-                </div>
-
-                <div class="platform-info">
-
-                    <strong>
-                        Android
-                    </strong>
-
-                    <span>
-                        Android용 앱 다운로드
-                    </span>
-
-                </div>
-
-                <div class="platform-arrow">
-                    ›
-                </div>
-
-            </button>
-
-
-            <button
-                class="platform"
-                onclick="downloadApp('windows')"
-            >
-
-                <div class="platform-icon">
-                    WIN
-                </div>
-
-                <div class="platform-info">
-
-                    <strong>
-                        Windows
-                    </strong>
-
-                    <span>
-                        Windows용 앱 다운로드
-                    </span>
-
-                </div>
-
-                <div class="platform-arrow">
-                    ›
-                </div>
-
-            </button>
-
-
-            <button
-                class="platform"
-                onclick="downloadApp('web')"
-            >
-
-                <div class="platform-icon">
-                    WEB
-                </div>
-
-                <div class="platform-info">
-
-                    <strong>
-                        Web
-                    </strong>
-
-                    <span>
-                        브라우저에서 바로 사용
-                    </span>
-
-                </div>
-
-                <div class="platform-arrow">
-                    ›
-                </div>
-
-            </button>
-
-        </div>
-
+  <div class="app-card" onclick="openApp('osmail')">
+    <div class="app-icon">M</div>
+    <div class="app-info">
+      <div class="app-name">OSmail</div>
+      <div class="app-description">
+        OSCADIA 이메일 서비스
+      </div>
     </div>
+    <div class="arrow">›</div>
+  </div>
 
+  <div class="app-card" onclick="openApp('oscaai')">
+    <div class="app-icon">AI</div>
+    <div class="app-info">
+      <div class="app-name">OscaAI</div>
+      <div class="app-description">
+        OSCADIA AI 서비스
+      </div>
+    </div>
+    <div class="arrow">›</div>
+  </div>
+
+  <div class="app-card" onclick="openApp('translate')">
+    <div class="app-icon">T</div>
+    <div class="app-info">
+      <div class="app-name">Osca Translate</div>
+      <div class="app-description">
+        빠르고 간편한 언어 번역 서비스
+      </div>
+    </div>
+    <div class="arrow">›</div>
+  </div>
+
+  <div class="app-card" onclick="openApp('meteor')">
+    <div class="app-icon">MS</div>
+    <div class="app-info">
+      <div class="app-name">운석 서바이버</div>
+      <div class="app-description">
+        운석을 피하며 살아남는 서바이벌 게임
+      </div>
+    </div>
+    <div class="arrow">›</div>
+  </div>
+
+<div class="modal" id="modal">
+  <div class="modal-box">
+
+    <div class="modal-title" id="modalTitle"></div>
+
+    <div class="modal-description" id="modalDescription"></div>
+
+    <button class="platform" onclick="useApp('android')">
+      Android
+      <span>앱처럼 설치</span>
+    </button>
+
+    <button class="platform" onclick="useApp('windows')">
+      Windows
+      <span>PC에서 앱처럼 설치</span>
+    </button>
+
+    <button class="platform" onclick="useApp('web')">
+      Web
+      <span>브라우저에서 바로 사용</span>
+    </button>
+
+    <button class="close" onclick="closeModal()">
+      닫기
+    </button>
+
+  </div>
 </div>
-
-
-<footer>
-
-    <div class="footer-inner">
-
-        <div>
-            <strong>OSCADIA</strong>
-            <br>
-            The digital ecosystem.
-        </div>
-
-        <a href="oscadia.html">
-            OSCADIA 홈
-        </a>
-
-    </div>
-
-</footer>
-
 
 <script>
 
-/* =========================================
-   앱 설정
-   =========================================
-   
-   android / windows:
-   실제 다운로드 파일 주소를 넣으면
-   클릭 즉시 다운로드됩니다.
-
-   web:
-   해당 서비스의 웹 주소.
-========================================= */
-
 const apps = {
 
-    oscadia:{
-        name:"OSCADIA",
-        icon:"O",
-        description:
-            "Search, AI, communication and language.",
+  oscadia:{
+    name:"OSCADIA",
+    description:"검색과 OSCADIA 서비스를 한곳에서",
+    manifest:"/apps/oscadia/manifest.json",
+    web:"oscadia.html"
+  },
 
-        android:"",
-        windows:"",
-        web:"oscadia.html"
-    },
+  osmail:{
+    name:"OSmail",
+    description:"OSCADIA 이메일 서비스",
+    manifest:"/apps/osmail/manifest.json",
+    web:"osmail.html"
+  },
 
+  oscaai:{
+    name:"OscaAI",
+    description:"OSCADIA AI 서비스",
+    manifest:"/apps/oscaai/manifest.json",
+    web:"oscaai.html"
+  },
 
-    osmail:{
-        name:"OSmail",
-        icon:"M",
-        description:
-            "OSCADIA의 이메일 서비스.",
+  translate:{
+    name:"Osca Translate",
+    description:"빠르고 간편한 언어 번역 서비스",
+    manifest:"/apps/translate/manifest.json",
+    web:"translate.html"
+  },
 
-        android:"",
-        windows:"",
-        web:"osmail.html"
-    },
-
-
-    oscaai:{
-        name:"OscaAI",
-        icon:"AI",
-        description:
-            "OSCADIA의 AI 서비스.",
-
-        android:"",
-        windows:"",
-        web:"oscaai.html"
-    },
-
-
-    translate:{
-        name:"Osca Translate",
-        icon:"T",
-        description:
-            "빠르고 간편한 언어 번역 서비스.",
-
-        android:"",
-        windows:"",
-        web:"translate.html"
-    },
-
-
-    meteor:{
-        name:"운석 서바이버",
-        icon:"MS",
-        description:
-            "운석을 피하며 살아남는 서바이벌 게임.",
-
-        android:"",
-        windows:"",
-        web:"game.html"
-    },
-
-
-    mathmeteor:{
-        name:"운석수학서바이버",
-        icon:"M",
-        description:
-            "수학 문제와 서바이벌을 결합한 게임.",
-
-        android:"",
-        windows:"",
-        web:"math.html"
-    }
-
+  meteor:{
+    name:"운석 서바이버",
+    description:"운석을 피하며 살아남는 서바이벌 게임",
+    manifest:"/apps/meteor/manifest.json",
+    web:"/54/game.html"
+  }
 };
-
-
-/* 현재 선택한 앱 */
 
 let currentApp = null;
 
-
-/* 앱 클릭 */
-
 function openApp(id){
 
-    const app = apps[id];
+  currentApp = apps[id];
 
-    if(!app) return;
+  document.getElementById("modalTitle").textContent =
+    currentApp.name;
 
-    currentApp = app;
+  document.getElementById("modalDescription").textContent =
+    currentApp.description;
 
-    document
-        .getElementById("modalName")
-        .textContent = app.name;
-
-    document
-        .getElementById("modalDescription")
-        .textContent = app.description;
-
-    document
-        .getElementById("modalIcon")
-        .textContent = app.icon;
-
-    document
-        .getElementById("modalBg")
-        .classList.add("show");
-
-    document.body.style.overflow = "hidden";
+  document.getElementById("modal").classList.add("show");
 }
-
-
-/* 닫기 */
 
 function closeModal(){
 
-    document
-        .getElementById("modalBg")
-        .classList.remove("show");
+  document.getElementById("modal").classList.remove("show");
 
-    document.body.style.overflow = "";
-
-    currentApp = null;
+  currentApp = null;
 }
 
+function useApp(platform){
 
-/* 배경 클릭 */
+  if(!currentApp) return;
 
-function backgroundClose(event){
+  if(platform === "web"){
 
-    if(event.target.id === "modalBg"){
+    location.href = currentApp.web;
 
-        closeModal();
+    return;
+  }
 
-    }
+  installPWA(currentApp);
 
 }
 
+async function installPWA(app){
 
-/* =========================================
-   다운로드
-========================================= */
+  /*
+    PWA 설치는 브라우저가 제공하는 설치 기능을 사용한다.
+    실제 APK/EXE 파일을 다운로드하는 방식은 아니다.
+  */
 
-function downloadApp(platform){
+  if(deferredPrompt){
 
-    if(!currentApp) return;
+    deferredPrompt.prompt();
 
-    const url = currentApp[platform];
+    const result =
+      await deferredPrompt.userChoice;
 
-
-    /* Web */
-
-    if(platform === "web"){
-
-        if(url){
-
-            window.location.href = url;
-
-        }
-
-        return;
-    }
-
-
-    /* 실제 파일 주소가 있는 경우 */
-
-    if(url){
-
-        const link =
-            document.createElement("a");
-
-        link.href = url;
-
-        link.download = "";
-
-        document.body.appendChild(link);
-
-        link.click();
-
-        link.remove();
-
-        return;
-    }
-
-
-    /* 아직 실제 파일이 없는 경우 */
-
-    alert(
-        currentApp.name +
-        "의 " +
-        (platform === "android"
-            ? "Android"
-            : "Windows") +
-        " 다운로드 파일이 아직 등록되지 않았습니다."
+    console.log(
+      app.name,
+      result.outcome
     );
 
+    deferredPrompt = null;
+
+    closeModal();
+
+    return;
+  }
+
+  alert(
+    app.name +
+    "은(는) 현재 브라우저에서 자동 설치 창을 사용할 수 없습니다.\n\n" +
+    "브라우저 메뉴에서 '앱 설치' 또는 '홈 화면에 추가'를 선택해주세요."
+  );
 }
 
+let deferredPrompt = null;
 
-/* ESC */
+window.addEventListener(
+  "beforeinstallprompt",
+  event => {
 
-document.addEventListener(
-    "keydown",
-    event => {
+    event.preventDefault();
 
-        if(
-            event.key === "Escape" &&
-            currentApp
-        ){
+    deferredPrompt = event;
 
-            closeModal();
-
-        }
-
-    }
+  }
 );
+
+document
+  .getElementById("modal")
+  .addEventListener("click", event => {
+
+    if(event.target.id === "modal"){
+      closeModal();
+    }
+
+  });
 
 </script>
 

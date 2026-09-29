@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="manifest" href="/apps/meteor/manifest.json">
 <title>☄️ 운석 서바이버</title>
 
 <link rel="icon" type="image/png" href="54img/favicon.png">
@@ -5074,6 +5075,10 @@ function gameLoop(now){
 draw();
 
 </script>
-
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/apps/meteor/sw.js");
+}
+</script>
 </body>
 </html>

@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<link rel="manifest" href="/apps/osmail/manifest.json">
+<meta name="theme-color" content="#1769ff">
 <title>OSmail</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -2040,6 +2041,13 @@ function escapeHTML(value){
 initialize();
 
 </script>
-
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/apps/osmail/sw.js")
+    .catch(error => {
+      console.error("OSmail Service Worker:", error);
+    });
+}
+</script>
 </body>
 </html>

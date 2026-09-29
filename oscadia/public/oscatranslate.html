@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<link rel="manifest" href="/apps/translate/manifest.json">
+<meta name="theme-color" content="#0b78d0">
 <title>OscaTranslate</title>
 
 <style>
@@ -1363,6 +1364,13 @@ sourceText.addEventListener(
 updateCharCount();
 
 </script>
-
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/apps/translate/sw.js")
+    .catch(error => {
+      console.error("Osca Translate Service Worker:", error);
+    });
+}
+</script>
 </body>
 </html>

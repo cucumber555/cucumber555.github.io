@@ -8,7 +8,8 @@
     name="viewport"
     content="width=device-width, initial-scale=1"
 >
-
+<link rel="manifest" href="/apps/oscaai/manifest.json">
+<meta name="theme-color" content="#5636d9">
 <title>OscaAI - OSCADIA</title>
 
 <style>
@@ -1793,6 +1794,13 @@ if(sessionToken){
 }
 
 </script>
-
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/apps/oscaai/sw.js")
+    .catch(error => {
+      console.error("OscaAI Service Worker:", error);
+    });
+}
+</script>
 </body>
 </html>

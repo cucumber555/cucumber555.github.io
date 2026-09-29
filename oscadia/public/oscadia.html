@@ -6,7 +6,8 @@
     name="viewport"
     content="width=device-width, initial-scale=1, viewport-fit=cover"
 >
-
+<link rel="manifest" href="/apps/oscadia/manifest.json">
+<meta name="theme-color" content="#0b4fd8">
 <title>OSCADIA</title>
 
 <style>
@@ -805,6 +806,13 @@ addressInput.addEventListener(
 );
 
 </script>
-
+<script>
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/apps/oscadia/sw.js")
+    .catch(error => {
+      console.error("OSCADIA Service Worker:", error);
+    });
+}
+</script>
 </body>
 </html>
