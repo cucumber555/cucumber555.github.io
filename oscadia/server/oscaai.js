@@ -1,7 +1,138 @@
 /* =========================================
    인증 코드 확인
 ========================================= */
+/* =========================================
+   로그인 인증 코드 요청
+========================================= */
 
+export async function requestLoginCode(
+    osmailId,
+    password
+) {
+    requireAdmin();
+
+    osmailId =
+        String(osmailId || "").trim();
+
+    password =
+        String(password || "");
+
+    if (!osmailId) {
+        throw new Error(
+            "OSmail ID를 입력하세요."
+        );
+    }
+
+    if (!password) {
+        throw new Error(
+            "비밀번호를 입력하세요."
+        );
+    }
+
+    const profile =
+        await findOSmailProfile(
+            osmailId
+        );
+
+    if (!profile) {
+        throw new Error(
+            "OSmail 계정을 찾을 수 없습니다."
+        );
+    }
+
+    /*
+     * 여기서는 실제 비밀번호 검증을
+     * 기존 OSmail의 비밀번호 해시 방식에 맞춰야 함.
+     */
+
+    if (!profile.password_hash) {
+        throw new Error(
+            "OSmail 계정의 비밀번호 정보를 찾을 수 없습니다."
+        );
+    }
+
+    const valid =
+        await bcrypt.compare(
+            password,
+            profile.password_hash
+        );
+
+    if (!valid) {
+        throw new Error(
+            "OSmail ID 또는 비밀번호가 올바르지 않습니다."
+        );
+    }
+
+    const code =
+        String(
+            Math.floor(
+                100000 +
+                Math.random() * 900000
+            )
+        );
+
+    const requestId =
+        randomToken();
+
+    const codeHash =
+        await bcrypt.hash(
+            code,
+            10
+        );
+
+    const expiresAt =
+        new Date(
+            Date.now() +
+            5 * 60 * 1000
+        ).toISOString();
+
+    const {
+        error
+    } =
+        await adminSupabase
+            .from(
+                "oscaai_verification_codes"
+            )
+            .insert({
+                request_id:
+                    requestId,
+
+                user_id:
+                    profile.id,
+
+                code_hash:
+                    codeHash,
+
+                expires_at:
+                    expiresAt,
+
+                used:
+                    false,
+
+                attempts:
+                    0
+            });
+
+    if (error) {
+        throw new Error(
+            error.message
+        );
+    }
+
+    /*
+     * TODO:
+     * 여기에서 OSmail 받은편지함으로
+     * 인증번호를 보내야 함.
+     */
+
+    return {
+        ok: true,
+
+        requestId,
+
+        expiresAt
+    };
+}
 export async function verifyLoginCode(
     requestId,
     code
