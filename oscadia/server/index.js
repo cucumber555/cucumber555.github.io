@@ -23,14 +23,12 @@ import {
 import {
     requestLoginCode,
     verifyLoginCode,
-    setPassword,
     logout as oscaaiLogout,
     chat as oscaaiChat,
     getHistory as getOscaAIHistory,
     getConversation as getOscaAIConversation,
     getHealth as getOscaAIHealth
 } from "./oscaai.js";
-
 
 // ========================================
 // 기본 설정
