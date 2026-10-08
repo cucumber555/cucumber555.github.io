@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PIVOP · 연습 모드</title>
+<link rel="stylesheet" href="./css/pivop.css">
+</head>
+<body class="game">
+<div id="hud">
+  <div class="game-top"><button id="backBtn">PIVOP</button><div class="game-title">연습 모드</div><div class="objective" id="objective">목표: 적 0 / 8</div></div>
+  <div class="crosshair">+</div>
+  <div class="hp"><span>HP</span><div><i id="hpFill"></i></div><b id="hpText">100</b></div>
+  <div class="weapon">E 총 발사 · 클릭 근접공격 · X 아이템 · Q 시점</div>
+  <div class="inventory" id="inventory"><div class="inv-box"><button class="inv-close" id="invClose">X</button><h2>아이템</h2><div class="inv-items" id="invItems"></div><p>← → 아이템 변경 · 클릭하여 장착</p></div></div>
+  <div class="clear-screen" id="clearScreen"><div><small>PIVOP // PRACTICE</small><h1>연습 완료</h1><p>모든 목표를 처치했습니다.</p><button id="clearHome">메인으로</button></div></div>
+</div>
+<script type="module" src="./js/practice.js"></script>
+</body>
+</html>

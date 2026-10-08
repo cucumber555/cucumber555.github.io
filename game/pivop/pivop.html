@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PIVOP</title>
+<link rel="stylesheet" href="./css/pivop.css">
+</head>
+<body class="home">
+<div class="topbar">
+  <a class="logo" href="./pivop.html">PIVOP</a>
+  <div class="top-actions">
+    <button class="navbtn" data-go="pvp.html">PvP</button>
+    <button class="navbtn" data-go="practice.html">연습 모드</button>
+    <button class="navbtn" id="shopBtn">상점</button>
+    <button class="profile" id="profileBtn">로그인</button>
+  </div>
+</div>
+
+<main class="home-wrap">
+  <section class="hero">
+    <div>
+      <div class="eyebrow">PIVOP // COMBAT PROTOCOL</div>
+      <h1>친구와 겨루는<br><span>3D 액션 슈팅</span></h1>
+      <p>무기를 선택하고, 움직이고, 조준하고, 먼저 3라운드를 가져가세요.</p>
+      <div class="hero-actions">
+        <button class="primary big" data-go="pvp.html">PvP 시작</button>
+        <button class="secondary big" data-go="practice.html">연습하기</button>
+      </div>
+    </div>
+    <div class="hero-card">
+      <div class="hero-character">
+        <div class="h-head"></div><div class="h-body"></div><div class="h-arm a1"></div><div class="h-arm a2"></div>
+        <div class="h-leg l1"></div><div class="h-leg l2"></div><div class="h-gun"></div>
+      </div>
+      <div class="hero-label">PIVOP // READY</div>
+    </div>
+  </section>
+
+  <section class="cards">
+    <button class="mode-card" data-go="pvp.html"><b>PvP</b><span>친구와 방을 만들거나 매칭을 준비합니다.</span><em>2:2 · FIRST TO 3</em></button>
+    <button class="mode-card" data-go="practice.html"><b>연습 모드</b><span>적을 상대하며 이동과 무기 조작을 익힙니다.</span><em>SOLO · TARGETS</em></button>
+    <button class="mode-card" id="shopCard"><b>상점</b><span>무기와 장비를 확인합니다.</span><em>VOP · LOADOUT</em></button>
+  </section>
+</main>
+
+<div class="modal" id="shopModal">
+  <div class="modal-box">
+    <button class="close" id="closeShop">×</button>
+    <div class="eyebrow">SHOP // VOP</div>
+    <h2>장비 상점</h2>
+    <div class="shop-grid">
+      <div class="item"><div class="item-visual rifle"></div><b>VOP-9</b><span>기본 소총 · 0 VOP</span><button class="select-item">장착</button></div>
+      <div class="item"><div class="item-visual shotgun"></div><b>BREACH</b><span>근거리 · 250 VOP</span><button class="select-item">선택</button></div>
+      <div class="item"><div class="item-visual spear"></div><b>PIKE</b><span>근접 무기 · 150 VOP</span><button class="select-item">선택</button></div>
+      <div class="item"><div class="item-visual armor"></div><b>ORBIT ARMOR</b><span>방어 장비 · 300 VOP</span><button class="select-item">선택</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll("[data-go]").forEach(b=>b.addEventListener("click",()=>location.href=b.dataset.go));
+const modal=document.getElementById("shopModal");
+document.getElementById("shopBtn").onclick=()=>modal.classList.add("show");
+document.getElementById("shopCard").onclick=()=>modal.classList.add("show");
+document.getElementById("closeShop").onclick=()=>modal.classList.remove("show");
+modal.addEventListener("click",e=>{if(e.target===modal)modal.classList.remove("show")});
+document.querySelectorAll(".select-item").forEach(b=>b.onclick=()=>{b.textContent="선택됨";});
+document.getElementById("profileBtn").onclick=()=>alert("로그인 시스템은 다음 단계에서 연결합니다.");
+</script>
+</body>
+</html>

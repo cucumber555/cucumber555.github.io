@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PIVOP · PvP</title>
+<link rel="stylesheet" href="./css/pivop.css">
+</head>
+<body class="lobby">
+<div class="topbar">
+<a class="logo" href="./pivop.html">PIVOP</a>
+<div class="top-actions"><button class="navbtn" id="homeBtn">메인</button><button class="navbtn" id="practiceBtn">연습 모드</button><button class="profile">로그인</button></div>
+</div>
+<main class="lobby-wrap">
+  <section class="lobby-head"><div><div class="eyebrow">PVP // MATCHMAKING</div><h1>대전 준비</h1><p>플레이어가 실제로 모이기 전에는 경기가 시작되지 않습니다.</p></div><div class="status"><i></i><span id="statusText">대기 중</span></div></section>
+  <section class="lobby-grid">
+    <div class="panel">
+      <h2>방 만들기</h2>
+      <p>친구가 참가할 수 있는 방을 생성합니다.</p>
+      <button class="primary full" id="createBtn">방 만들기</button>
+      <div class="room" id="roomBox">방 코드 <strong id="roomCode">------</strong></div>
+    </div>
+    <div class="panel">
+      <h2>방 참가</h2>
+      <p>친구에게 받은 6자리 코드를 입력하세요.</p>
+      <input id="joinCode" maxlength="6" inputmode="numeric" placeholder="6자리 코드">
+      <button class="secondary full" id="joinBtn">방 참가</button>
+    </div>
+    <div class="panel wide">
+      <h2>빠른 매칭</h2>
+      <p>상대가 연결되면 그때 경기를 시작합니다. 혼자 있는 상태에서 가짜 경기를 시작하지 않습니다.</p>
+      <div class="players"><div><b id="playerCount">1</b><span>/ 4 플레이어</span></div><div class="slots"><i></i><i></i><i></i><i></i></div></div>
+      <button class="primary full" id="matchBtn">매칭 시작</button>
+      <div class="notice" id="notice">현재는 온라인 서버가 연결되지 않아 실제 상대를 찾을 수 없습니다.</div>
+    </div>
+  </section>
+</main>
+<script>
+const go=(p)=>location.href=p;
+document.getElementById("homeBtn").onclick=()=>go("./pivop.html");
+document.getElementById("practiceBtn").onclick=()=>go("./practice.html");
+document.getElementById("createBtn").onclick=()=>{
+ const code=Math.floor(100000+Math.random()*900000);
+ document.getElementById("roomCode").textContent=code;
+ document.getElementById("statusText").textContent="방 생성됨 · 참가 대기";
+ document.getElementById("notice").textContent="친구가 참가하면 실제 게임 서버 연결 단계로 넘어갑니다. 현재는 혼자서 시작하지 않습니다.";
+};
+document.getElementById("joinBtn").onclick=()=>{
+ const c=document.getElementById("joinCode").value.trim();
+ if(!/^\d{6}$/.test(c)){alert("6자리 방 코드를 입력하세요.");return;}
+ document.getElementById("statusText").textContent="방 참가 요청";
+ document.getElementById("notice").textContent="현재 버전은 온라인 서버가 연결되지 않아 실제 참가 처리는 다음 단계에서 연결합니다.";
+};
+document.getElementById("matchBtn").onclick=()=>{
+ document.getElementById("statusText").textContent="상대 검색 중";
+ document.getElementById("notice").textContent="상대 플레이어가 연결될 때까지 대기합니다. 플레이어가 없는데 경기가 시작되지는 않습니다.";
+};
+</script>
+</body>
+</html>
