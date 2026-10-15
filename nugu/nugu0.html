@@ -30,7 +30,7 @@ input,textarea{width:100%;border:1px solid #ccd9e8;border-radius:9px;padding:12p
 <body>
 <header>
 <div class="header-inner">
-<a class="logo" href="index.html" aria-label="홈으로 이동"><span>NUGU</span> 자유게시판</a>
+<a class="logo" href="index0.html" aria-label="홈으로 이동"><span>NUGU</span> 자유게시판</a>
 <div class="header-actions">
 <span id="loginState" style="font-size:13px;color:#62748a"></span>
 <button class="secondary" onclick="goNuguHome()">NUGU 홈</button>
@@ -134,7 +134,7 @@ async function loginWithGoogle(){
   if(error)alert("Google 로그인에 실패했습니다.\n"+error.message);
 }
 async function logout(){await db.auth.signOut();location.reload()}
-function goNuguHome(){location.href="index.html"}
+function goNuguHome(){location.href="index0.html"}
 
 function showStatus(text){
   const box=document.getElementById("status");box.textContent=text;box.style.display="block";
